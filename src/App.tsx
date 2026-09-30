@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GeoLogData, Borehole } from './core/dataStore';
 import { bus } from './core/eventBus';
 import { Journal } from './core/journal';
@@ -260,7 +260,15 @@ export default function App() {
     }
   }, [openDocs, activeDocId]);
 
-  const selectedBorehole: Borehole | null = selectedBoreholeId ? (GeoLogData.getById(selectedBoreholeId) ?? null) : null;
+  // Вычисляем selectedBorehole с зависимостью от dataVersion для реактивности
+  const selectedBorehole: Borehole | null = useMemo(() => {
+    return selectedBoreholeId ? (GeoLogData.getById(selectedBoreholeId) ?? null) : null;
+  }, [selectedBoreholeId, dataVersion]);
+
+  // Получаем актуальный список скважин с зависимостью от dataVersion
+  const boreholes = useMemo(() => {
+    return GeoLogData.getAll();
+  }, [dataVersion]);
 
   const themeClass = `theme-${theme}`;
 
@@ -294,13 +302,12 @@ export default function App() {
           {/* MDI Area */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <MDIArea
-              key={dataVersion}
               openDocs={openDocs}
               activeDocId={activeDocId}
               onActivate={setActiveDocId}
               onClose={closeDoc}
               onReorder={setOpenDocs}
-              boreholes={GeoLogData.getAll()}
+              boreholes={boreholes}
               selectedBoreholeId={selectedBoreholeId}
               onSelectBorehole={selectBorehole}
               onCreateBorehole={handleCreateBorehole}
