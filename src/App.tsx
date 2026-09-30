@@ -216,6 +216,12 @@ export default function App() {
           loadedCount++;
         }
 
+        // Снимаем выделение, чтобы пользователь мог выбрать отдельную скважину
+        setSelectedBoreholeId(null);
+        
+        // Сортируем скважины по номеру
+        GeoLogData.sortByNumber();
+        
         forceUpdate((n) => n + 1);
         Journal.logEvent('info', `Загружено скважин из Excel: ${loadedCount}`, 'bore.load_catalog');
       } catch (error) {

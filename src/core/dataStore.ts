@@ -315,4 +315,15 @@ export const GeoLogData = {
     storeListeners.add(fn);
     return () => storeListeners.delete(fn);
   },
+
+  sortByNumber() {
+    boreholes.sort((a, b) => {
+      // Извлекаем числовую часть из номера скважины
+      const numA = parseInt(a.number.replace(/[^0-9]/g, '')) || 0;
+      const numB = parseInt(b.number.replace(/[^0-9]/g, '')) || 0;
+      return numA - numB;
+    });
+    notify();
+    Journal.logEvent('info', 'Скважины отсортированы по номеру', 'bore.sort');
+  },
 };
