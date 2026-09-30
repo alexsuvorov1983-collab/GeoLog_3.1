@@ -69,3 +69,321 @@ input:focus, select:focus, textarea:focus {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ============================================
+   ТЕМЫ ОФОРМЛЕНИЯ (добавлено)
+   ============================================ */
+
+/* Светлая тема (по умолчанию) */
+.theme-light {
+  --bg-app: #f0f0f0;
+  --bg-panel: #ffffff;
+  --bg-header: #e8e8e8;
+  --bg-toolbar: #f5f5f5;
+  --bg-input: #ffffff;
+  --bg-hover: #e8e8ff;
+  --bg-active: #c8c8ff;
+  --bg-menu-hover: #d0d0ff;
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-muted: #808080;
+  --border-main: #c0c0c0;
+  --border-light: #e0e0e0;
+  --accent: #4472c4;
+  --row-even: #ffffff;
+  --row-odd: #f8f8f8;
+  --row-selected: #c8d8ff;
+  --row-hover: #e0e8ff;
+  --gap-bg: #f0e8e8;
+  --gap-text: #999999;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #c0c0c0;
+}
+
+/* Средняя тема */
+.theme-medium {
+  --bg-app: #b8c0c8;
+  --bg-panel: #d0d4d8;
+  --bg-header: #a8b0b8;
+  --bg-toolbar: #c0c8d0;
+  --bg-input: #dce0e4;
+  --bg-hover: #c8d0e0;
+  --bg-active: #a0b0c8;
+  --bg-menu-hover: #b0c0d8;
+  --text-primary: #1a1a2e;
+  --text-secondary: #2a2a3e;
+  --text-muted: #505068;
+  --border-main: #808890;
+  --border-light: #a0a8b0;
+  --accent: #3060a0;
+  --row-even: #d0d4d8;
+  --row-odd: #c8ccd0;
+  --row-selected: #a0b8d8;
+  --row-hover: #b8c8e0;
+  --gap-bg: #c8b8b0;
+  --gap-text: #605050;
+  --scrollbar-track: #b8c0c8;
+  --scrollbar-thumb: #808890;
+}
+
+/* Тёмная тема */
+.theme-dark {
+  --bg-app: #1e1e1e;
+  --bg-panel: #252526;
+  --bg-header: #333333;
+  --bg-toolbar: #2d2d2d;
+  --bg-input: #3c3c3c;
+  --bg-hover: #2a2d3e;
+  --bg-active: #3a3d5e;
+  --bg-menu-hover: #3a3d5e;
+  --text-primary: #d4d4d4;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  --border-main: #404040;
+  --border-light: #333333;
+  --accent: #5b9bd5;
+  --row-even: #252526;
+  --row-odd: #2a2a2b;
+  --row-selected: #264f78;
+  --row-hover: #2a2d3e;
+  --gap-bg: #3a2a2a;
+  --gap-text: #666666;
+  --scrollbar-track: #1e1e1e;
+  --scrollbar-thumb: #404040;
+}
+
+/* Применение тем через CSS-переменные к существующим элементам */
+.theme-light,
+.theme-medium,
+.theme-dark {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.theme-light ::-webkit-scrollbar-track,
+.theme-medium ::-webkit-scrollbar-track,
+.theme-dark ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.theme-light ::-webkit-scrollbar-thumb,
+.theme-medium ::-webkit-scrollbar-thumb,
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+.theme-light ::selection,
+.theme-medium ::selection,
+.theme-dark ::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* Переопределение Tailwind-цветов для тем */
+.theme-light .bg-\[\#f0f0f0\],
+.theme-medium .bg-\[\#f0f0f0\],
+.theme-dark .bg-\[\#f0f0f0\] {
+  background-color: var(--bg-app) !important;
+}
+
+.theme-light .bg-\[\#e8e8e8\],
+.theme-medium .bg-\[\#e8e8e8\],
+.theme-dark .bg-\[\#e8e8e8\] {
+  background-color: var(--bg-header) !important;
+}
+
+.theme-light .bg-\[\#f5f5f5\],
+.theme-medium .bg-\[\#f5f5f5\],
+.theme-dark .bg-\[\#f5f5f5\] {
+  background-color: var(--bg-toolbar) !important;
+}
+
+.theme-light .bg-white,
+.theme-medium .bg-white,
+.theme-dark .bg-white {
+  background-color: var(--bg-panel) !important;
+}
+
+.theme-light .bg-\[\#e0e0e0\],
+.theme-medium .bg-\[\#e0e0e0\],
+.theme-dark .bg-\[\#e0e0e0\] {
+  background-color: var(--bg-app) !important;
+}
+
+.theme-light .border-\[\#c0c0c0\],
+.theme-medium .border-\[\#c0c0c0\],
+.theme-dark .border-\[\#c0c0c0\] {
+  border-color: var(--border-main) !important;
+}
+
+.theme-light .border-\[\#e0e0e0\],
+.theme-medium .border-\[\#e0e0e0\],
+.theme-dark .border-\[\#e0e0e0\] {
+  border-color: var(--border-light) !important;
+}
+
+.theme-light .border-\[\#e8e8e8\],
+.theme-medium .border-\[\#e8e8e8\],
+.theme-dark .border-\[\#e8e8e8\] {
+  border-color: var(--border-light) !important;
+}
+
+.theme-light .text-\[\#555\],
+.theme-medium .text-\[\#555\],
+.theme-dark .text-\[\#555\] {
+  color: var(--text-secondary) !important;
+}
+
+.theme-light .text-\[\#808080\],
+.theme-medium .text-\[\#808080\],
+.theme-dark .text-\[\#808080\] {
+  color: var(--text-muted) !important;
+}
+
+.theme-light .text-\[\#333\],
+.theme-medium .text-\[\#333\],
+.theme-dark .text-\[\#333\] {
+  color: var(--text-primary) !important;
+}
+
+.theme-light .hover\:bg-\[\#e8e8ff\]:hover,
+.theme-medium .hover\:bg-\[\#e8e8ff\]:hover,
+.theme-dark .hover\:bg-\[\#e8e8ff\]:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.theme-light .hover\:bg-\[\#f0f0ff\]:hover,
+.theme-medium .hover\:bg-\[\#f0f0ff\]:hover,
+.theme-dark .hover\:bg-\[\#f0f0ff\]:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.theme-light .hover\:bg-\[\#d0d0ff\]:hover,
+.theme-medium .hover\:bg-\[\#d0d0ff\]:hover,
+.theme-dark .hover\:bg-\[\#d0d0ff\]:hover {
+  background-color: var(--bg-menu-hover) !important;
+}
+
+.theme-light .bg-\[\#c8c8ff\],
+.theme-medium .bg-\[\#c8c8ff\],
+.theme-dark .bg-\[\#c8c8ff\] {
+  background-color: var(--bg-active) !important;
+}
+
+.theme-light .bg-\[\#d0d0ff\],
+.theme-medium .bg-\[\#d0d0ff\],
+.theme-dark .bg-\[\#d0d0ff\] {
+  background-color: var(--bg-menu-hover) !important;
+}
+
+.theme-light .bg-\[\#f8f8f8\],
+.theme-medium .bg-\[\#f8f8f8\],
+.theme-dark .bg-\[\#f8f8f8\] {
+  background-color: var(--row-odd) !important;
+}
+
+.theme-light .bg-\[\#c8d8ff\],
+.theme-medium .bg-\[\#c8d8ff\],
+.theme-dark .bg-\[\#c8d8ff\] {
+  background-color: var(--row-selected) !important;
+}
+
+.theme-light .hover\:bg-\[\#e0e8ff\]:hover,
+.theme-medium .hover\:bg-\[\#e0e8ff\]:hover,
+.theme-dark .hover\:bg-\[\#e0e8ff\]:hover {
+  background-color: var(--row-hover) !important;
+}
+
+.theme-light .bg-\[\#f0e8e8\],
+.theme-medium .bg-\[\#f0e8e8\],
+.theme-dark .bg-\[\#f0e8e8\] {
+  background-color: var(--gap-bg) !important;
+}
+
+.theme-light .text-\[\#999\],
+.theme-medium .text-\[\#999\],
+.theme-dark .text-\[\#999\] {
+  color: var(--gap-text) !important;
+}
+
+.theme-light .text-\[\#bbb\],
+.theme-medium .text-\[\#bbb\],
+.theme-dark .text-\[\#bbb\] {
+  color: var(--gap-text) !important;
+}
+
+.theme-light .bg-\[\#4472c4\],
+.theme-medium .bg-\[\#4472c4\],
+.theme-dark .bg-\[\#4472c4\] {
+  background-color: var(--accent) !important;
+}
+
+/* Поля ввода */
+.theme-light input,
+.theme-light select,
+.theme-light textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.theme-medium input,
+.theme-medium select,
+.theme-medium textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.theme-dark input::placeholder,
+.theme-medium input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Кнопки тулбара в тёмной теме */
+.theme-dark .bg-white.border,
+.theme-medium .bg-white.border {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-main) !important;
+}
+
+/* Hover для кнопок тулбара */
+.theme-dark .hover\:bg-\[\#e8e8ff\]:hover,
+.theme-medium .hover\:bg-\[\#e8e8ff\]:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Scrollbar кнопки */
+.theme-dark ::-webkit-scrollbar-button,
+.theme-medium ::-webkit-scrollbar-button {
+  background: var(--bg-header);
+  border-color: var(--border-main);
+}
+
+/* Ссылки и текст */
+.theme-dark a,
+.theme-dark .text-blue-600 {
+  color: var(--accent) !important;
+}
+
+.theme-dark .text-\[\#999\],
+.theme-dark .text-\[\#808080\] {
+  color: var(--text-muted) !important;
+}
+
+/* Таблица — заголовки */
+.theme-dark th,
+.theme-medium th {
+  color: var(--text-primary);
+}
+
+.theme-dark td,
+.theme-medium td {
+  color: var(--text-primary);
+}

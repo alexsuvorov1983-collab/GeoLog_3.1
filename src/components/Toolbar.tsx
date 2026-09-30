@@ -1,7 +1,13 @@
 import { CommandRegistry } from '../core/commandRegistry';
 import { Journal } from '../core/journal';
+import ThemeSwitcher, { ThemeMode } from './ThemeSwitcher';
 
-export default function Toolbar() {
+interface ToolbarProps {
+  theme: ThemeMode;
+  onThemeChange: (theme: ThemeMode) => void;
+}
+
+export default function Toolbar({ theme, onThemeChange }: ToolbarProps) {
   const handleAction = (action: string) => {
     switch (action) {
       case 'new':
@@ -88,6 +94,9 @@ export default function Toolbar() {
           <button className="w-full text-left px-4 py-1.5 text-sm hover:bg-[#d0d0ff]">ИГЭ</button>
         </div>
       </div>
+
+      {/* Переключатель темы (справа) */}
+      <ThemeSwitcher theme={theme} onThemeChange={onThemeChange} />
     </div>
   );
 }

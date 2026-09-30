@@ -20,7 +20,7 @@ export default function App() {
   const [activeDocId, setActiveDocId] = useState('doc-boreholes');
   const [showNavigator, setShowNavigator] = useState(true);
   const [showJournal, setShowJournal] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'medium' | 'dark'>('light');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: { label: string; commandId: string }[] } | null>(null);
   const [, forceUpdate] = useState(0);
 
@@ -67,7 +67,7 @@ export default function App() {
     // View commands
     CommandRegistry.register({ id: 'view.navigator', label: 'Навигатор', handler: () => { setShowNavigator((v) => !v); } });
     CommandRegistry.register({ id: 'view.journal', label: 'Журнал', handler: () => { setShowJournal((v) => !v); } });
-    CommandRegistry.register({ id: 'view.theme', label: 'Тема', handler: () => { setDarkMode((v) => !v); } });
+    CommandRegistry.register({ id: 'view.theme', label: 'Тема', handler: () => { setTheme(v => v === 'light' ? 'medium' : v === 'medium' ? 'dark' : 'light'); } });
     CommandRegistry.register({ id: 'view.resetLayout', label: 'Сброс раскладки', handler: () => { Journal.logEvent('command', 'Сброс раскладки'); } });
     CommandRegistry.register({ id: 'view.refresh', label: 'Обновить', shortcut: 'F5', handler: () => { forceUpdate((n) => n + 1); Journal.logEvent('command', 'Обновление'); } });
 
@@ -172,7 +172,7 @@ export default function App() {
 
   const selectedBorehole: Borehole | null = selectedBoreholeId ? (GeoLogData.getById(selectedBoreholeId) ?? null) : null;
 
-  const themeClass = darkMode ? 'dark' : '';
+  const themeClass = `theme-${theme}`;
 
   return (
     <div className={`h-screen w-screen flex flex-col overflow-hidden ${themeClass}`} style={{ fontFamily: 'Segoe UI, Tahoma, sans-serif', fontSize: '12px' }}>
@@ -180,7 +180,7 @@ export default function App() {
       <MenuBar />
 
       {/* Toolbar */}
-      <Toolbar />
+      <Toolbar theme={theme} onThemeChange={setTheme} />
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
