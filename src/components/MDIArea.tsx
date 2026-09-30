@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Borehole } from '../core/dataStore';
+import { Borehole, GeoLogData } from '../core/dataStore';
 import {
   DndContext,
   closestCenter,
@@ -67,6 +67,26 @@ function formatValue(key: string, value: any): string {
   if (key === 'user') {
     return String(value || '—');
   }
+  
+  // Преобразование ID справочников в названия
+  const dicts = GeoLogData.getDicts();
+  if (key === 'side_id') {
+    const item = dicts.sides.find(s => s.id === value);
+    return item ? item.name : String(value);
+  }
+  if (key === 'rig_id') {
+    const item = dicts.rigs.find(r => r.id === value);
+    return item ? item.name : String(value);
+  }
+  if (key === 'method_id') {
+    const item = dicts.methods.find(m => m.id === value);
+    return item ? item.name : String(value);
+  }
+  if (key === 'diameter_id' || key === 'casing_diameter_id') {
+    const item = dicts.diameters.find(d => d.id === value);
+    return item ? item.name : String(value);
+  }
+  
   return String(value);
 }
 
