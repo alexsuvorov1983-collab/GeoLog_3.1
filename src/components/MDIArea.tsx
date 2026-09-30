@@ -255,12 +255,11 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold whitespace-nowrap relative ${col.gap ? 'bg-[#f0e8e8] text-[#999]' : ''}`}
+                className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold whitespace-nowrap relative"
                 style={{ width: `${widths[col.key] || 100}px` }}
-                title={col.gap ? 'Поле появится в схеме v1.4 (GAP)' : col.label}
+                title={col.label}
               >
                 {col.label}
-                {col.gap && <span className="text-xs ml-1">⚠</span>}
                 <ColumnResizer onMouseDown={(e) => handleMouseDown(e, col.key)} />
               </th>
             ))}
@@ -280,8 +279,7 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
                 return (
                   <td
                     key={col.key}
-                    className={`px-3 py-1 border-r border-[#e8e8e8] whitespace-nowrap ${col.gap ? 'text-[#bbb] italic' : ''}`}
-                    title={col.gap ? 'Поле появится в схеме v1.4' : undefined}
+                    className="px-3 py-1 border-r border-[#e8e8e8] whitespace-nowrap"
                   >
                     {formatted}
                   </td>
