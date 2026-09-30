@@ -225,7 +225,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
 
   const inputClass = "w-full px-2 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
   const labelClass = "text-sm text-[#555] text-right whitespace-nowrap";
-  const fieldRowClass = "grid grid-cols-[auto_1fr] gap-2 items-center";
+  const fieldRowClass = "grid grid-cols-[180px_1fr] gap-2 items-center";
 
   // Конвертация даты из формата YYYY-MM-DD в ДД.ММ.ГГГГ
   const formatDateToDisplay = (dateStr: string): string => {
@@ -300,8 +300,8 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   };
 
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {/* Column 1 */}
+    <div className="grid grid-cols-1 gap-4">
+      {/* Single column - All fields aligned */}
       <div className="space-y-2">
         <div className={fieldRowClass}>
           <label className={labelClass}>Номер:</label>
@@ -323,10 +323,6 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
           <label className={labelClass}>Координата Y:</label>
           <input className={inputClass} type="text" value={form.y} onChange={(e) => handleChange('y', e.target.value)} onBlur={(e) => handleBlurFormat('y', e.target.value)} />
         </div>
-      </div>
-
-      {/* Column 2 */}
-      <div className="space-y-2">
         <div className={fieldRowClass}>
           <label className={labelClass}>Начата:</label>
           <input 
@@ -360,13 +356,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
           <label className={labelClass}>WGS84 широта:</label>
           <input className={inputClass} type="number" step="0.0001" value={form.wgs84_lat} onChange={(e) => handleChange('wgs84_lat', e.target.value)} />
         </div>
-        <button className="text-[10px] text-blue-600 hover:underline" onClick={() => Journal.logEvent('command', 'Пересчёт WGS84')}>
-          🔄 Пересчёт координат
-        </button>
-      </div>
-
-      {/* Column 3 */}
-      <div className="space-y-2">
+        <div className={fieldRowClass}>
+          <label className={labelClass}></label>
+          <button className="text-[10px] text-blue-600 hover:underline" onClick={() => Journal.logEvent('command', 'Пересчёт WGS84')}>
+            🔄 Пересчёт координат
+          </button>
+        </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Буровая установка:</label>
           <select className={inputClass} value={form.rig_id} onChange={(e) => handleChange('rig_id', e.target.value)}>
@@ -403,10 +398,6 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
           <label className={labelClass}>Разбуривание, м:</label>
           <input className={inputClass} type="number" step="0.01" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} />
         </div>
-      </div>
-
-      {/* Column 4 */}
-      <div className="space-y-2">
         <div className={fieldRowClass}>
           <label className={labelClass}>ГСО, м:</label>
           <div>
@@ -444,7 +435,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       </div>
 
       {/* Save button */}
-      <div className="col-span-4 flex justify-end">
+      <div className="flex justify-end">
         <button
           onClick={handleSave}
           className="px-5 py-1.5 text-sm bg-[#4472c4] text-white rounded hover:bg-[#3060b0] border border-[#2a5090]"
