@@ -385,7 +385,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Глубина обсадки, м:</label>
-          <input className={inputClass} type="number" step="0.01" value={form.casing_depth_m} onChange={(e) => handleChange('casing_depth_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.casing_depth_m} onChange={(e) => handleChange('casing_depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('casing_depth_m', e.target.value)} />
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Диаметр обсадки, мм:</label>
@@ -396,7 +396,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Разбуривание, м:</label>
-          <input className={inputClass} type="number" step="0.01" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} onBlur={(e) => handleBlurFormat('reaming_m', e.target.value)} />
         </div>
       </div>
 
@@ -405,7 +405,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ГСО, м:</label>
           <div>
-            <input className={inputClass} type="number" step="0.01" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} disabled={!form.gso_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} onBlur={(e) => handleBlurFormat('gso_m', e.target.value)} disabled={!form.gso_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.gso_manual} onChange={(e) => handleChange('gso_manual', e.target.checked)} className="mr-1.5" />
               Вручную
@@ -415,7 +415,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ГСП, м:</label>
           <div>
-            <input className={inputClass} type="number" step="0.01" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} onBlur={(e) => handleBlurFormat('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.gsp_manual} onChange={(e) => handleChange('gsp_manual', e.target.checked)} className="mr-1.5" />
               Вручную
@@ -425,7 +425,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ММГ, м:</label>
           <div>
-            <input className={inputClass} type="number" step="0.01" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} onBlur={(e) => handleBlurFormat('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.mmg_manual} onChange={(e) => handleChange('mmg_manual', e.target.checked)} className="mr-1.5" />
               Вручную
