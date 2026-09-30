@@ -224,7 +224,8 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   };
 
   const inputClass = "w-full px-2 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
-  const labelClass = "text-sm text-[#555] mb-1";
+  const labelClass = "text-sm text-[#555] text-right whitespace-nowrap";
+  const fieldRowClass = "grid grid-cols-[auto_1fr] gap-2 items-center";
 
   // Конвертация даты из формата YYYY-MM-DD в ДД.ММ.ГГГГ
   const formatDateToDisplay = (dateStr: string): string => {
@@ -302,32 +303,32 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     <div className="grid grid-cols-4 gap-4">
       {/* Column 1 */}
       <div className="space-y-2">
-        <div>
-          <label className={labelClass}>Номер</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Номер:</label>
           <input className={inputClass} value={form.number} onChange={(e) => handleChange('number', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>Глубина, м</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Глубина, м:</label>
           <input className={inputClass} type="text" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('depth_m', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>Отметка, м</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Отметка, м:</label>
           <input className={inputClass} type="text" value={form.elev_m} onChange={(e) => handleChange('elev_m', e.target.value)} onBlur={(e) => handleBlurFormat('elev_m', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>Координата X</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Координата X:</label>
           <input className={inputClass} type="text" value={form.x} onChange={(e) => handleChange('x', e.target.value)} onBlur={(e) => handleBlurFormat('x', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>Координата Y</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Координата Y:</label>
           <input className={inputClass} type="text" value={form.y} onChange={(e) => handleChange('y', e.target.value)} onBlur={(e) => handleBlurFormat('y', e.target.value)} />
         </div>
       </div>
 
       {/* Column 2 */}
       <div className="space-y-2">
-        <div>
-          <label className={labelClass}>Начата</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Начата:</label>
           <input 
             className={inputClass} 
             type="date" 
@@ -335,8 +336,8 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
             onChange={(e) => handleChange('date', formatDateToDisplay(e.target.value))} 
           />
         </div>
-        <div>
-          <label className={labelClass}>Окончена</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Окончена:</label>
           <input 
             className={inputClass} 
             type="date" 
@@ -344,19 +345,19 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
             onChange={(e) => handleChange('end_date', formatDateToDisplay(e.target.value))} 
           />
         </div>
-        <div>
-          <label className={labelClass}>Сторонность</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Сторонность:</label>
           <select className={inputClass} value={form.side_id} onChange={(e) => handleChange('side_id', e.target.value)}>
             <option value="">—</option>
             {dicts.sides.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>WGS84 долгота</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>WGS84 долгота:</label>
           <input className={inputClass} type="number" step="0.0001" value={form.wgs84_lon} onChange={(e) => handleChange('wgs84_lon', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>WGS84 широта</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>WGS84 широта:</label>
           <input className={inputClass} type="number" step="0.0001" value={form.wgs84_lat} onChange={(e) => handleChange('wgs84_lat', e.target.value)} />
         </div>
         <button className="text-[10px] text-blue-600 hover:underline" onClick={() => Journal.logEvent('command', 'Пересчёт WGS84')}>
@@ -366,72 +367,78 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
 
       {/* Column 3 */}
       <div className="space-y-2">
-        <div>
-          <label className={labelClass}>Буровая установка</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Буровая установка:</label>
           <select className={inputClass} value={form.rig_id} onChange={(e) => handleChange('rig_id', e.target.value)}>
             <option value="">—</option>
             {dicts.rigs.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>Способ проходки</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Способ проходки:</label>
           <select className={inputClass} value={form.method_id} onChange={(e) => handleChange('method_id', e.target.value)}>
             <option value="">—</option>
             {dicts.methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>Диаметр, мм</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Диаметр, мм:</label>
           <select className={inputClass} value={form.diameter_id} onChange={(e) => handleChange('diameter_id', e.target.value)}>
             <option value="">—</option>
             {dicts.diameters.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>Глубина обсадки, м</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Глубина обсадки, м:</label>
           <input className={inputClass} type="number" step="0.01" value={form.casing_depth_m} onChange={(e) => handleChange('casing_depth_m', e.target.value)} />
         </div>
-        <div>
-          <label className={labelClass}>Диаметр обсадки, мм</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Диаметр обсадки, мм:</label>
           <select className={inputClass} value={form.casing_diameter_id} onChange={(e) => handleChange('casing_diameter_id', e.target.value)}>
             <option value="">—</option>
             {dicts.diameters.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>Разбуривание, м</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Разбуривание, м:</label>
           <input className={inputClass} type="number" step="0.01" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} />
         </div>
       </div>
 
       {/* Column 4 */}
       <div className="space-y-2">
-        <div>
-          <label className={labelClass}>ГСО, м</label>
-          <input className={inputClass} type="number" step="0.01" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} disabled={!form.gso_manual} />
-          <label className="flex items-center text-xs mt-1">
-            <input type="checkbox" checked={form.gso_manual} onChange={(e) => handleChange('gso_manual', e.target.checked)} className="mr-1.5" />
-            Вручную
-          </label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>ГСО, м:</label>
+          <div>
+            <input className={inputClass} type="number" step="0.01" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} disabled={!form.gso_manual} />
+            <label className="flex items-center text-xs mt-1">
+              <input type="checkbox" checked={form.gso_manual} onChange={(e) => handleChange('gso_manual', e.target.checked)} className="mr-1.5" />
+              Вручную
+            </label>
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>ГСП, м</label>
-          <input className={inputClass} type="number" step="0.01" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
-          <label className="flex items-center text-xs mt-1">
-            <input type="checkbox" checked={form.gsp_manual} onChange={(e) => handleChange('gsp_manual', e.target.checked)} className="mr-1.5" />
-            Вручную
-          </label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>ГСП, м:</label>
+          <div>
+            <input className={inputClass} type="number" step="0.01" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
+            <label className="flex items-center text-xs mt-1">
+              <input type="checkbox" checked={form.gsp_manual} onChange={(e) => handleChange('gsp_manual', e.target.checked)} className="mr-1.5" />
+              Вручную
+            </label>
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>ММГ, м</label>
-          <input className={inputClass} type="number" step="0.01" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
-          <label className="flex items-center text-xs mt-1">
-            <input type="checkbox" checked={form.mmg_manual} onChange={(e) => handleChange('mmg_manual', e.target.checked)} className="mr-1.5" />
-            Вручную
-          </label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>ММГ, м:</label>
+          <div>
+            <input className={inputClass} type="number" step="0.01" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
+            <label className="flex items-center text-xs mt-1">
+              <input type="checkbox" checked={form.mmg_manual} onChange={(e) => handleChange('mmg_manual', e.target.checked)} className="mr-1.5" />
+              Вручную
+            </label>
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>Исполнитель</label>
+        <div className={fieldRowClass}>
+          <label className={labelClass}>Исполнитель:</label>
           <input className={inputClass} value={form.user} onChange={(e) => handleChange('user', e.target.value)} />
         </div>
       </div>
