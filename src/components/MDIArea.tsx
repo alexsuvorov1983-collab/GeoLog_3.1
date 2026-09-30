@@ -223,24 +223,24 @@ function DocContent({ docId, boreholes, selectedId, onSelect }: { docId: string;
 function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehole[]; selectedId: string | null; onSelect: (id: string) => void }) {
   // Ширина столбцов по умолчанию
   const defaultColumnWidths: Record<string, number> = {
-    number: 100,
-    depth_m: 80,
-    elev_m: 80,
-    x: 100,
-    y: 100,
-    wgs84_lon: 110,
-    wgs84_lat: 110,
-    side_id: 90,
-    rig_id: 120,
-    method_id: 130,
-    diameter_id: 80,
-    casing_depth_m: 110,
-    casing_diameter_id: 120,
-    reaming_m: 100,
-    gso_m: 70,
-    gsp_m: 70,
-    mmg_m: 70,
-    executor: 100,
+    number: 80,
+    depth_m: 70,
+    elev_m: 70,
+    x: 90,
+    y: 90,
+    wgs84_lon: 85,
+    wgs84_lat: 85,
+    side_id: 75,
+    rig_id: 95,
+    method_id: 100,
+    diameter_id: 70,
+    casing_depth_m: 90,
+    casing_diameter_id: 95,
+    reaming_m: 80,
+    gso_m: 60,
+    gsp_m: 60,
+    mmg_m: 60,
+    executor: 85,
   };
 
   const columnKeys = columns.map((c) => c.key);
@@ -251,11 +251,11 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
       <table className="border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10">
           <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
-            <th className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold relative" style={{ width: '40px' }}>#</th>
+            <th className="px-3 py-1.5 text-center border-r border-[#c0c0c0] font-semibold relative" style={{ width: '40px' }}>#</th>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold whitespace-nowrap relative"
+                className="px-2 py-1.5 text-center border-r border-[#c0c0c0] font-semibold relative leading-tight"
                 style={{ width: `${widths[col.key] || 100}px` }}
                 title={col.label}
               >
@@ -272,14 +272,14 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
               className={`cursor-pointer border-b border-[#e8e8e8] ${selectedId === bh.id ? 'bg-[#c8d8ff]' : idx % 2 === 0 ? 'bg-white' : 'bg-[#f8f8f8]'} hover:bg-[#e0e8ff]`}
               onClick={() => onSelect(bh.id)}
             >
-              <td className="px-3 py-1 border-r border-[#e8e8e8] text-[#808080]">{idx + 1}</td>
+              <td className="px-3 py-1 border-r border-[#e8e8e8] text-center text-[#808080]">{idx + 1}</td>
               {columns.map((col) => {
                 const value = (bh as any)[col.key];
                 const formatted = formatValue(col.key, value);
                 return (
                   <td
                     key={col.key}
-                    className="px-3 py-1 border-r border-[#e8e8e8] whitespace-nowrap"
+                    className="px-2 py-1 border-r border-[#e8e8e8] text-center"
                   >
                     {formatted}
                   </td>
@@ -310,7 +310,7 @@ function ResizableDocTable({ columns: cols }: { columns: string[] }) {
             {cols.map((col, idx) => (
               <th
                 key={idx}
-                className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold relative last:border-r-0"
+                className="px-2 py-1.5 text-center border-r border-[#c0c0c0] font-semibold relative last:border-r-0 leading-tight"
                 style={{ width: `${widths[col] || 150}px` }}
               >
                 {col}

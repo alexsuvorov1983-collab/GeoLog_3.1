@@ -293,10 +293,10 @@ function SoilLayersTab({ borehole }: { borehole: Borehole }) {
           <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth_from}px` }}>Глубина от, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_from')} /></th>
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth_to}px` }}>Глубина до, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_to')} /></th>
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.ground_type}px` }}>Тип грунта<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'ground_type')} /></th>
-                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.description}px` }}>Описание</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth_from}px` }}>Глубина от, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_from')} /></th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth_to}px` }}>Глубина до, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_to')} /></th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.ground_type}px` }}>Тип грунта<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'ground_type')} /></th>
+                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.description}px` }}>Описание</th>
               </tr>
             </thead>
             <tbody>
@@ -332,8 +332,8 @@ function WaterLayersTab({ borehole }: { borehole: Borehole }) {
           <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
-                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.water_type}px` }}>Тип воды</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.water_type}px` }}>Тип воды</th>
               </tr>
             </thead>
             <tbody>
@@ -367,9 +367,9 @@ function SamplesTab({ borehole }: { borehole: Borehole }) {
           <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.sample_type}px` }}>Тип<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'sample_type')} /></th>
-                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.lab_number}px` }}>Лаб. номер</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.sample_type}px` }}>Тип<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'sample_type')} /></th>
+                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.lab_number}px` }}>Лаб. номер</th>
               </tr>
             </thead>
             <tbody>
@@ -404,8 +404,8 @@ function ThermometryTab({ borehole }: { borehole: Borehole }) {
           <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
-                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
-                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.temperature}px` }}>Температура, °C</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.temperature}px` }}>Температура, °C</th>
               </tr>
             </thead>
             <tbody>
