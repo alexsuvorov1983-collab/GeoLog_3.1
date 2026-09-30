@@ -185,7 +185,44 @@ export default function App() {
   }, [selectedBoreholeId]);
 
   const handleLoadFromCatalog = useCallback(() => {
-    Journal.logEvent('warning', 'Загрузка из каталога — функция в разработке', 'bore.load_catalog');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const XLSX = await import('xlsx');
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+
+        // Пропускаем первую строку (заголовки), начинаем со второй
+        let loadedCount = 0;
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (!row || row.length < 4) continue;
+
+          const number = String(row[0] || '').trim();
+          const x = parseFloat(row[1]) || 0;
+          const y = parseFloat(row[2]) || 0;
+          const elev_m = parseFloat(row[3]) || 0;
+
+          if (!number) continue;
+
+          GeoLogData.create({ number, x, y, elev_m, depth_m: 10 });
+          loadedCount++;
+        }
+
+        forceUpdate((n) => n + 1);
+        Journal.logEvent('info', `Загружено скважин из Excel: ${loadedCount}`, 'bore.load_catalog');
+      } catch (error) {
+        Journal.logEvent('error', `Ошибка загрузки Excel: ${(error as Error).message}`, 'bore.load_catalog');
+      }
+    };
+    input.click();
   }, []);
 
   // Close doc with confirmation
