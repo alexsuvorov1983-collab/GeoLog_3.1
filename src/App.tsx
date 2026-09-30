@@ -305,11 +305,13 @@ export default function App() {
           {/* Bottom Panel */}
           <BottomPanel
             borehole={selectedBorehole}
+            boreholeId={selectedBoreholeId}
             height={bottomPanelHeight}
             onUpdate={(data: Partial<Borehole>) => {
               if (selectedBoreholeId) {
                 GeoLogData.update(selectedBoreholeId, data);
                 markDirty('doc-boreholes');
+                forceUpdate((n) => n + 1);
               }
             }}
           />

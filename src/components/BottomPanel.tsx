@@ -7,11 +7,12 @@ interface Props {
   borehole: Borehole | null;
   onUpdate: (data: Partial<Borehole>) => void;
   height?: number;
+  boreholeId?: string | null;
 }
 
 type TabId = 'general' | 'soil' | 'water' | 'samples' | 'thermometry' | 'additional';
 
-export default function BottomPanel({ borehole, onUpdate, height = 260 }: Props) {
+export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 260 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
 
   const tabs: { id: TabId; label: string }[] = [
@@ -62,10 +63,10 @@ export default function BottomPanel({ borehole, onUpdate, height = 260 }: Props)
       {/* Tab Content */}
       <div className="flex-1 overflow-auto p-2">
         {activeTab === 'general' && <GeneralForm borehole={borehole} onUpdate={onUpdate} />}
-        {activeTab === 'soil' && <SoilLayersTab borehole={borehole} />}
-        {activeTab === 'water' && <WaterLayersTab borehole={borehole} />}
-        {activeTab === 'samples' && <SamplesTab borehole={borehole} />}
-        {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} />}
+        {activeTab === 'soil' && <SoilLayersTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
+        {activeTab === 'water' && <WaterLayersTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
+        {activeTab === 'samples' && <SamplesTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
+        {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'additional' && <AdditionalTab borehole={borehole} />}
       </div>
     </div>
@@ -277,15 +278,34 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   );
 }
 
-function SoilLayersTab({ borehole }: { borehole: Borehole }) {
+function SoilLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; boreholeId?: string | null; onUpdate: (data: Partial<Borehole>) => void }) {
   const layers = borehole.soil_layers || [];
   const colKeys = ['depth_from', 'depth_to', 'ground_type', 'description'];
   const defaultWidths: Record<string, number> = { depth_from: 100, depth_to: 100, ground_type: 150, description: 300 };
   const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
 
+  const handleAdd = () => {
+    const newLayer = {
+      id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId || borehole.id,
+      depth_from_m: 0,
+      depth_to_m: 1,
+      ground_type: 'Новый слой',
+      description: '',
+    };
+    onUpdate({ soil_layers: [...layers, newLayer] });
+  };
+
+  const handleDelete = (id: string) => {
+    onUpdate({ soil_layers: layers.filter(l => l.id !== id) });
+  };
+
   return (
     <div>
-      <div className="text-sm font-semibold mb-2">Слои грунта — {borehole.number}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold">Слои грунта — {borehole.number}</div>
+        <button onClick={handleAdd} className="px-2 py-0.5 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]">+ Добавить</button>
+      </div>
       {layers.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
@@ -297,6 +317,7 @@ function SoilLayersTab({ borehole }: { borehole: Borehole }) {
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth_to}px` }}>Глубина до, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_to')} /></th>
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.ground_type}px` }}>Тип грунта<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'ground_type')} /></th>
                 <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.description}px` }}>Описание</th>
+                <th style={{ width: '60px' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -306,6 +327,9 @@ function SoilLayersTab({ borehole }: { borehole: Borehole }) {
                   <td className="px-3 py-1 border-r">{l.depth_to_m.toFixed(2)}</td>
                   <td className="px-3 py-1 border-r">{l.ground_type}</td>
                   <td className="px-3 py-1">{l.description || '—'}</td>
+                  <td className="px-2 py-1 text-center">
+                    <button onClick={() => handleDelete(l.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -316,15 +340,32 @@ function SoilLayersTab({ borehole }: { borehole: Borehole }) {
   );
 }
 
-function WaterLayersTab({ borehole }: { borehole: Borehole }) {
+function WaterLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; boreholeId?: string | null; onUpdate: (data: Partial<Borehole>) => void }) {
   const layers = borehole.water_layers || [];
   const colKeys = ['depth', 'water_type'];
   const defaultWidths: Record<string, number> = { depth: 120, water_type: 200 };
   const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
 
+  const handleAdd = () => {
+    const newLayer = {
+      id: 'wl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId || borehole.id,
+      depth_m: 0,
+      water_type: 'Грунтовые',
+    };
+    onUpdate({ water_layers: [...layers, newLayer] });
+  };
+
+  const handleDelete = (id: string) => {
+    onUpdate({ water_layers: layers.filter(l => l.id !== id) });
+  };
+
   return (
     <div>
-      <div className="text-sm font-semibold mb-2">Слои воды — {borehole.number}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold">Слои воды — {borehole.number}</div>
+        <button onClick={handleAdd} className="px-2 py-0.5 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]">+ Добавить</button>
+      </div>
       {layers.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
@@ -333,14 +374,18 @@ function WaterLayersTab({ borehole }: { borehole: Borehole }) {
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
-                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.water_type}px` }}>Тип воды</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.water_type}px` }}>Тип воды</th>
+                <th style={{ width: '60px' }}></th>
               </tr>
             </thead>
             <tbody>
               {layers.map((l) => (
                 <tr key={l.id} className="border-b border-[#e8e8e8]">
                   <td className="px-3 py-1 border-r">{l.depth_m.toFixed(2)}</td>
-                  <td className="px-3 py-1">{l.water_type}</td>
+                  <td className="px-3 py-1 border-r">{l.water_type}</td>
+                  <td className="px-2 py-1 text-center">
+                    <button onClick={() => handleDelete(l.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -351,15 +396,33 @@ function WaterLayersTab({ borehole }: { borehole: Borehole }) {
   );
 }
 
-function SamplesTab({ borehole }: { borehole: Borehole }) {
+function SamplesTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; boreholeId?: string | null; onUpdate: (data: Partial<Borehole>) => void }) {
   const samples = borehole.samples || [];
   const colKeys = ['depth', 'sample_type', 'lab_number'];
   const defaultWidths: Record<string, number> = { depth: 100, sample_type: 150, lab_number: 150 };
   const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
 
+  const handleAdd = () => {
+    const newSample = {
+      id: 'sp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId || borehole.id,
+      depth_m: 0,
+      sample_type: 'Нарушенный',
+      lab_number: '',
+    };
+    onUpdate({ samples: [...samples, newSample] });
+  };
+
+  const handleDelete = (id: string) => {
+    onUpdate({ samples: samples.filter(s => s.id !== id) });
+  };
+
   return (
     <div>
-      <div className="text-sm font-semibold mb-2">Пробы — {borehole.number}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold">Пробы — {borehole.number}</div>
+        <button onClick={handleAdd} className="px-2 py-0.5 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]">+ Добавить</button>
+      </div>
       {samples.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
@@ -369,7 +432,8 @@ function SamplesTab({ borehole }: { borehole: Borehole }) {
               <tr className="bg-[#e8e8e8] border-b">
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.sample_type}px` }}>Тип<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'sample_type')} /></th>
-                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.lab_number}px` }}>Лаб. номер</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.lab_number}px` }}>Лаб. номер</th>
+                <th style={{ width: '60px' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -377,7 +441,10 @@ function SamplesTab({ borehole }: { borehole: Borehole }) {
                 <tr key={s.id} className="border-b border-[#e8e8e8]">
                   <td className="px-3 py-1 border-r">{s.depth_m.toFixed(2)}</td>
                   <td className="px-3 py-1 border-r">{s.sample_type}</td>
-                  <td className="px-3 py-1">{s.lab_number || '—'}</td>
+                  <td className="px-3 py-1 border-r">{s.lab_number || '—'}</td>
+                  <td className="px-2 py-1 text-center">
+                    <button onClick={() => handleDelete(s.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -388,15 +455,32 @@ function SamplesTab({ borehole }: { borehole: Borehole }) {
   );
 }
 
-function ThermometryTab({ borehole }: { borehole: Borehole }) {
+function ThermometryTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; boreholeId?: string | null; onUpdate: (data: Partial<Borehole>) => void }) {
   const entries = borehole.thermometry || [];
   const colKeys = ['depth', 'temperature'];
   const defaultWidths: Record<string, number> = { depth: 120, temperature: 150 };
   const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
 
+  const handleAdd = () => {
+    const newEntry = {
+      id: 'th-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId || borehole.id,
+      depth_m: 0,
+      temperature_c: 10,
+    };
+    onUpdate({ thermometry: [...entries, newEntry] });
+  };
+
+  const handleDelete = (id: string) => {
+    onUpdate({ thermometry: entries.filter(t => t.id !== id) });
+  };
+
   return (
     <div>
-      <div className="text-sm font-semibold mb-2">Термометрия — {borehole.number}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold">Термометрия — {borehole.number}</div>
+        <button onClick={handleAdd} className="px-2 py-0.5 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]">+ Добавить</button>
+      </div>
       {entries.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
@@ -405,14 +489,18 @@ function ThermometryTab({ borehole }: { borehole: Borehole }) {
             <thead>
               <tr className="bg-[#e8e8e8] border-b">
                 <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
-                <th className="px-2 py-1.5 text-center relative leading-tight" style={{ width: `${widths.temperature}px` }}>Температура, °C</th>
+                <th className="px-2 py-1.5 text-center border-r relative leading-tight" style={{ width: `${widths.temperature}px` }}>Температура, °C</th>
+                <th style={{ width: '60px' }}></th>
               </tr>
             </thead>
             <tbody>
               {entries.map((t) => (
                 <tr key={t.id} className="border-b border-[#e8e8e8]">
                   <td className="px-3 py-1 border-r">{t.depth_m.toFixed(2)}</td>
-                  <td className="px-3 py-1">{t.temperature_c.toFixed(1)}</td>
+                  <td className="px-3 py-1 border-r">{t.temperature_c.toFixed(1)}</td>
+                  <td className="px-2 py-1 text-center">
+                    <button onClick={() => handleDelete(t.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
