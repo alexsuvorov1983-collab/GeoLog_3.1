@@ -116,7 +116,29 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   }, [borehole.id]);
 
   const handleChange = (field: string, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    const newForm = { ...form, [field]: value };
+    setForm(newForm);
+    
+    // Автоматическое сохранение при изменении полей
+    const data: Partial<Borehole> = {
+      number: newForm.number,
+      depth_m: parseFloat(newForm.depth_m) || 0,
+      elev_m: parseFloat(newForm.elev_m) || 0,
+      x: parseFloat(newForm.x) || 0,
+      y: parseFloat(newForm.y) || 0,
+      date: newForm.date,
+      wgs84_lon: parseFloat(newForm.wgs84_lon) || undefined,
+      wgs84_lat: parseFloat(newForm.wgs84_lat) || undefined,
+      casing_depth_m: parseFloat(newForm.casing_depth_m) || undefined,
+      reaming_m: parseFloat(newForm.reaming_m) || undefined,
+      gso_m: parseFloat(newForm.gso_m) || undefined,
+      gsp_m: parseFloat(newForm.gsp_m) || undefined,
+      mmg_m: parseFloat(newForm.mmg_m) || undefined,
+      gso_manual: newForm.gso_manual,
+      gsp_manual: newForm.gsp_manual,
+      mmg_manual: newForm.mmg_manual,
+    };
+    onUpdate(data);
   };
 
   const handleSave = () => {
@@ -300,6 +322,13 @@ function SoilLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole;
     onUpdate({ soil_layers: layers.filter(l => l.id !== id) });
   };
 
+  const handleCellEdit = (id: string, field: keyof typeof layers[0], value: string | number) => {
+    const updatedLayers = layers.map(l => 
+      l.id === id ? { ...l, [field]: value } : l
+    );
+    onUpdate({ soil_layers: updatedLayers });
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -323,10 +352,40 @@ function SoilLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole;
             <tbody>
               {layers.map((l) => (
                 <tr key={l.id} className="border-b border-[#e8e8e8]">
-                  <td className="px-3 py-1 border-r">{l.depth_from_m.toFixed(2)}</td>
-                  <td className="px-3 py-1 border-r">{l.depth_to_m.toFixed(2)}</td>
-                  <td className="px-3 py-1 border-r">{l.ground_type}</td>
-                  <td className="px-3 py-1">{l.description || '—'}</td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={l.depth_from_m} 
+                      onChange={(e) => handleCellEdit(l.id, 'depth_from_m', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={l.depth_to_m} 
+                      onChange={(e) => handleCellEdit(l.id, 'depth_to_m', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="text"
+                      value={l.ground_type} 
+                      onChange={(e) => handleCellEdit(l.id, 'ground_type', e.target.value)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <input 
+                      type="text"
+                      value={l.description || ''} 
+                      onChange={(e) => handleCellEdit(l.id, 'description', e.target.value)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
                   <td className="px-2 py-1 text-center">
                     <button onClick={() => handleDelete(l.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
                   </td>
@@ -360,6 +419,13 @@ function WaterLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole
     onUpdate({ water_layers: layers.filter(l => l.id !== id) });
   };
 
+  const handleCellEdit = (id: string, field: keyof typeof layers[0], value: string | number) => {
+    const updatedLayers = layers.map(l => 
+      l.id === id ? { ...l, [field]: value } : l
+    );
+    onUpdate({ water_layers: updatedLayers });
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -381,8 +447,23 @@ function WaterLayersTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole
             <tbody>
               {layers.map((l) => (
                 <tr key={l.id} className="border-b border-[#e8e8e8]">
-                  <td className="px-3 py-1 border-r">{l.depth_m.toFixed(2)}</td>
-                  <td className="px-3 py-1 border-r">{l.water_type}</td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={l.depth_m} 
+                      onChange={(e) => handleCellEdit(l.id, 'depth_m', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="text"
+                      value={l.water_type} 
+                      onChange={(e) => handleCellEdit(l.id, 'water_type', e.target.value)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
                   <td className="px-2 py-1 text-center">
                     <button onClick={() => handleDelete(l.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
                   </td>
@@ -417,6 +498,13 @@ function SamplesTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; bo
     onUpdate({ samples: samples.filter(s => s.id !== id) });
   };
 
+  const handleCellEdit = (id: string, field: keyof typeof samples[0], value: string | number) => {
+    const updatedSamples = samples.map(s => 
+      s.id === id ? { ...s, [field]: value } : s
+    );
+    onUpdate({ samples: updatedSamples });
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -439,9 +527,31 @@ function SamplesTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole; bo
             <tbody>
               {samples.map((s) => (
                 <tr key={s.id} className="border-b border-[#e8e8e8]">
-                  <td className="px-3 py-1 border-r">{s.depth_m.toFixed(2)}</td>
-                  <td className="px-3 py-1 border-r">{s.sample_type}</td>
-                  <td className="px-3 py-1 border-r">{s.lab_number || '—'}</td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={s.depth_m} 
+                      onChange={(e) => handleCellEdit(s.id, 'depth_m', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="text"
+                      value={s.sample_type} 
+                      onChange={(e) => handleCellEdit(s.id, 'sample_type', e.target.value)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="text"
+                      value={s.lab_number || ''} 
+                      onChange={(e) => handleCellEdit(s.id, 'lab_number', e.target.value)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
                   <td className="px-2 py-1 text-center">
                     <button onClick={() => handleDelete(s.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
                   </td>
@@ -475,6 +585,13 @@ function ThermometryTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole
     onUpdate({ thermometry: entries.filter(t => t.id !== id) });
   };
 
+  const handleCellEdit = (id: string, field: keyof typeof entries[0], value: string | number) => {
+    const updatedEntries = entries.map(t => 
+      t.id === id ? { ...t, [field]: value } : t
+    );
+    onUpdate({ thermometry: updatedEntries });
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -496,8 +613,24 @@ function ThermometryTab({ borehole, boreholeId, onUpdate }: { borehole: Borehole
             <tbody>
               {entries.map((t) => (
                 <tr key={t.id} className="border-b border-[#e8e8e8]">
-                  <td className="px-3 py-1 border-r">{t.depth_m.toFixed(2)}</td>
-                  <td className="px-3 py-1 border-r">{t.temperature_c.toFixed(1)}</td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={t.depth_m} 
+                      onChange={(e) => handleCellEdit(t.id, 'depth_m', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
+                  <td className="px-1 py-1 border-r">
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={t.temperature_c} 
+                      onChange={(e) => handleCellEdit(t.id, 'temperature_c', parseFloat(e.target.value) || 0)}
+                      className="w-full px-1 py-0.5 text-sm border border-transparent focus:border-blue-400 rounded"
+                    />
+                  </td>
                   <td className="px-2 py-1 text-center">
                     <button onClick={() => handleDelete(t.id)} className="text-red-600 hover:text-red-800 text-xs">🗑️</button>
                   </td>
