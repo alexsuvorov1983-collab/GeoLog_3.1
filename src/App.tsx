@@ -163,6 +163,31 @@ export default function App() {
     setBottomPanelHeight((prev) => Math.max(150, Math.min(500, prev - delta)));
   }, []);
 
+  // Borehole actions
+  const handleCreateBorehole = useCallback(() => {
+    const bh = GeoLogData.create({ 
+      number: `С-${GeoLogData.count() + 1}`, 
+      depth_m: 10, 
+      elev_m: 140, 
+      x: 554000, 
+      y: 6178000 
+    });
+    setSelectedBoreholeId(bh.id);
+    forceUpdate((n) => n + 1);
+  }, []);
+
+  const handleDeleteBorehole = useCallback(() => {
+    if (selectedBoreholeId) {
+      GeoLogData.delete(selectedBoreholeId);
+      setSelectedBoreholeId(null);
+      forceUpdate((n) => n + 1);
+    }
+  }, [selectedBoreholeId]);
+
+  const handleLoadFromCatalog = useCallback(() => {
+    Journal.logEvent('warning', 'Загрузка из каталога — функция в разработке', 'bore.load_catalog');
+  }, []);
+
   // Close doc with confirmation
   const closeDoc = useCallback((docId: string) => {
     const doc = openDocs.find((d) => d.id === docId);
@@ -225,6 +250,9 @@ export default function App() {
               boreholes={GeoLogData.getAll()}
               selectedBoreholeId={selectedBoreholeId}
               onSelectBorehole={selectBorehole}
+              onCreateBorehole={handleCreateBorehole}
+              onDeleteBorehole={handleDeleteBorehole}
+              onLoadFromCatalog={handleLoadFromCatalog}
             />
           </div>
 

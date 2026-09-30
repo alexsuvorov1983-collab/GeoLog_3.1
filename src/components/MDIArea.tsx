@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { Borehole } from '../core/dataStore';
 import {
   DndContext,
@@ -25,6 +26,9 @@ interface Props {
   boreholes: Borehole[];
   selectedBoreholeId: string | null;
   onSelectBorehole: (id: string) => void;
+  onCreateBorehole?: () => void;
+  onDeleteBorehole?: () => void;
+  onLoadFromCatalog?: () => void;
 }
 
 // GAP-поля (не в схеме v1.3) — используются для определения полей, которые появятся в v1.4
@@ -116,7 +120,7 @@ function SortableTab({ doc, isActive, onActivate, onClose }: {
   );
 }
 
-export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, onReorder, boreholes, selectedBoreholeId, onSelectBorehole }: Props) {
+export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, onReorder, boreholes, selectedBoreholeId, onSelectBorehole, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -173,6 +177,9 @@ export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, on
             boreholes={boreholes}
             selectedId={selectedBoreholeId}
             onSelect={onSelectBorehole}
+            onCreateBorehole={onCreateBorehole}
+            onDeleteBorehole={onDeleteBorehole}
+            onLoadFromCatalog={onLoadFromCatalog}
           />
         )}
       </div>
@@ -180,7 +187,15 @@ export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, on
   );
 }
 
-function DocContent({ docId, boreholes, selectedId, onSelect }: { docId: string; boreholes: Borehole[]; selectedId: string | null; onSelect: (id: string) => void }) {
+function DocContent({ docId, boreholes, selectedId, onSelect, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: { 
+  docId: string; 
+  boreholes: Borehole[]; 
+  selectedId: string | null; 
+  onSelect: (id: string) => void;
+  onCreateBorehole?: () => void;
+  onDeleteBorehole?: () => void;
+  onLoadFromCatalog?: () => void;
+}) {
   const docConfigs: Record<string, { title: string; icon: string; description: string; columns?: string[] }> = {
     'doc-boreholes': { title: 'Скважины', icon: '🕳️', description: 'Таблица скважин проекта' },
     'doc-cpt': { title: 'Статическое зондирование', icon: '📊', description: 'Данные статического зондирования (CPT)', columns: ['Номер', 'Глубина, м', 'Сопротивление, МПа', 'Дата'] },
@@ -196,7 +211,14 @@ function DocContent({ docId, boreholes, selectedId, onSelect }: { docId: string;
   };
 
   if (docId === 'doc-boreholes') {
-    return <BoreholeTable boreholes={boreholes} selectedId={selectedId} onSelect={onSelect} />;
+    return <BoreholeTable 
+      boreholes={boreholes} 
+      selectedId={selectedId} 
+      onSelect={onSelect}
+      onCreateBorehole={onCreateBorehole}
+      onDeleteBorehole={onDeleteBorehole}
+      onLoadFromCatalog={onLoadFromCatalog}
+    />;
   }
 
   const config = docConfigs[docId];
@@ -220,7 +242,21 @@ function DocContent({ docId, boreholes, selectedId, onSelect }: { docId: string;
   );
 }
 
-function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehole[]; selectedId: string | null; onSelect: (id: string) => void }) {
+function BoreholeTable({ boreholes, selectedId, onSelect, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: { 
+  boreholes: Borehole[]; 
+  selectedId: string | null; 
+  onSelect: (id: string) => void;
+  onCreateBorehole?: () => void;
+  onDeleteBorehole?: () => void;
+  onLoadFromCatalog?: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Фильтрация скважин по номеру
+  const filteredBoreholes = boreholes.filter(bh => 
+    !searchQuery || bh.number.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Ширина столбцов по умолчанию
   const defaultColumnWidths: Record<string, number> = {
     number: 80,
@@ -247,11 +283,50 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
   const { widths, handleMouseDown } = useColumnResize(columnKeys, defaultColumnWidths);
 
   return (
-    <div className="overflow-auto h-full">
-      <table className="border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
-        <thead className="sticky top-0 z-10">
-          <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
-            <th className="px-3 py-1.5 text-center border-r border-[#c0c0c0] font-semibold relative" style={{ width: '40px' }}>#</th>
+    <div className="flex flex-col h-full">
+      {/* Панель инструментов */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-[#f5f5f5] border-b border-[#c0c0c0]">
+        <button
+          onClick={onCreateBorehole}
+          className="px-3 py-1 text-sm bg-[#4472c4] text-white rounded hover:bg-[#3060b0] border border-[#2a5090]"
+          title="Создать новую скважину"
+        >
+          + Создать
+        </button>
+        <button
+          onClick={onDeleteBorehole}
+          disabled={!selectedId}
+          className="px-3 py-1 text-sm bg-white border border-[#c0c0c0] rounded hover:bg-[#ffe8e8] disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Удалить выбранную скважину"
+        >
+          🗑️ Удалить
+        </button>
+        <button
+          onClick={onLoadFromCatalog}
+          className="px-3 py-1 text-sm bg-white border border-[#c0c0c0] rounded hover:bg-[#e8e8ff]"
+          title="Загрузить скважины из каталога"
+        >
+          📂 Из каталога
+        </button>
+        
+        <div className="ml-auto flex items-center gap-2">
+          <label className="text-sm text-[#555]">Поиск:</label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Номер скважины..."
+            className="px-2 py-1 text-sm border border-[#c0c0c0] rounded w-48"
+          />
+        </div>
+      </div>
+
+      {/* Таблица */}
+      <div className="flex-1 overflow-auto">
+        <table className="border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
+              <th className="px-3 py-1.5 text-center border-r border-[#c0c0c0] font-semibold relative" style={{ width: '40px' }}>#</th>
             {columns.map((col) => (
               <th
                 key={col.key}
@@ -266,7 +341,7 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
           </tr>
         </thead>
         <tbody>
-          {boreholes.map((bh, idx) => (
+          {filteredBoreholes.map((bh, idx) => (
             <tr
               key={bh.id}
               className={`cursor-pointer border-b border-[#e8e8e8] ${selectedId === bh.id ? 'bg-[#c8d8ff]' : idx % 2 === 0 ? 'bg-white' : 'bg-[#f8f8f8]'} hover:bg-[#e0e8ff]`}
@@ -289,6 +364,7 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
