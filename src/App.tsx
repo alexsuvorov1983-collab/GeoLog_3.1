@@ -23,6 +23,7 @@ export default function App() {
   const [showJournal, setShowJournal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'medium' | 'dark'>('light');
   const [navWidth, setNavWidth] = useState(280);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(260);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: { label: string; commandId: string }[] } | null>(null);
   const [, forceUpdate] = useState(0);
 
@@ -157,6 +158,11 @@ export default function App() {
     setNavWidth((prev) => Math.max(180, Math.min(600, prev + delta)));
   }, []);
 
+  // Bottom panel resize handler
+  const handleBottomResize = useCallback((delta: number) => {
+    setBottomPanelHeight((prev) => Math.max(150, Math.min(500, prev - delta)));
+  }, []);
+
   // Close doc with confirmation
   const closeDoc = useCallback((docId: string) => {
     const doc = openDocs.find((d) => d.id === docId);
@@ -222,9 +228,13 @@ export default function App() {
             />
           </div>
 
+          {/* Horizontal Splitter */}
+          <Splitter direction="horizontal" onResize={handleBottomResize} />
+
           {/* Bottom Panel */}
           <BottomPanel
             borehole={selectedBorehole}
+            height={bottomPanelHeight}
             onUpdate={(data: Partial<Borehole>) => {
               if (selectedBoreholeId) {
                 GeoLogData.update(selectedBoreholeId, data);

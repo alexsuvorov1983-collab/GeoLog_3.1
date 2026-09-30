@@ -6,11 +6,12 @@ import { useColumnResize, ColumnResizer } from './ResizableTable';
 interface Props {
   borehole: Borehole | null;
   onUpdate: (data: Partial<Borehole>) => void;
+  height?: number;
 }
 
 type TabId = 'general' | 'soil' | 'water' | 'samples' | 'thermometry' | 'additional';
 
-export default function BottomPanel({ borehole, onUpdate }: Props) {
+export default function BottomPanel({ borehole, onUpdate, height = 260 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
 
   const tabs: { id: TabId; label: string }[] = [
@@ -24,7 +25,7 @@ export default function BottomPanel({ borehole, onUpdate }: Props) {
 
   if (!borehole) {
     return (
-      <div className="h-[260px] min-h-[200px] border-t border-[#c0c0c0] bg-[#f5f5f5] flex flex-col">
+      <div style={{ height: `${height}px`, minHeight: '150px' }} className="border-t border-[#c0c0c0] bg-[#f5f5f5] flex flex-col flex-shrink-0">
         <div className="flex bg-[#e8e8e8] border-b border-[#c0c0c0]">
           {tabs.map((tab) => (
             <button
@@ -44,7 +45,7 @@ export default function BottomPanel({ borehole, onUpdate }: Props) {
   }
 
   return (
-    <div className="h-[260px] min-h-[200px] border-t border-[#c0c0c0] bg-[#f5f5f5] flex flex-col">
+    <div style={{ height: `${height}px`, minHeight: '150px' }} className="border-t border-[#c0c0c0] bg-[#f5f5f5] flex flex-col flex-shrink-0">
       {/* Tabs */}
       <div className="flex bg-[#e8e8e8] border-b border-[#c0c0c0]">
         {tabs.map((tab) => (
