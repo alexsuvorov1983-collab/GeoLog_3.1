@@ -82,6 +82,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     x: borehole.x?.toString() || '',
     y: borehole.y?.toString() || '',
     date: borehole.date || '',
+    end_date: (borehole as any).end_date || '',
     wgs84_lon: borehole.wgs84_lon?.toString() || '',
     wgs84_lat: borehole.wgs84_lat?.toString() || '',
     side_id: (borehole as any).side_id || '',
@@ -108,6 +109,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       x: borehole.x?.toString() || '',
       y: borehole.y?.toString() || '',
       date: borehole.date || '',
+      end_date: (borehole as any).end_date || '',
       wgs84_lon: borehole.wgs84_lon?.toString() || '',
       wgs84_lat: borehole.wgs84_lat?.toString() || '',
       side_id: (borehole as any).side_id || '',
@@ -160,6 +162,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       mmg_manual: newForm.mmg_manual,
       user: newForm.user,
     };
+    (data as any).end_date = newForm.end_date;
     (data as any).side_id = newForm.side_id;
     (data as any).rig_id = newForm.rig_id;
     (data as any).method_id = newForm.method_id;
@@ -188,6 +191,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       mmg_manual: form.mmg_manual,
       user: form.user,
     };
+    (data as any).end_date = form.end_date;
     (data as any).side_id = form.side_id;
     (data as any).rig_id = form.rig_id;
     (data as any).method_id = form.method_id;
@@ -199,6 +203,26 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
 
   const inputClass = "w-full px-2 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
   const labelClass = "text-sm text-[#555] mb-1";
+
+  // Конвертация даты из формата YYYY-MM-DD в ДД.ММ.ГГГГ
+  const formatDateToDisplay = (dateStr: string): string => {
+    if (!dateStr || dateStr.length !== 10) return dateStr;
+    const [year, month, day] = dateStr.split('-');
+    return `${day}.${month}.${year}`;
+  };
+
+  // Конвертация даты из формата ДД.ММ.ГГГГ в YYYY-MM-DD
+  const formatDateToStorage = (dateStr: string): string => {
+    if (!dateStr) return '';
+    // Если уже в формате YYYY-MM-DD
+    if (dateStr.length === 10 && dateStr.includes('-')) return dateStr;
+    // Если в формате ДД.ММ.ГГГГ
+    if (dateStr.includes('.')) {
+      const [day, month, year] = dateStr.split('.');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dateStr;
+  };
 
   // Вспомогательная функция для обрезания числа до двух знаков после запятой без округления
   const truncateToTwoDecimals = (value: string): number => {
@@ -242,6 +266,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         user: form.user,
       };
       (data as any)[field] = num;
+      (data as any).end_date = form.end_date;
       (data as any).side_id = form.side_id;
       (data as any).rig_id = form.rig_id;
       (data as any).method_id = form.method_id;
@@ -280,8 +305,22 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       {/* Column 2 */}
       <div className="space-y-2">
         <div>
-          <label className={labelClass}>Дата</label>
-          <input className={inputClass} value={form.date} onChange={(e) => handleChange('date', e.target.value)} placeholder="ДД.ММ.ГГГГ" />
+          <label className={labelClass}>Начата</label>
+          <input 
+            className={inputClass} 
+            type="date" 
+            value={formatDateToStorage(form.date)} 
+            onChange={(e) => handleChange('date', formatDateToDisplay(e.target.value))} 
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Окончена</label>
+          <input 
+            className={inputClass} 
+            type="date" 
+            value={formatDateToStorage(form.end_date)} 
+            onChange={(e) => handleChange('end_date', formatDateToDisplay(e.target.value))} 
+          />
         </div>
         <div>
           <label className={labelClass}>Сторонность</label>
