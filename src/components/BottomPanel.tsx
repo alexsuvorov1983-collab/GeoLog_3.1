@@ -82,7 +82,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     x: borehole.x?.toString() || '',
     y: borehole.y?.toString() || '',
     date: borehole.date || '',
-    end_date: (borehole as any).end_date || '',
+    end_date: borehole.end_date || '',
     wgs84_lon: borehole.wgs84_lon?.toString() || '',
     wgs84_lat: borehole.wgs84_lat?.toString() || '',
     side_id: (borehole as any).side_id || '',
@@ -112,7 +112,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       x: borehole.x?.toString() || '',
       y: borehole.y?.toString() || '',
       date: borehole.date || '',
-      end_date: (borehole as any).end_date || '',
+      end_date: borehole.end_date || '',
       wgs84_lon: borehole.wgs84_lon?.toString() || '',
       wgs84_lat: borehole.wgs84_lat?.toString() || '',
       side_id: (borehole as any).side_id || '',
@@ -139,7 +139,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     
     // Если изменяется поле "Начата" и дата окончания не была изменена вручную,
     // автоматически подставляем дату в "Окончена"
-    if (field === 'date' && !endDateManual && value) {
+    if (field === 'date' && !endDateManual && typeof value === 'string' && value) {
       newForm.end_date = value;
     }
     

@@ -14,6 +14,7 @@ export interface Borehole {
   wgs84_lon?: number;
   wgs84_lat?: number;
   date?: string; // ДД.ММ.ГГГГ
+  end_date?: string; // ДД.ММ.ГГГГ
   casing_depth_m?: number;
   reaming_m?: number;
   gso_m?: number;
@@ -254,6 +255,7 @@ export const GeoLogData = {
       x: data.x || 0,
       y: data.y || 0,
       date: data.date || new Date().toLocaleDateString('ru-RU'),
+      end_date: data.end_date || data.date || new Date().toLocaleDateString('ru-RU'),
       modified_at: new Date().toLocaleString('ru-RU'),
       rev: 1,
       user: 'Пользователь',

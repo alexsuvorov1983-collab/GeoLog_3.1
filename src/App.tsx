@@ -174,12 +174,15 @@ export default function App() {
 
   // Borehole actions
   const handleCreateBorehole = useCallback(() => {
+    const currentDate = new Date().toLocaleDateString('ru-RU');
     const bh = GeoLogData.create({ 
       number: `С-${GeoLogData.count() + 1}`, 
       depth_m: 10, 
       elev_m: 140, 
       x: 554000, 
-      y: 6178000 
+      y: 6178000,
+      date: currentDate,
+      end_date: currentDate
     });
     setSelectedBoreholeId(bh.id);
     forceUpdate((n) => n + 1);
@@ -221,7 +224,9 @@ export default function App() {
 
           if (!number) continue;
 
-          GeoLogData.create({ number, x, y, elev_m, depth_m: 10 });
+          // Устанавливаем текущую дату для полей "Начата" и "Окончена"
+          const currentDate = new Date().toLocaleDateString('ru-RU');
+          GeoLogData.create({ number, x, y, elev_m, depth_m: 10, date: currentDate, end_date: currentDate });
           loadedCount++;
         }
 
