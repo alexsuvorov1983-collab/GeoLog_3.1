@@ -75,12 +75,21 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
 
 function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (data: Partial<Borehole>) => void }) {
   const dicts = GeoLogData.getDicts();
+  
+  // Форматирование значения с двумя знаками после запятой
+  const formatWithTwoDecimals = (value: string | number | undefined): string => {
+    if (value === undefined || value === null || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : value;
+    if (isNaN(num)) return '';
+    return num.toFixed(2);
+  };
+  
   const [form, setForm] = useState({
     number: borehole.number || '',
-    depth_m: borehole.depth_m?.toString() || '',
-    elev_m: borehole.elev_m?.toString() || '',
-    x: borehole.x?.toString() || '',
-    y: borehole.y?.toString() || '',
+    depth_m: formatWithTwoDecimals(borehole.depth_m),
+    elev_m: formatWithTwoDecimals(borehole.elev_m),
+    x: formatWithTwoDecimals(borehole.x),
+    y: formatWithTwoDecimals(borehole.y),
     date: borehole.date || '',
     end_date: borehole.end_date || '',
     wgs84_lon: borehole.wgs84_lon?.toString() || '',
@@ -89,12 +98,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     rig_id: (borehole as any).rig_id || '',
     method_id: (borehole as any).method_id || '',
     diameter_id: (borehole as any).diameter_id || '',
-    casing_depth_m: borehole.casing_depth_m?.toString() || '',
+    casing_depth_m: formatWithTwoDecimals(borehole.casing_depth_m),
     casing_diameter_id: (borehole as any).casing_diameter_id || '',
-    reaming_m: borehole.reaming_m?.toString() || '',
-    gso_m: borehole.gso_m?.toString() || '',
-    gsp_m: borehole.gsp_m?.toString() || '',
-    mmg_m: borehole.mmg_m?.toString() || '',
+    reaming_m: formatWithTwoDecimals(borehole.reaming_m),
+    gso_m: formatWithTwoDecimals(borehole.gso_m),
+    gsp_m: formatWithTwoDecimals(borehole.gsp_m),
+    mmg_m: formatWithTwoDecimals(borehole.mmg_m),
     gso_manual: borehole.gso_manual || false,
     gsp_manual: borehole.gsp_manual || false,
     mmg_manual: borehole.mmg_manual || false,
@@ -107,10 +116,10 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   useEffect(() => {
     setForm({
       number: borehole.number || '',
-      depth_m: borehole.depth_m?.toString() || '',
-      elev_m: borehole.elev_m?.toString() || '',
-      x: borehole.x?.toString() || '',
-      y: borehole.y?.toString() || '',
+      depth_m: formatWithTwoDecimals(borehole.depth_m),
+      elev_m: formatWithTwoDecimals(borehole.elev_m),
+      x: formatWithTwoDecimals(borehole.x),
+      y: formatWithTwoDecimals(borehole.y),
       date: borehole.date || '',
       end_date: borehole.end_date || '',
       wgs84_lon: borehole.wgs84_lon?.toString() || '',
@@ -119,12 +128,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       rig_id: (borehole as any).rig_id || '',
       method_id: (borehole as any).method_id || '',
       diameter_id: (borehole as any).diameter_id || '',
-      casing_depth_m: borehole.casing_depth_m?.toString() || '',
+      casing_depth_m: formatWithTwoDecimals(borehole.casing_depth_m),
       casing_diameter_id: (borehole as any).casing_diameter_id || '',
-      reaming_m: borehole.reaming_m?.toString() || '',
-      gso_m: borehole.gso_m?.toString() || '',
-      gsp_m: borehole.gsp_m?.toString() || '',
-      mmg_m: borehole.mmg_m?.toString() || '',
+      reaming_m: formatWithTwoDecimals(borehole.reaming_m),
+      gso_m: formatWithTwoDecimals(borehole.gso_m),
+      gsp_m: formatWithTwoDecimals(borehole.gsp_m),
+      mmg_m: formatWithTwoDecimals(borehole.mmg_m),
       gso_manual: borehole.gso_manual || false,
       gsp_manual: borehole.gsp_manual || false,
       mmg_manual: borehole.mmg_manual || false,
