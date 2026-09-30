@@ -202,6 +202,7 @@ export default function App() {
               activeDocId={activeDocId}
               onActivate={setActiveDocId}
               onClose={closeDoc}
+              onReorder={setOpenDocs}
               boreholes={GeoLogData.getAll()}
               selectedBoreholeId={selectedBoreholeId}
               onSelectBorehole={selectBorehole}

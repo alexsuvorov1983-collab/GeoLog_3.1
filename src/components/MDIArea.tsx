@@ -1,10 +1,26 @@
 import { Borehole } from '../core/dataStore';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
   activeDocId: string;
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
+  onReorder: (newDocs: { id: string; title: string; dirty: boolean }[]) => void;
   boreholes: Borehole[];
   selectedBoreholeId: string | null;
   onSelectBorehole: (id: string) => void;
@@ -46,29 +62,103 @@ function formatValue(key: string, value: any): string {
   return String(value);
 }
 
-export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, boreholes, selectedBoreholeId, onSelectBorehole }: Props) {
+// Sortable tab component
+function SortableTab({ doc, isActive, onActivate, onClose }: {
+  doc: { id: string; title: string; dirty: boolean };
+  isActive: boolean;
+  onActivate: (id: string) => void;
+  onClose: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: doc.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 'auto' as any,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center px-4 border-r border-[#c0c0c0] text-sm select-none ${
+        isActive ? 'bg-white font-semibold' : 'bg-[#e8e8e8] hover:bg-[#f0f0ff]'
+      } ${isDragging ? 'shadow-lg' : ''}`}
+      onClick={() => onActivate(doc.id)}
+    >
+      {/* Drag handle area */}
+      <span
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing mr-1.5 text-[#999] hover:text-[#555]"
+        title="Перетащить вкладку"
+        onClick={(e) => e.stopPropagation()}
+      >
+        ⠿
+      </span>
+      <span className="cursor-pointer">{doc.title}{doc.dirty ? ' *' : ''}</span>
+      <button
+        className="ml-2 w-5 h-5 flex items-center justify-center hover:bg-[#ff6666] hover:text-white rounded text-xs"
+        onClick={(e) => { e.stopPropagation(); onClose(doc.id); }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, onReorder, boreholes, selectedBoreholeId, onSelectBorehole }: Props) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // Минимальное расстояние для начала перетаскивания
+      },
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = openDocs.findIndex((d) => d.id === active.id);
+      const newIndex = openDocs.findIndex((d) => d.id === over.id);
+      const newDocs = arrayMove(openDocs, oldIndex, newIndex);
+      onReorder(newDocs);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#e0e0e0]">
       {/* Document Tabs */}
-      <div className="flex bg-[#f0f0f0] border-b border-[#c0c0c0] overflow-x-auto" style={{ height: '30px' }}>
-        {openDocs.map((doc) => (
-          <div
-            key={doc.id}
-            className={`flex items-center px-4 border-r border-[#c0c0c0] cursor-pointer text-sm ${
-              activeDocId === doc.id ? 'bg-white font-semibold' : 'bg-[#e8e8e8] hover:bg-[#f0f0ff]'
-            }`}
-            onClick={() => onActivate(doc.id)}
-          >
-            <span>{doc.title}{doc.dirty ? ' *' : ''}</span>
-            <button
-              className="ml-2 w-5 h-5 flex items-center justify-center hover:bg-[#ff6666] hover:text-white rounded text-xs"
-              onClick={(e) => { e.stopPropagation(); onClose(doc.id); }}
-            >
-              ×
-            </button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={openDocs.map((d) => d.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <div className="flex bg-[#f0f0f0] border-b border-[#c0c0c0] overflow-x-auto" style={{ height: '30px' }}>
+            {openDocs.map((doc) => (
+              <SortableTab
+                key={doc.id}
+                doc={doc}
+                isActive={activeDocId === doc.id}
+                onActivate={onActivate}
+                onClose={onClose}
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto bg-white">
