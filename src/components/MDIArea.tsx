@@ -309,6 +309,20 @@ function BoreholeTable({ boreholes, selectedId, onSelect, onCreateBorehole, onDe
           📂 Из каталога
         </button>
         
+        <select
+          value={selectedId || ''}
+          onChange={(e) => onSelect(e.target.value)}
+          className="px-2 py-1 text-sm border border-[#c0c0c0] rounded bg-white"
+          title="Выбрать скважину из списка"
+        >
+          <option value="">-- Выберите скважину --</option>
+          {boreholes.map((bh) => (
+            <option key={bh.id} value={bh.id}>
+              {bh.number}
+            </option>
+          ))}
+        </select>
+        
         <div className="ml-auto flex items-center gap-2">
           <label className="text-sm text-[#555]">Поиск:</label>
           <input
