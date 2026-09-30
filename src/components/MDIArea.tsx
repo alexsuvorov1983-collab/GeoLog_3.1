@@ -53,7 +53,7 @@ const columns = [
   { key: 'gso_m', label: 'ГСО', gap: false },
   { key: 'gsp_m', label: 'ГСП', gap: false },
   { key: 'mmg_m', label: 'ММГ', gap: false },
-  { key: 'executor', label: 'Исполнитель', gap: true },
+  { key: 'user', label: 'Исполнитель', gap: false },
 ];
 
 function formatValue(key: string, value: any): string {
@@ -63,6 +63,9 @@ function formatValue(key: string, value: any): string {
   }
   if (key === 'date') {
     return String(value); // Already in DD.MM.YYYY format
+  }
+  if (key === 'user') {
+    return String(value || '—');
   }
   return String(value);
 }
@@ -276,7 +279,7 @@ function BoreholeTable({ boreholes, selectedId, onSelect, onCreateBorehole, onDe
     gso_m: 60,
     gsp_m: 60,
     mmg_m: 60,
-    executor: 85,
+    user: 85,
   };
 
   const columnKeys = columns.map((c) => c.key);
