@@ -247,7 +247,7 @@ export const GeoLogData = {
 
   create(data: Partial<Borehole>): Borehole {
     const newBh: Borehole = {
-      id: 'bh-' + Date.now().toString(36),
+      id: 'bh-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       number: data.number || 'Новая',
       depth_m: data.depth_m || 0,
       elev_m: data.elev_m || 0,
