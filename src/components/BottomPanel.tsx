@@ -102,11 +102,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   });
   
   // Флаг для отслеживания ручного изменения даты окончания
-  const [endDateManual, setEndDateManual] = useState(() => {
-    // Если end_date уже есть и отличается от date, значит было изменено вручную
-    const endDate = (borehole as any).end_date;
-    return endDate && endDate !== borehole.date;
-  });
+  const [endDateManual, setEndDateManual] = useState(false);
 
   useEffect(() => {
     setForm({
@@ -134,9 +130,8 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       mmg_manual: borehole.mmg_manual || false,
       user: borehole.user || '',
     });
-    // Определяем, было ли поле end_date изменено вручную
-    const endDate = (borehole as any).end_date;
-    setEndDateManual(endDate && endDate !== borehole.date);
+    // Сбрасываем флаг ручного изменения при смене скважины
+    setEndDateManual(false);
   }, [borehole.id]);
 
   const handleChange = (field: string, value: string | boolean) => {
