@@ -191,12 +191,13 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   const inputClass = "w-full px-2 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
   const labelClass = "text-sm text-[#555] mb-1";
 
-  // Форматирование числовых значений с двумя знаками после запятой
-  const formatNumber = (value: string): string => {
-    if (!value || value === '') return '';
+  // Форматирование числовых значений с двумя знаками после запятой при потере фокуса
+  const handleBlurFormat = (field: string, value: string) => {
+    if (!value || value === '') return;
     const num = parseFloat(value);
-    if (isNaN(num)) return value;
-    return num.toFixed(2);
+    if (!isNaN(num)) {
+      handleChange(field, num.toFixed(2));
+    }
   };
 
   return (
@@ -209,19 +210,19 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div>
           <label className={labelClass}>Глубина, м</label>
-          <input className={inputClass} type="text" value={formatNumber(form.depth_m)} onChange={(e) => handleChange('depth_m', e.target.value)} />
+          <input className={inputClass} type="text" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('depth_m', e.target.value)} />
         </div>
         <div>
           <label className={labelClass}>Отметка, м</label>
-          <input className={inputClass} type="text" value={formatNumber(form.elev_m)} onChange={(e) => handleChange('elev_m', e.target.value)} />
+          <input className={inputClass} type="text" value={form.elev_m} onChange={(e) => handleChange('elev_m', e.target.value)} onBlur={(e) => handleBlurFormat('elev_m', e.target.value)} />
         </div>
         <div>
           <label className={labelClass}>Координата X</label>
-          <input className={inputClass} type="text" value={formatNumber(form.x)} onChange={(e) => handleChange('x', e.target.value)} />
+          <input className={inputClass} type="text" value={form.x} onChange={(e) => handleChange('x', e.target.value)} onBlur={(e) => handleBlurFormat('x', e.target.value)} />
         </div>
         <div>
           <label className={labelClass}>Координата Y</label>
-          <input className={inputClass} type="text" value={formatNumber(form.y)} onChange={(e) => handleChange('y', e.target.value)} />
+          <input className={inputClass} type="text" value={form.y} onChange={(e) => handleChange('y', e.target.value)} onBlur={(e) => handleBlurFormat('y', e.target.value)} />
         </div>
       </div>
 
