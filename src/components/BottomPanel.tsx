@@ -143,18 +143,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     // Автоматическое сохранение для текстовых полей и селектов
     const data: Partial<Borehole> = {
       number: newForm.number,
-      depth_m: parseFloat(newForm.depth_m) || 0,
-      elev_m: parseFloat(newForm.elev_m) || 0,
-      x: parseFloat(newForm.x) || 0,
-      y: parseFloat(newForm.y) || 0,
+      depth_m: parseFloat(newForm.depth_m.replace(',', '.')) || 0,
+      elev_m: parseFloat(newForm.elev_m.replace(',', '.')) || 0,
+      x: parseFloat(newForm.x.replace(',', '.')) || 0,
+      y: parseFloat(newForm.y.replace(',', '.')) || 0,
       date: newForm.date,
-      wgs84_lon: parseFloat(newForm.wgs84_lon) || undefined,
-      wgs84_lat: parseFloat(newForm.wgs84_lat) || undefined,
-      casing_depth_m: parseFloat(newForm.casing_depth_m) || undefined,
-      reaming_m: parseFloat(newForm.reaming_m) || undefined,
-      gso_m: parseFloat(newForm.gso_m) || undefined,
-      gsp_m: parseFloat(newForm.gsp_m) || undefined,
-      mmg_m: parseFloat(newForm.mmg_m) || undefined,
+      wgs84_lon: parseFloat(newForm.wgs84_lon.replace(',', '.')) || undefined,
+      wgs84_lat: parseFloat(newForm.wgs84_lat.replace(',', '.')) || undefined,
+      casing_depth_m: parseFloat(newForm.casing_depth_m.replace(',', '.')) || undefined,
+      reaming_m: parseFloat(newForm.reaming_m.replace(',', '.')) || undefined,
+      gso_m: parseFloat(newForm.gso_m.replace(',', '.')) || undefined,
+      gsp_m: parseFloat(newForm.gsp_m.replace(',', '.')) || undefined,
+      mmg_m: parseFloat(newForm.mmg_m.replace(',', '.')) || undefined,
       gso_manual: newForm.gso_manual,
       gsp_manual: newForm.gsp_manual,
       mmg_manual: newForm.mmg_manual,
@@ -171,18 +171,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   const handleSave = () => {
     const data: Partial<Borehole> = {
       number: form.number,
-      depth_m: parseFloat(form.depth_m) || 0,
-      elev_m: parseFloat(form.elev_m) || 0,
-      x: parseFloat(form.x) || 0,
-      y: parseFloat(form.y) || 0,
+      depth_m: parseFloat(form.depth_m.replace(',', '.')) || 0,
+      elev_m: parseFloat(form.elev_m.replace(',', '.')) || 0,
+      x: parseFloat(form.x.replace(',', '.')) || 0,
+      y: parseFloat(form.y.replace(',', '.')) || 0,
       date: form.date,
-      wgs84_lon: parseFloat(form.wgs84_lon) || undefined,
-      wgs84_lat: parseFloat(form.wgs84_lat) || undefined,
-      casing_depth_m: parseFloat(form.casing_depth_m) || undefined,
-      reaming_m: parseFloat(form.reaming_m) || undefined,
-      gso_m: parseFloat(form.gso_m) || undefined,
-      gsp_m: parseFloat(form.gsp_m) || undefined,
-      mmg_m: parseFloat(form.mmg_m) || undefined,
+      wgs84_lon: parseFloat(form.wgs84_lon.replace(',', '.')) || undefined,
+      wgs84_lat: parseFloat(form.wgs84_lat.replace(',', '.')) || undefined,
+      casing_depth_m: parseFloat(form.casing_depth_m.replace(',', '.')) || undefined,
+      reaming_m: parseFloat(form.reaming_m.replace(',', '.')) || undefined,
+      gso_m: parseFloat(form.gso_m.replace(',', '.')) || undefined,
+      gsp_m: parseFloat(form.gsp_m.replace(',', '.')) || undefined,
+      mmg_m: parseFloat(form.mmg_m.replace(',', '.')) || undefined,
       gso_manual: form.gso_manual,
       gsp_manual: form.gsp_manual,
       mmg_manual: form.mmg_manual,
@@ -203,7 +203,9 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   // Форматирование числовых значений с двумя знаками после запятой при потере фокуса
   const handleBlurFormat = (field: string, value: string) => {
     if (!value || value === '') return;
-    const num = parseFloat(value);
+    // Заменяем запятую на точку для корректного парсинга
+    const normalizedValue = value.replace(',', '.');
+    const num = parseFloat(normalizedValue);
     if (!isNaN(num)) {
       const formattedValue = num.toFixed(2);
       setForm(prev => ({ ...prev, [field]: formattedValue }));
@@ -211,18 +213,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       // Сохраняем данные при потере фокуса
       const data: Partial<Borehole> = {
         number: form.number,
-        depth_m: parseFloat(form.depth_m) || 0,
-        elev_m: parseFloat(form.elev_m) || 0,
-        x: parseFloat(form.x) || 0,
-        y: parseFloat(form.y) || 0,
+        depth_m: parseFloat(form.depth_m.replace(',', '.')) || 0,
+        elev_m: parseFloat(form.elev_m.replace(',', '.')) || 0,
+        x: parseFloat(form.x.replace(',', '.')) || 0,
+        y: parseFloat(form.y.replace(',', '.')) || 0,
         date: form.date,
-        wgs84_lon: parseFloat(form.wgs84_lon) || undefined,
-        wgs84_lat: parseFloat(form.wgs84_lat) || undefined,
-        casing_depth_m: parseFloat(form.casing_depth_m) || undefined,
-        reaming_m: parseFloat(form.reaming_m) || undefined,
-        gso_m: parseFloat(form.gso_m) || undefined,
-        gsp_m: parseFloat(form.gsp_m) || undefined,
-        mmg_m: parseFloat(form.mmg_m) || undefined,
+        wgs84_lon: parseFloat(form.wgs84_lon.replace(',', '.')) || undefined,
+        wgs84_lat: parseFloat(form.wgs84_lat.replace(',', '.')) || undefined,
+        casing_depth_m: parseFloat(form.casing_depth_m.replace(',', '.')) || undefined,
+        reaming_m: parseFloat(form.reaming_m.replace(',', '.')) || undefined,
+        gso_m: parseFloat(form.gso_m.replace(',', '.')) || undefined,
+        gsp_m: parseFloat(form.gsp_m.replace(',', '.')) || undefined,
+        mmg_m: parseFloat(form.mmg_m.replace(',', '.')) || undefined,
         gso_manual: form.gso_manual,
         gsp_manual: form.gsp_manual,
         mmg_manual: form.mmg_manual,
