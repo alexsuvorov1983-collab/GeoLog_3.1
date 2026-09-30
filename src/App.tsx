@@ -121,6 +121,15 @@ export default function App() {
     return () => { unsub(); };
   }, []);
 
+  // Подписка на изменения данных для обновления таблицы скважин
+  const [dataVersion, setDataVersion] = useState(0);
+  useEffect(() => {
+    const unsub = GeoLogData.subscribe(() => {
+      setDataVersion(v => v + 1);
+    });
+    return () => { unsub(); };
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -285,6 +294,7 @@ export default function App() {
           {/* MDI Area */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <MDIArea
+              key={dataVersion}
               openDocs={openDocs}
               activeDocId={activeDocId}
               onActivate={setActiveDocId}
@@ -311,6 +321,8 @@ export default function App() {
               if (selectedBoreholeId) {
                 GeoLogData.update(selectedBoreholeId, data);
                 markDirty('doc-boreholes');
+                // Принудительно обновляем selectedBoreholeId для перерендера
+                setSelectedBoreholeId(selectedBoreholeId);
                 forceUpdate((n) => n + 1);
               }
             }}
