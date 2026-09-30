@@ -131,6 +131,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
 
   const handleChange = (field: string, value: string | boolean) => {
     const newForm = { ...form, [field]: value };
+    
+    // Если изменяется поле "Начата" и поле "Окончена" пустое, автоматически подставляем дату
+    if (field === 'date' && !form.end_date && value) {
+      newForm.end_date = value;
+    }
+    
     setForm(newForm);
     
     // Числовые поля сохраняются только при потере фокуса (onBlur)
