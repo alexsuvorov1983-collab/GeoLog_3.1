@@ -11,6 +11,7 @@ import BottomPanel from './components/BottomPanel';
 import StatusBar from './components/StatusBar';
 import ContextMenu from './components/ContextMenu';
 import JournalPanel from './components/JournalPanel';
+import Splitter from './components/Splitter';
 
 export default function App() {
   const [selectedBoreholeId, setSelectedBoreholeId] = useState<string | null>(null);
@@ -21,6 +22,7 @@ export default function App() {
   const [showNavigator, setShowNavigator] = useState(true);
   const [showJournal, setShowJournal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'medium' | 'dark'>('light');
+  const [navWidth, setNavWidth] = useState(280);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: { label: string; commandId: string }[] } | null>(null);
   const [, forceUpdate] = useState(0);
 
@@ -150,6 +152,11 @@ export default function App() {
     setOpenDocs((docs) => docs.map((d) => d.id === docId ? { ...d, dirty: true } : d));
   }, []);
 
+  // Navigator resize handler
+  const handleNavResize = useCallback((delta: number) => {
+    setNavWidth((prev) => Math.max(180, Math.min(600, prev + delta)));
+  }, []);
+
   // Close doc with confirmation
   const closeDoc = useCallback((docId: string) => {
     const doc = openDocs.find((d) => d.id === docId);
@@ -190,7 +197,13 @@ export default function App() {
             selectedBoreholeId={selectedBoreholeId}
             onSelect={selectBorehole}
             onContextMenu={handleContextMenu}
+            width={navWidth}
           />
+        )}
+
+        {/* Vertical Splitter */}
+        {showNavigator && (
+          <Splitter direction="vertical" onResize={handleNavResize} />
         )}
 
         {/* Center + Bottom */}

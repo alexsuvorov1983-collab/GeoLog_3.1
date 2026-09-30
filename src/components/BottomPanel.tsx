@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Borehole, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
+import { useColumnResize, ColumnResizer } from './ResizableTable';
 
 interface Props {
   borehole: Borehole | null;
@@ -277,32 +278,38 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
 
 function SoilLayersTab({ borehole }: { borehole: Borehole }) {
   const layers = borehole.soil_layers || [];
+  const colKeys = ['depth_from', 'depth_to', 'ground_type', 'description'];
+  const defaultWidths: Record<string, number> = { depth_from: 100, depth_to: 100, ground_type: 150, description: 300 };
+  const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
+
   return (
     <div>
       <div className="text-sm font-semibold mb-2">Слои грунта — {borehole.number}</div>
       {layers.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#e8e8e8] border-b">
-              <th className="px-3 py-1.5 text-left border-r">Глубина от, м</th>
-              <th className="px-3 py-1.5 text-left border-r">Глубина до, м</th>
-              <th className="px-3 py-1.5 text-left border-r">Тип грунта</th>
-              <th className="px-3 py-1.5 text-left">Описание</th>
-            </tr>
-          </thead>
-          <tbody>
-            {layers.map((l) => (
-              <tr key={l.id} className="border-b border-[#e8e8e8]">
-                <td className="px-3 py-1 border-r">{l.depth_from_m.toFixed(2)}</td>
-                <td className="px-3 py-1 border-r">{l.depth_to_m.toFixed(2)}</td>
-                <td className="px-3 py-1 border-r">{l.ground_type}</td>
-                <td className="px-3 py-1">{l.description || '—'}</td>
+        <div className="overflow-auto">
+          <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+            <thead>
+              <tr className="bg-[#e8e8e8] border-b">
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth_from}px` }}>Глубина от, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_from')} /></th>
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth_to}px` }}>Глубина до, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth_to')} /></th>
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.ground_type}px` }}>Тип грунта<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'ground_type')} /></th>
+                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.description}px` }}>Описание</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {layers.map((l) => (
+                <tr key={l.id} className="border-b border-[#e8e8e8]">
+                  <td className="px-3 py-1 border-r">{l.depth_from_m.toFixed(2)}</td>
+                  <td className="px-3 py-1 border-r">{l.depth_to_m.toFixed(2)}</td>
+                  <td className="px-3 py-1 border-r">{l.ground_type}</td>
+                  <td className="px-3 py-1">{l.description || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -310,28 +317,34 @@ function SoilLayersTab({ borehole }: { borehole: Borehole }) {
 
 function WaterLayersTab({ borehole }: { borehole: Borehole }) {
   const layers = borehole.water_layers || [];
+  const colKeys = ['depth', 'water_type'];
+  const defaultWidths: Record<string, number> = { depth: 120, water_type: 200 };
+  const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
+
   return (
     <div>
       <div className="text-sm font-semibold mb-2">Слои воды — {borehole.number}</div>
       {layers.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#e8e8e8] border-b">
-              <th className="px-3 py-1.5 text-left border-r">Глубина, м</th>
-              <th className="px-3 py-1.5 text-left">Тип воды</th>
-            </tr>
-          </thead>
-          <tbody>
-            {layers.map((l) => (
-              <tr key={l.id} className="border-b border-[#e8e8e8]">
-                <td className="px-3 py-1 border-r">{l.depth_m.toFixed(2)}</td>
-                <td className="px-3 py-1">{l.water_type}</td>
+        <div className="overflow-auto">
+          <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+            <thead>
+              <tr className="bg-[#e8e8e8] border-b">
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.water_type}px` }}>Тип воды</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {layers.map((l) => (
+                <tr key={l.id} className="border-b border-[#e8e8e8]">
+                  <td className="px-3 py-1 border-r">{l.depth_m.toFixed(2)}</td>
+                  <td className="px-3 py-1">{l.water_type}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -339,30 +352,36 @@ function WaterLayersTab({ borehole }: { borehole: Borehole }) {
 
 function SamplesTab({ borehole }: { borehole: Borehole }) {
   const samples = borehole.samples || [];
+  const colKeys = ['depth', 'sample_type', 'lab_number'];
+  const defaultWidths: Record<string, number> = { depth: 100, sample_type: 150, lab_number: 150 };
+  const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
+
   return (
     <div>
       <div className="text-sm font-semibold mb-2">Пробы — {borehole.number}</div>
       {samples.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#e8e8e8] border-b">
-              <th className="px-3 py-1.5 text-left border-r">Глубина, м</th>
-              <th className="px-3 py-1.5 text-left border-r">Тип</th>
-              <th className="px-3 py-1.5 text-left">Лаб. номер</th>
-            </tr>
-          </thead>
-          <tbody>
-            {samples.map((s) => (
-              <tr key={s.id} className="border-b border-[#e8e8e8]">
-                <td className="px-3 py-1 border-r">{s.depth_m.toFixed(2)}</td>
-                <td className="px-3 py-1 border-r">{s.sample_type}</td>
-                <td className="px-3 py-1">{s.lab_number || '—'}</td>
+        <div className="overflow-auto">
+          <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+            <thead>
+              <tr className="bg-[#e8e8e8] border-b">
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.sample_type}px` }}>Тип<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'sample_type')} /></th>
+                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.lab_number}px` }}>Лаб. номер</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {samples.map((s) => (
+                <tr key={s.id} className="border-b border-[#e8e8e8]">
+                  <td className="px-3 py-1 border-r">{s.depth_m.toFixed(2)}</td>
+                  <td className="px-3 py-1 border-r">{s.sample_type}</td>
+                  <td className="px-3 py-1">{s.lab_number || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -370,28 +389,34 @@ function SamplesTab({ borehole }: { borehole: Borehole }) {
 
 function ThermometryTab({ borehole }: { borehole: Borehole }) {
   const entries = borehole.thermometry || [];
+  const colKeys = ['depth', 'temperature'];
+  const defaultWidths: Record<string, number> = { depth: 120, temperature: 150 };
+  const { widths, handleMouseDown } = useColumnResize(colKeys, defaultWidths);
+
   return (
     <div>
       <div className="text-sm font-semibold mb-2">Термометрия — {borehole.number}</div>
       {entries.length === 0 ? (
         <div className="text-sm text-[#808080]">Нет данных</div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#e8e8e8] border-b">
-              <th className="px-3 py-1.5 text-left border-r">Глубина, м</th>
-              <th className="px-3 py-1.5 text-left">Температура, °C</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((t) => (
-              <tr key={t.id} className="border-b border-[#e8e8e8]">
-                <td className="px-3 py-1 border-r">{t.depth_m.toFixed(2)}</td>
-                <td className="px-3 py-1">{t.temperature_c.toFixed(1)}</td>
+        <div className="overflow-auto">
+          <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+            <thead>
+              <tr className="bg-[#e8e8e8] border-b">
+                <th className="px-3 py-1.5 text-left border-r relative" style={{ width: `${widths.depth}px` }}>Глубина, м<ColumnResizer onMouseDown={(e) => handleMouseDown(e, 'depth')} /></th>
+                <th className="px-3 py-1.5 text-left relative" style={{ width: `${widths.temperature}px` }}>Температура, °C</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {entries.map((t) => (
+                <tr key={t.id} className="border-b border-[#e8e8e8]">
+                  <td className="px-3 py-1 border-r">{t.depth_m.toFixed(2)}</td>
+                  <td className="px-3 py-1">{t.temperature_c.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

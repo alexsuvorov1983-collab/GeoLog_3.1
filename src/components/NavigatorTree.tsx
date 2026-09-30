@@ -6,6 +6,7 @@ interface Props {
   selectedBoreholeId: string | null;
   onSelect: (id: string | null) => void;
   onContextMenu: (e: React.MouseEvent, items: { label: string; commandId: string }[]) => void;
+  width?: number;
 }
 
 interface TreeNode {
@@ -17,7 +18,7 @@ interface TreeNode {
   icon?: string;
 }
 
-export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextMenu }: Props) {
+export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextMenu, width = 280 }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['geology', 'project', 'field', 'lab', 'processing']));
 
   const boreholes = GeoLogData.getAll();
@@ -154,7 +155,7 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
   };
 
   return (
-    <div className="w-[280px] min-w-[240px] bg-white border-r border-[#c0c0c0] flex flex-col overflow-hidden">
+    <div style={{ width: `${width}px`, minWidth: '180px' }} className="bg-white border-r border-[#c0c0c0] flex flex-col overflow-hidden flex-shrink-0">
       <div className="bg-[#e8e8e8] border-b border-[#c0c0c0] px-3 py-1.5 text-sm font-bold">
         Навигатор
       </div>

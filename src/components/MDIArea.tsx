@@ -14,6 +14,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useColumnResize, ColumnResizer } from './ResizableTable';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
@@ -213,46 +214,54 @@ function DocContent({ docId, boreholes, selectedId, onSelect }: { docId: string;
         </div>
       </div>
       {config.columns && (
-        <div className="border border-[#c0c0c0] rounded">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
-                {config.columns.map((col, idx) => (
-                  <th key={idx} className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold last:border-r-0">
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan={config.columns.length} className="px-3 py-5 text-center text-[#808080] italic">
-                  Нет данных
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ResizableDocTable columns={config.columns} />
       )}
     </div>
   );
 }
 
 function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehole[]; selectedId: string | null; onSelect: (id: string) => void }) {
+  // Ширина столбцов по умолчанию
+  const defaultColumnWidths: Record<string, number> = {
+    number: 100,
+    depth_m: 80,
+    elev_m: 80,
+    x: 100,
+    y: 100,
+    wgs84_lon: 110,
+    wgs84_lat: 110,
+    side_id: 90,
+    rig_id: 120,
+    method_id: 130,
+    diameter_id: 80,
+    casing_depth_m: 110,
+    casing_diameter_id: 120,
+    reaming_m: 100,
+    gso_m: 70,
+    gsp_m: 70,
+    mmg_m: 70,
+    executor: 100,
+  };
+
+  const columnKeys = columns.map((c) => c.key);
+  const { widths, handleMouseDown } = useColumnResize(columnKeys, defaultColumnWidths);
+
   return (
     <div className="overflow-auto h-full">
-      <table className="w-full border-collapse text-sm">
+      <table className="border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10">
           <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
-            <th className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold w-10">#</th>
+            <th className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold relative" style={{ width: '40px' }}>#</th>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold whitespace-nowrap ${col.gap ? 'bg-[#f0e8e8] text-[#999]' : ''}`}
+                className={`px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold whitespace-nowrap relative ${col.gap ? 'bg-[#f0e8e8] text-[#999]' : ''}`}
+                style={{ width: `${widths[col.key] || 100}px` }}
                 title={col.gap ? 'Поле появится в схеме v1.4 (GAP)' : col.label}
               >
                 {col.label}
                 {col.gap && <span className="text-xs ml-1">⚠</span>}
+                <ColumnResizer onMouseDown={(e) => handleMouseDown(e, col.key)} />
               </th>
             ))}
           </tr>
@@ -280,6 +289,44 @@ function BoreholeTable({ boreholes, selectedId, onSelect }: { boreholes: Borehol
               })}
             </tr>
           ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Компонент таблицы с ресайзом для остальных документов
+function ResizableDocTable({ columns: cols }: { columns: string[] }) {
+  const defaultWidths: Record<string, number> = {};
+  cols.forEach((col) => {
+    defaultWidths[col] = 150;
+  });
+
+  const { widths, handleMouseDown } = useColumnResize(cols, defaultWidths);
+
+  return (
+    <div className="border border-[#c0c0c0] rounded overflow-auto">
+      <table className="text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+        <thead>
+          <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
+            {cols.map((col, idx) => (
+              <th
+                key={idx}
+                className="px-3 py-1.5 text-left border-r border-[#c0c0c0] font-semibold relative last:border-r-0"
+                style={{ width: `${widths[col] || 150}px` }}
+              >
+                {col}
+                <ColumnResizer onMouseDown={(e) => handleMouseDown(e, col)} />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colSpan={cols.length} className="px-3 py-5 text-center text-[#808080] italic">
+              Нет данных
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
