@@ -143,18 +143,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     // Автоматическое сохранение для текстовых полей и селектов
     const data: Partial<Borehole> = {
       number: newForm.number,
-      depth_m: parseFloat(newForm.depth_m.replace(',', '.')) || 0,
-      elev_m: parseFloat(newForm.elev_m.replace(',', '.')) || 0,
-      x: parseFloat(newForm.x.replace(',', '.')) || 0,
-      y: parseFloat(newForm.y.replace(',', '.')) || 0,
+      depth_m: truncateToTwoDecimals(newForm.depth_m),
+      elev_m: truncateToTwoDecimals(newForm.elev_m),
+      x: truncateToTwoDecimals(newForm.x),
+      y: truncateToTwoDecimals(newForm.y),
       date: newForm.date,
-      wgs84_lon: parseFloat(newForm.wgs84_lon.replace(',', '.')) || undefined,
-      wgs84_lat: parseFloat(newForm.wgs84_lat.replace(',', '.')) || undefined,
-      casing_depth_m: parseFloat(newForm.casing_depth_m.replace(',', '.')) || undefined,
-      reaming_m: parseFloat(newForm.reaming_m.replace(',', '.')) || undefined,
-      gso_m: parseFloat(newForm.gso_m.replace(',', '.')) || undefined,
-      gsp_m: parseFloat(newForm.gsp_m.replace(',', '.')) || undefined,
-      mmg_m: parseFloat(newForm.mmg_m.replace(',', '.')) || undefined,
+      wgs84_lon: truncateToTwoDecimals(newForm.wgs84_lon) || undefined,
+      wgs84_lat: truncateToTwoDecimals(newForm.wgs84_lat) || undefined,
+      casing_depth_m: truncateToTwoDecimals(newForm.casing_depth_m) || undefined,
+      reaming_m: truncateToTwoDecimals(newForm.reaming_m) || undefined,
+      gso_m: truncateToTwoDecimals(newForm.gso_m) || undefined,
+      gsp_m: truncateToTwoDecimals(newForm.gsp_m) || undefined,
+      mmg_m: truncateToTwoDecimals(newForm.mmg_m) || undefined,
       gso_manual: newForm.gso_manual,
       gsp_manual: newForm.gsp_manual,
       mmg_manual: newForm.mmg_manual,
@@ -171,18 +171,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   const handleSave = () => {
     const data: Partial<Borehole> = {
       number: form.number,
-      depth_m: parseFloat(form.depth_m.replace(',', '.')) || 0,
-      elev_m: parseFloat(form.elev_m.replace(',', '.')) || 0,
-      x: parseFloat(form.x.replace(',', '.')) || 0,
-      y: parseFloat(form.y.replace(',', '.')) || 0,
+      depth_m: truncateToTwoDecimals(form.depth_m),
+      elev_m: truncateToTwoDecimals(form.elev_m),
+      x: truncateToTwoDecimals(form.x),
+      y: truncateToTwoDecimals(form.y),
       date: form.date,
-      wgs84_lon: parseFloat(form.wgs84_lon.replace(',', '.')) || undefined,
-      wgs84_lat: parseFloat(form.wgs84_lat.replace(',', '.')) || undefined,
-      casing_depth_m: parseFloat(form.casing_depth_m.replace(',', '.')) || undefined,
-      reaming_m: parseFloat(form.reaming_m.replace(',', '.')) || undefined,
-      gso_m: parseFloat(form.gso_m.replace(',', '.')) || undefined,
-      gsp_m: parseFloat(form.gsp_m.replace(',', '.')) || undefined,
-      mmg_m: parseFloat(form.mmg_m.replace(',', '.')) || undefined,
+      wgs84_lon: truncateToTwoDecimals(form.wgs84_lon) || undefined,
+      wgs84_lat: truncateToTwoDecimals(form.wgs84_lat) || undefined,
+      casing_depth_m: truncateToTwoDecimals(form.casing_depth_m) || undefined,
+      reaming_m: truncateToTwoDecimals(form.reaming_m) || undefined,
+      gso_m: truncateToTwoDecimals(form.gso_m) || undefined,
+      gsp_m: truncateToTwoDecimals(form.gsp_m) || undefined,
+      mmg_m: truncateToTwoDecimals(form.mmg_m) || undefined,
       gso_manual: form.gso_manual,
       gsp_manual: form.gsp_manual,
       mmg_manual: form.mmg_manual,
@@ -200,12 +200,23 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   const inputClass = "w-full px-2 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
   const labelClass = "text-sm text-[#555] mb-1";
 
-  // Форматирование числовых значений с двумя знаками после запятой при потере фокуса
+  // Вспомогательная функция для обрезания числа до двух знаков после запятой без округления
+  const truncateToTwoDecimals = (value: string): number => {
+    const normalized = value.replace(',', '.');
+    const parts = normalized.split('.');
+    let truncatedValue = normalized;
+    if (parts.length === 2 && parts[1].length > 2) {
+      parts[1] = parts[1].substring(0, 2);
+      truncatedValue = parts.join('.');
+    }
+    return parseFloat(truncatedValue) || 0;
+  };
+
+  // Форматирование числовых значений с двумя знаками после запятой при потере фокуса (обрезание без округления)
   const handleBlurFormat = (field: string, value: string) => {
     if (!value || value === '') return;
-    // Заменяем запятую на точку для корректного парсинга
-    const normalizedValue = value.replace(',', '.');
-    const num = parseFloat(normalizedValue);
+    
+    const num = truncateToTwoDecimals(value);
     if (!isNaN(num)) {
       const formattedValue = num.toFixed(2);
       setForm(prev => ({ ...prev, [field]: formattedValue }));
@@ -213,18 +224,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       // Сохраняем данные при потере фокуса
       const data: Partial<Borehole> = {
         number: form.number,
-        depth_m: parseFloat(form.depth_m.replace(',', '.')) || 0,
-        elev_m: parseFloat(form.elev_m.replace(',', '.')) || 0,
-        x: parseFloat(form.x.replace(',', '.')) || 0,
-        y: parseFloat(form.y.replace(',', '.')) || 0,
+        depth_m: truncateToTwoDecimals(form.depth_m),
+        elev_m: truncateToTwoDecimals(form.elev_m),
+        x: truncateToTwoDecimals(form.x),
+        y: truncateToTwoDecimals(form.y),
         date: form.date,
-        wgs84_lon: parseFloat(form.wgs84_lon.replace(',', '.')) || undefined,
-        wgs84_lat: parseFloat(form.wgs84_lat.replace(',', '.')) || undefined,
-        casing_depth_m: parseFloat(form.casing_depth_m.replace(',', '.')) || undefined,
-        reaming_m: parseFloat(form.reaming_m.replace(',', '.')) || undefined,
-        gso_m: parseFloat(form.gso_m.replace(',', '.')) || undefined,
-        gsp_m: parseFloat(form.gsp_m.replace(',', '.')) || undefined,
-        mmg_m: parseFloat(form.mmg_m.replace(',', '.')) || undefined,
+        wgs84_lon: truncateToTwoDecimals(form.wgs84_lon) || undefined,
+        wgs84_lat: truncateToTwoDecimals(form.wgs84_lat) || undefined,
+        casing_depth_m: truncateToTwoDecimals(form.casing_depth_m) || undefined,
+        reaming_m: truncateToTwoDecimals(form.reaming_m) || undefined,
+        gso_m: truncateToTwoDecimals(form.gso_m) || undefined,
+        gsp_m: truncateToTwoDecimals(form.gsp_m) || undefined,
+        mmg_m: truncateToTwoDecimals(form.mmg_m) || undefined,
         gso_manual: form.gso_manual,
         gsp_manual: form.gsp_manual,
         mmg_manual: form.mmg_manual,
