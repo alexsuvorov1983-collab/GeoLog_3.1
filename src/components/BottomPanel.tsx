@@ -131,7 +131,16 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     const newForm = { ...form, [field]: value };
     setForm(newForm);
     
-    // Автоматическое сохранение при изменении полей
+    // Числовые поля сохраняются только при потере фокуса (onBlur)
+    // Текстовые поля и селекты сохраняются сразу
+    const numericFields = ['depth_m', 'elev_m', 'x', 'y', 'wgs84_lon', 'wgs84_lat', 'casing_depth_m', 'reaming_m', 'gso_m', 'gsp_m', 'mmg_m'];
+    
+    if (numericFields.includes(field)) {
+      // Для числовых полей не сохраняем сразу, ждём onBlur
+      return;
+    }
+    
+    // Автоматическое сохранение для текстовых полей и селектов
     const data: Partial<Borehole> = {
       number: newForm.number,
       depth_m: parseFloat(newForm.depth_m) || 0,
@@ -196,7 +205,36 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     if (!value || value === '') return;
     const num = parseFloat(value);
     if (!isNaN(num)) {
-      handleChange(field, num.toFixed(2));
+      const formattedValue = num.toFixed(2);
+      setForm(prev => ({ ...prev, [field]: formattedValue }));
+      
+      // Сохраняем данные при потере фокуса
+      const data: Partial<Borehole> = {
+        number: form.number,
+        depth_m: parseFloat(form.depth_m) || 0,
+        elev_m: parseFloat(form.elev_m) || 0,
+        x: parseFloat(form.x) || 0,
+        y: parseFloat(form.y) || 0,
+        date: form.date,
+        wgs84_lon: parseFloat(form.wgs84_lon) || undefined,
+        wgs84_lat: parseFloat(form.wgs84_lat) || undefined,
+        casing_depth_m: parseFloat(form.casing_depth_m) || undefined,
+        reaming_m: parseFloat(form.reaming_m) || undefined,
+        gso_m: parseFloat(form.gso_m) || undefined,
+        gsp_m: parseFloat(form.gsp_m) || undefined,
+        mmg_m: parseFloat(form.mmg_m) || undefined,
+        gso_manual: form.gso_manual,
+        gsp_manual: form.gsp_manual,
+        mmg_manual: form.mmg_manual,
+        user: form.user,
+      };
+      (data as any)[field] = num;
+      (data as any).side_id = form.side_id;
+      (data as any).rig_id = form.rig_id;
+      (data as any).method_id = form.method_id;
+      (data as any).diameter_id = form.diameter_id;
+      (data as any).casing_diameter_id = form.casing_diameter_id;
+      onUpdate(data);
     }
   };
 
