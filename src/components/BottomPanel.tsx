@@ -84,7 +84,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     date: borehole.date || '',
     wgs84_lon: borehole.wgs84_lon?.toString() || '',
     wgs84_lat: borehole.wgs84_lat?.toString() || '',
+    side_id: (borehole as any).side_id || '',
+    rig_id: (borehole as any).rig_id || '',
+    method_id: (borehole as any).method_id || '',
+    diameter_id: (borehole as any).diameter_id || '',
     casing_depth_m: borehole.casing_depth_m?.toString() || '',
+    casing_diameter_id: (borehole as any).casing_diameter_id || '',
     reaming_m: borehole.reaming_m?.toString() || '',
     gso_m: borehole.gso_m?.toString() || '',
     gsp_m: borehole.gsp_m?.toString() || '',
@@ -92,6 +97,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     gso_manual: borehole.gso_manual || false,
     gsp_manual: borehole.gsp_manual || false,
     mmg_manual: borehole.mmg_manual || false,
+    user: borehole.user || '',
   });
 
   useEffect(() => {
@@ -104,7 +110,12 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       date: borehole.date || '',
       wgs84_lon: borehole.wgs84_lon?.toString() || '',
       wgs84_lat: borehole.wgs84_lat?.toString() || '',
+      side_id: (borehole as any).side_id || '',
+      rig_id: (borehole as any).rig_id || '',
+      method_id: (borehole as any).method_id || '',
+      diameter_id: (borehole as any).diameter_id || '',
       casing_depth_m: borehole.casing_depth_m?.toString() || '',
+      casing_diameter_id: (borehole as any).casing_diameter_id || '',
       reaming_m: borehole.reaming_m?.toString() || '',
       gso_m: borehole.gso_m?.toString() || '',
       gsp_m: borehole.gsp_m?.toString() || '',
@@ -112,6 +123,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       gso_manual: borehole.gso_manual || false,
       gsp_manual: borehole.gsp_manual || false,
       mmg_manual: borehole.mmg_manual || false,
+      user: borehole.user || '',
     });
   }, [borehole.id]);
 
@@ -137,7 +149,13 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       gso_manual: newForm.gso_manual,
       gsp_manual: newForm.gsp_manual,
       mmg_manual: newForm.mmg_manual,
+      user: newForm.user,
     };
+    (data as any).side_id = newForm.side_id;
+    (data as any).rig_id = newForm.rig_id;
+    (data as any).method_id = newForm.method_id;
+    (data as any).diameter_id = newForm.diameter_id;
+    (data as any).casing_diameter_id = newForm.casing_diameter_id;
     onUpdate(data);
   };
 
@@ -159,7 +177,13 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       gso_manual: form.gso_manual,
       gsp_manual: form.gsp_manual,
       mmg_manual: form.mmg_manual,
+      user: form.user,
     };
+    (data as any).side_id = form.side_id;
+    (data as any).rig_id = form.rig_id;
+    (data as any).method_id = form.method_id;
+    (data as any).diameter_id = form.diameter_id;
+    (data as any).casing_diameter_id = form.casing_diameter_id;
     onUpdate(data);
     Journal.logEvent('command', `Форма скважины ${borehole.number} сохранена`, 'bore.edit');
   };
@@ -197,7 +221,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div>
           <label className={labelClass}>Сторонность</label>
-          <select className={inputClass}>
+          <select className={inputClass} value={form.side_id} onChange={(e) => handleChange('side_id', e.target.value)}>
             <option value="">—</option>
             {dicts.sides.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
@@ -221,21 +245,21 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
       <div className="space-y-2">
         <div>
           <label className={labelClass}>Буровая установка</label>
-          <select className={inputClass}>
+          <select className={inputClass} value={form.rig_id} onChange={(e) => handleChange('rig_id', e.target.value)}>
             <option value="">—</option>
             {dicts.rigs.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div>
           <label className={labelClass}>Способ проходки</label>
-          <select className={inputClass}>
+          <select className={inputClass} value={form.method_id} onChange={(e) => handleChange('method_id', e.target.value)}>
             <option value="">—</option>
             {dicts.methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
         </div>
         <div>
           <label className={labelClass}>Диаметр, мм</label>
-          <select className={inputClass}>
+          <select className={inputClass} value={form.diameter_id} onChange={(e) => handleChange('diameter_id', e.target.value)}>
             <option value="">—</option>
             {dicts.diameters.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -246,7 +270,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div>
           <label className={labelClass}>Диаметр обсадки, мм</label>
-          <select className={inputClass}>
+          <select className={inputClass} value={form.casing_diameter_id} onChange={(e) => handleChange('casing_diameter_id', e.target.value)}>
             <option value="">—</option>
             {dicts.diameters.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -283,7 +307,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div>
           <label className={labelClass}>Исполнитель</label>
-          <input className={inputClass} value={borehole.user || ''} readOnly />
+          <input className={inputClass} value={form.user} onChange={(e) => handleChange('user', e.target.value)} />
         </div>
       </div>
 
