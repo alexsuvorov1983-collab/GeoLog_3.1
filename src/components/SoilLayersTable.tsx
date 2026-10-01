@@ -115,7 +115,10 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
 
   // Обработчик изменения поля слоя
   const handleLayerChange = (layerId: string, field: keyof SoilLayer, value: any) => {
-    const updatedLayers = (borehole.soil_layers || []).map(layer => {
+    const allLayers = [...(borehole.soil_layers || [])].sort((a, b) => a.depth_from_m - b.depth_from_m);
+    const currentIndex = allLayers.findIndex(l => l.id === layerId);
+    
+    const updatedLayers = allLayers.map((layer, index) => {
       if (layer.id !== layerId) return layer;
       
       const updated = { ...layer, [field]: value };
@@ -130,6 +133,20 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
       
       return updated;
     });
+    
+    // Обновляем связанные слои
+    if (field === 'depth_from_m' && currentIndex > 0) {
+      // Если изменилась кровля текущего слоя, обновляем подошву предыдущего
+      updatedLayers[currentIndex - 1].depth_to_m = value;
+    } else if (field === 'depth_to_m' && currentIndex < updatedLayers.length - 1) {
+      // Если изменилась подошва текущего слоя, обновляем кровлю следующего
+      updatedLayers[currentIndex + 1].depth_from_m = value;
+    }
+    
+    // Первый слой всегда имеет кровлю 0
+    if (updatedLayers.length > 0) {
+      updatedLayers[0].depth_from_m = 0;
+    }
     
     onUpdate({ soil_layers: updatedLayers });
     Journal.logEvent('command', `Обновлён слой ${layerId}`, 'layer.update');
@@ -234,8 +251,8 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     if (actualValue === 0) {
       return '';
     }
-    // Иначе показываем отформатированное значение
-    return actualValue.toFixed(1);
+    // Иначе показываем отформатированное значение с двумя знаками после запятой
+    return actualValue.toFixed(2);
   };
 
   // Обработчик изменения значения в поле ввода
