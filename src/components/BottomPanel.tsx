@@ -313,7 +313,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Глубина, м:</label>
-          <input className={inputClass} type="text" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('depth_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('depth_m', e.target.value)} />
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Отметка, м:</label>
