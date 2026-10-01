@@ -248,7 +248,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   {/* УППВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     {layer.upvAbsent ? (
                       <div className="flex items-center gap-1">
                         <span className="text-sm text-gray-500">Нет</span>
@@ -278,7 +278,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* УУПВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     {layer.uuvAbsent ? (
                       <div className="flex items-center gap-1">
                         <span className="text-sm text-gray-500">Нет</span>
@@ -308,7 +308,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Подошва */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       ref={(el) => { inputRefs.current[`${layer.id}_bottom`] = el; }}
                       type="text"
@@ -327,7 +327,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Дата УППВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       className={inputClass}
@@ -339,7 +339,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Дата УУПВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       className={inputClass}
