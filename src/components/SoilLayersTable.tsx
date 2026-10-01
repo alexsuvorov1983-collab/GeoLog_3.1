@@ -241,11 +241,17 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
 
   // Установка фокуса на поле ввода после создания нового слоя
   useEffect(() => {
-    if (focusTargetLayerId && inputRefs.current[focusTargetLayerId]) {
-      inputRefs.current[focusTargetLayerId]?.focus();
-      setFocusTargetLayerId(null);
+    if (focusTargetLayerId) {
+      // Используем setTimeout для гарантии, что ref будет установлен после рендера
+      const timer = setTimeout(() => {
+        if (inputRefs.current[focusTargetLayerId]) {
+          inputRefs.current[focusTargetLayerId]?.focus();
+          setFocusTargetLayerId(null);
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [focusTargetLayerId, borehole.soil_layers]);
+  }, [focusTargetLayerId]);
 
   // Округление до одного знака после запятой (шаг 0.1)
   const roundToOneDecimal = (value: number): number => {
@@ -311,6 +317,40 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
         }
         return newValues;
       });
+    }
+  };
+
+  // Обработчик нажатия Enter в поле подошвы
+  const handleDepthToKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, layerId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Сначала сохраняем текущее значение
+      const inputValue = inputValues[layerId]?.['depth_to_m'];
+      if (inputValue !== undefined && inputValue !== '') {
+        const normalizedValue = inputValue.replace(',', '.');
+        const num = parseFloat(normalizedValue);
+        
+        if (!isNaN(num)) {
+          const roundedValue = roundToOneDecimal(num);
+          handleLayerChange(layerId, 'depth_to_m', roundedValue);
+          
+          // Очищаем временное значение
+          setInputValues(prev => {
+            const newValues = { ...prev };
+            if (newValues[layerId]) {
+              delete newValues[layerId]['depth_to_m'];
+            }
+            return newValues;
+          });
+        }
+      }
+      
+      // Создаём новый слой и устанавливаем фокус
+      const newLayerId = handleAddLayerBelow();
+      if (newLayerId) {
+        setFocusTargetLayerId(newLayerId);
+      }
     }
   };
 
@@ -434,16 +474,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                       onBlur={() => {
                         handleInputBlur(layer.id, 'depth_to_m');
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleInputBlur(layer.id, 'depth_to_m');
-                          const newLayerId = handleAddLayerBelow();
-                          if (newLayerId) {
-                            setFocusTargetLayerId(newLayerId);
-                          }
-                        }
-                      }}
+                      onKeyDown={(e) => handleDepthToKeyDown(e, layer.id)}
                     />
                   </td>
                   
