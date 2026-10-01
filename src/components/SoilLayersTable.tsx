@@ -247,11 +247,11 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     if (inputValues[layerId] && inputValues[layerId][field] !== undefined) {
       return inputValues[layerId][field];
     }
-    // Если значение равно 0 (новый слой для depth_to_m), показываем пустую строку
-    if (actualValue === 0) {
+    // Для поля depth_to_m (подошва) значение 0 показываем как пустую строку (новый слой)
+    if (field === 'depth_to_m' && actualValue === 0) {
       return '';
     }
-    // Иначе показываем отформатированное значение с двумя знаками после запятой
+    // Для поля depth_from_m (кровля) и других случаев показываем отформатированное значение
     return actualValue.toFixed(2);
   };
 
