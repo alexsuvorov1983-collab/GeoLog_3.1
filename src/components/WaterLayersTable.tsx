@@ -89,9 +89,11 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
   // Получение значения для отображения
   const getInputValue = (layerId: string, field: string, actualValue: number | string | undefined): string => {
+    // Если есть временное значение в процессе ввода, используем его
     if (inputValues[layerId] && inputValues[layerId][field] !== undefined) {
       return inputValues[layerId][field];
     }
+    // Иначе берём из данных слоя
     if (actualValue === undefined || actualValue === null) {
       return '';
     }
@@ -101,8 +103,9 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     return String(actualValue);
   };
 
-  // Обработчик изменения значения
+  // Обработчик изменения значения - сохраняем сразу
   const handleInputChange = (layerId: string, field: string, value: string) => {
+    // Сохраняем в локальное состояние для отображения
     setInputValues(prev => ({
       ...prev,
       [layerId]: {
@@ -110,22 +113,8 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
         [field]: value
       }
     }));
-  };
 
-  // Обработчик потери фокуса
-  const handleInputBlur = (layerId: string, field: string) => {
-    const inputValue = inputValues[layerId]?.[field];
-    if (inputValue === undefined || inputValue === '') {
-      setInputValues(prev => {
-        const newValues = { ...prev };
-        if (newValues[layerId]) {
-          delete newValues[layerId][field];
-        }
-        return newValues;
-      });
-      return;
-    }
-
+    // Сразу сохраняем в GeoLogData
     const layer = borehole.water_layers?.find(l => l.id === layerId);
     if (!layer) return;
 
@@ -133,31 +122,36 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
     // Числовые поля
     if (['upv', 'uuv', 'bottom', 'pressure', 'depression'].includes(field)) {
-      const normalizedValue = inputValue.replace(',', '.');
+      const normalizedValue = value.replace(',', '.');
       const num = parseFloat(normalizedValue);
       if (!isNaN(num)) {
         (update as any)[field] = roundToTwoDecimals(num);
+      } else if (value === '') {
+        (update as any)[field] = undefined;
+      } else {
+        // Если ещё не число (например, "1," или "1.2"), не сохраняем
+        return;
       }
     } else {
       // Текстовые поля (horizon, dates)
-      (update as any)[field] = inputValue;
+      (update as any)[field] = value;
     }
 
     if (Object.keys(update).length > 0) {
       GeoLogData.updateWaterLayer(boreholeId, layerId, update);
-      
-      // Очищаем временное значение
-      setInputValues(prev => {
-        const newValues = { ...prev };
-        if (newValues[layerId]) {
-          delete newValues[layerId][field];
-        }
-        return newValues;
-      });
-      
-      // Вызываем onUpdate для перерисовки родительского компонента
       onUpdate({});
     }
+  };
+
+  // Обработчик потери фокуса - только очищаем временное состояние
+  const handleInputBlur = (layerId: string, field: string) => {
+    setInputValues(prev => {
+      const newValues = { ...prev };
+      if (newValues[layerId]) {
+        delete newValues[layerId][field];
+      }
+      return newValues;
+    });
   };
 
   // Обработчик изменения чекбокса "Нет"
