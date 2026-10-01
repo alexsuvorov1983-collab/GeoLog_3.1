@@ -14,6 +14,7 @@ interface Props {
 export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSelectBorehole }: Props) {
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [inputValues, setInputValues] = useState<Record<string, Record<string, string>>>({});
   const allBoreholes = GeoLogData.getAll();
   const dicts = GeoLogData.getDicts();
   const igeCatalog = (dicts as any).ige_catalog || [];
@@ -218,6 +219,68 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     return depths.map(d => d.toFixed(2)).join('; ');
   };
 
+  // Округление до одного знака после запятой (шаг 0.1)
+  const roundToOneDecimal = (value: number): number => {
+    return Math.round(value * 10) / 10;
+  };
+
+  // Получение значения для отображения в поле ввода
+  const getInputValue = (layerId: string, field: string, actualValue: number): string => {
+    const key = `${layerId}_${field}`;
+    if (inputValues[layerId] && inputValues[layerId][field] !== undefined) {
+      return inputValues[layerId][field];
+    }
+    return actualValue.toFixed(1);
+  };
+
+  // Обработчик изменения значения в поле ввода
+  const handleInputChange = (layerId: string, field: string, value: string) => {
+    setInputValues(prev => ({
+      ...prev,
+      [layerId]: {
+        ...prev[layerId],
+        [field]: value
+      }
+    }));
+  };
+
+  // Обработчик потери фокуса - форматирование и сохранение
+  const handleInputBlur = (layerId: string, field: 'depth_from_m' | 'depth_to_m') => {
+    const inputValue = inputValues[layerId]?.[field];
+    if (inputValue === undefined || inputValue === '') {
+      // Если поле пустое, сбрасываем к текущему значению
+      setInputValues(prev => {
+        const newValues = { ...prev };
+        if (newValues[layerId]) {
+          delete newValues[layerId][field];
+        }
+        return newValues;
+      });
+      return;
+    }
+
+    // Преобразуем запятую в точку
+    const normalizedValue = inputValue.replace(',', '.');
+    const num = parseFloat(normalizedValue);
+    
+    if (!isNaN(num)) {
+      // Округляем до одного знака после запятой
+      const roundedValue = roundToOneDecimal(num);
+      
+      // Сохраняем значение
+      handleLayerChange(layerId, field, roundedValue);
+      
+      // Очищаем временное значение
+      setInputValues(prev => {
+        const newValues = { ...prev };
+        if (newValues[layerId]) {
+          delete newValues[layerId][field];
+        }
+        return newValues;
+      });
+    }
+  };
+
   const inputClass = "w-full px-1 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
   const invalidClass = "w-full px-1 py-1 text-sm border-2 border-red-500 bg-red-50 rounded focus:border-red-600 focus:outline-none";
 
@@ -315,12 +378,12 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
-                      value={layer.depth_from_m.toFixed(2)}
+                      value={getInputValue(layer.id, 'depth_from_m', layer.depth_from_m)}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value.replace(',', '.'));
-                        if (!isNaN(val)) {
-                          handleLayerChange(layer.id, 'depth_from_m', val);
-                        }
+                        handleInputChange(layer.id, 'depth_from_m', e.target.value);
+                      }}
+                      onBlur={() => {
+                        handleInputBlur(layer.id, 'depth_from_m');
                       }}
                     />
                   </td>
@@ -330,12 +393,12 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
-                      value={layer.depth_to_m === 0 ? '' : layer.depth_to_m.toFixed(2)}
+                      value={layer.depth_to_m === 0 ? '' : getInputValue(layer.id, 'depth_to_m', layer.depth_to_m)}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value.replace(',', '.'));
-                        if (!isNaN(val)) {
-                          handleLayerChange(layer.id, 'depth_to_m', val);
-                        }
+                        handleInputChange(layer.id, 'depth_to_m', e.target.value);
+                      }}
+                      onBlur={() => {
+                        handleInputBlur(layer.id, 'depth_to_m');
                       }}
                     />
                   </td>
