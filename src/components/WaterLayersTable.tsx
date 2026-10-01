@@ -103,7 +103,22 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     return String(actualValue);
   };
 
-  // Обработчик изменения значения - сохраняем сразу
+  // Обработчик изменения поля слоя (как в SoilLayersTable)
+  const handleLayerChange = (layerId: string, field: keyof WaterLayer, value: any) => {
+    const allLayers = [...(borehole.water_layers || [])];
+    
+    const updatedLayers = allLayers.map(layer => {
+      if (layer.id !== layerId) return layer;
+      
+      const updated = { ...layer, [field]: value };
+      return updated;
+    });
+    
+    onUpdate({ water_layers: updatedLayers });
+    Journal.logEvent('command', `Обновлён водный слой ${layerId}`, 'water_layer.update');
+  };
+
+  // Обработчик изменения значения в input
   const handleInputChange = (layerId: string, field: string, value: string) => {
     // Сохраняем в локальное состояние для отображения
     setInputValues(prev => ({
@@ -113,38 +128,42 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
         [field]: value
       }
     }));
+  };
 
-    // Сразу сохраняем в GeoLogData
+  // Обработчик потери фокуса - форматирование и сохранение
+  const handleInputBlur = (layerId: string, field: string) => {
+    const inputValue = inputValues[layerId]?.[field];
+    
+    if (inputValue === undefined || inputValue === '') {
+      // Если поле пустое, очищаем значение
+      handleLayerChange(layerId, field as keyof WaterLayer, undefined);
+      setInputValues(prev => {
+        const newValues = { ...prev };
+        if (newValues[layerId]) {
+          delete newValues[layerId][field];
+        }
+        return newValues;
+      });
+      return;
+    }
+
     const layer = borehole.water_layers?.find(l => l.id === layerId);
     if (!layer) return;
 
-    const update: Partial<WaterLayer> = {};
-
     // Числовые поля
     if (['upv', 'uuv', 'bottom', 'pressure', 'depression'].includes(field)) {
-      const normalizedValue = value.replace(',', '.');
+      const normalizedValue = inputValue.replace(',', '.');
       const num = parseFloat(normalizedValue);
       if (!isNaN(num)) {
-        (update as any)[field] = roundToTwoDecimals(num);
-      } else if (value === '') {
-        (update as any)[field] = undefined;
-      } else {
-        // Если ещё не число (например, "1," или "1.2"), не сохраняем
-        return;
+        const roundedValue = roundToTwoDecimals(num);
+        handleLayerChange(layerId, field as keyof WaterLayer, roundedValue);
       }
     } else {
       // Текстовые поля (horizon, dates)
-      (update as any)[field] = value;
+      handleLayerChange(layerId, field as keyof WaterLayer, inputValue);
     }
-
-    if (Object.keys(update).length > 0) {
-      GeoLogData.updateWaterLayer(boreholeId, layerId, update);
-      onUpdate({});
-    }
-  };
-
-  // Обработчик потери фокуса - только очищаем временное состояние
-  const handleInputBlur = (layerId: string, field: string) => {
+    
+    // Очищаем временное значение
     setInputValues(prev => {
       const newValues = { ...prev };
       if (newValues[layerId]) {
@@ -156,28 +175,35 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
   // Обработчик изменения чекбокса "Нет"
   const handleAbsentChange = (layerId: string, field: 'upvAbsent' | 'uuvAbsent', checked: boolean) => {
-    GeoLogData.updateWaterLayer(boreholeId, layerId, { [field]: checked });
-    onUpdate({});
+    handleLayerChange(layerId, field, checked);
   };
 
   // Добавление нового слоя
   const handleAddLayer = (): string => {
-    // Автоматически подставляем даты из полей "Начата" и "Окончена"
-    const newLayer = GeoLogData.addWaterLayer(boreholeId, {
+    const layers = borehole.water_layers || [];
+    
+    const newLayer: WaterLayer = {
+      id: 'wl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId,
+      depth_m: 0,
+      water_type: '',
       upvDate: borehole.date || '',
       uuvDate: borehole.end_date || ''
-    });
-    onUpdate({});
+    };
+    
+    onUpdate({ water_layers: [...layers, newLayer] });
+    Journal.logEvent('command', `Добавлен водный слой`, 'water_layer.add');
     return newLayer.id;
   };
 
   // Удаление слоя
   const handleDeleteLayer = (layerId: string) => {
-    GeoLogData.deleteWaterLayer(boreholeId, layerId);
+    const updatedLayers = (borehole.water_layers || []).filter(l => l.id !== layerId);
+    onUpdate({ water_layers: updatedLayers });
     if (selectedLayerId === layerId) {
       setSelectedLayerId(null);
     }
-    onUpdate({});
+    Journal.logEvent('command', `Удалён водный слой ${layerId}`, 'water_layer.delete');
   };
 
   // Установка фокуса
