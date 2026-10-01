@@ -1,5 +1,5 @@
 // GeoLog 7.4 main.tsx rev.2 (01.10.2026) | schema v1.4
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Borehole, SoilLayer, Sample, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
@@ -15,6 +15,8 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, Record<string, string>>>({});
+  const [focusTargetLayerId, setFocusTargetLayerId] = useState<string | null>(null);
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const allBoreholes = GeoLogData.getAll();
   const dicts = GeoLogData.getDicts();
   const igeCatalog = (dicts as any).ige_catalog || [];
@@ -177,7 +179,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
   };
 
   // Добавление слоя ниже (после последнего)
-  const handleAddLayerBelow = () => {
+  const handleAddLayerBelow = (): string => {
     const layers = borehole.soil_layers || [];
     const lastLayer = layers.length > 0 
       ? [...layers].sort((a, b) => b.depth_to_m - a.depth_to_m)[0]
@@ -198,6 +200,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     
     onUpdate({ soil_layers: [...layers, newLayer] });
     Journal.logEvent('command', `Добавлен слой ниже`, 'layer.create_below');
+    return newLayer.id;
   };
 
   // Добавление слоя выше (перед первым)
@@ -235,6 +238,14 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
   const formatDepths = (depths: number[]): string => {
     return depths.map(d => d.toFixed(2)).join('; ');
   };
+
+  // Установка фокуса на поле ввода после создания нового слоя
+  useEffect(() => {
+    if (focusTargetLayerId && inputRefs.current[focusTargetLayerId]) {
+      inputRefs.current[focusTargetLayerId]?.focus();
+      setFocusTargetLayerId(null);
+    }
+  }, [focusTargetLayerId, borehole.soil_layers]);
 
   // Округление до одного знака после запятой (шаг 0.1)
   const roundToOneDecimal = (value: number): number => {
@@ -413,6 +424,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   {/* Подошва */}
                   <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
+                      ref={(el) => { inputRefs.current[layer.id] = el; }}
                       type="text"
                       className={isValid ? inputClass : invalidClass}
                       value={getInputValue(layer.id, 'depth_to_m', layer.depth_to_m)}
@@ -426,7 +438,10 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           handleInputBlur(layer.id, 'depth_to_m');
-                          handleAddLayerBelow();
+                          const newLayerId = handleAddLayerBelow();
+                          if (newLayerId) {
+                            setFocusTargetLayerId(newLayerId);
+                          }
                         }
                       }}
                     />
