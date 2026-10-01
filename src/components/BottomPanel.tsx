@@ -200,18 +200,18 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
   const handleSave = () => {
     const data: Partial<Borehole> = {
       number: form.number,
-      depth_m: truncateToTwoDecimals(form.depth_m),
+      depth_m: roundToStep(form.depth_m),
       elev_m: truncateToTwoDecimals(form.elev_m),
       x: truncateToTwoDecimals(form.x),
       y: truncateToTwoDecimals(form.y),
       date: form.date,
       wgs84_lon: truncateToTwoDecimals(form.wgs84_lon) || undefined,
       wgs84_lat: truncateToTwoDecimals(form.wgs84_lat) || undefined,
-      casing_depth_m: truncateToTwoDecimals(form.casing_depth_m) || undefined,
-      reaming_m: truncateToTwoDecimals(form.reaming_m) || undefined,
-      gso_m: truncateToTwoDecimals(form.gso_m) || undefined,
-      gsp_m: truncateToTwoDecimals(form.gsp_m) || undefined,
-      mmg_m: truncateToTwoDecimals(form.mmg_m) || undefined,
+      casing_depth_m: roundToStep(form.casing_depth_m) || undefined,
+      reaming_m: roundToStep(form.reaming_m) || undefined,
+      gso_m: roundToStep(form.gso_m) || undefined,
+      gsp_m: roundToStep(form.gsp_m) || undefined,
+      mmg_m: roundToStep(form.mmg_m) || undefined,
       gso_manual: form.gso_manual,
       gsp_manual: form.gsp_manual,
       mmg_manual: form.mmg_manual,
@@ -263,6 +263,14 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     return parseFloat(truncatedValue) || 0;
   };
 
+  // Округление до ближайшего кратного 0.10 метра
+  const roundToStep = (value: string): number => {
+    const normalized = value.replace(',', '.');
+    const num = parseFloat(normalized);
+    if (isNaN(num)) return 0;
+    return Math.round(num * 10) / 10;
+  };
+
   // Форматирование числовых значений с двумя знаками после запятой при потере фокуса (обрезание без округления)
   const handleBlurFormat = (field: string, value: string) => {
     if (!value || value === '') return;
@@ -303,6 +311,46 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
     }
   };
 
+  // Форматирование числовых значений с округлением до шага 0.10 при потере фокуса
+  const handleBlurFormatStep = (field: string, value: string) => {
+    if (!value || value === '') return;
+    
+    const num = roundToStep(value);
+    if (!isNaN(num)) {
+      const formattedValue = num.toFixed(2);
+      setForm(prev => ({ ...prev, [field]: formattedValue }));
+      
+      // Сохраняем данные при потере фокуса
+      const data: Partial<Borehole> = {
+        number: form.number,
+        depth_m: roundToStep(form.depth_m),
+        elev_m: truncateToTwoDecimals(form.elev_m),
+        x: truncateToTwoDecimals(form.x),
+        y: truncateToTwoDecimals(form.y),
+        date: form.date,
+        wgs84_lon: truncateToTwoDecimals(form.wgs84_lon) || undefined,
+        wgs84_lat: truncateToTwoDecimals(form.wgs84_lat) || undefined,
+        casing_depth_m: roundToStep(form.casing_depth_m) || undefined,
+        reaming_m: roundToStep(form.reaming_m) || undefined,
+        gso_m: roundToStep(form.gso_m) || undefined,
+        gsp_m: roundToStep(form.gsp_m) || undefined,
+        mmg_m: roundToStep(form.mmg_m) || undefined,
+        gso_manual: form.gso_manual,
+        gsp_manual: form.gsp_manual,
+        mmg_manual: form.mmg_manual,
+        user: form.user,
+      };
+      (data as any)[field] = num;
+      (data as any).end_date = form.end_date;
+      (data as any).side_id = form.side_id;
+      (data as any).rig_id = form.rig_id;
+      (data as any).method_id = form.method_id;
+      (data as any).diameter_id = form.diameter_id;
+      (data as any).casing_diameter_id = form.casing_diameter_id;
+      onUpdate(data);
+    }
+  };
+
   return (
     <div className="grid grid-cols-4 gap-4">
       {/* Column 1 */}
@@ -313,7 +361,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Глубина, м:</label>
-          <input className={inputClass} type="text" step="0.10" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('depth_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.depth_m} onChange={(e) => handleChange('depth_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('depth_m', e.target.value)} />
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Отметка, м:</label>
@@ -394,7 +442,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Глубина обсадки, м:</label>
-          <input className={inputClass} type="text" step="0.10" value={form.casing_depth_m} onChange={(e) => handleChange('casing_depth_m', e.target.value)} onBlur={(e) => handleBlurFormat('casing_depth_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.casing_depth_m} onChange={(e) => handleChange('casing_depth_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('casing_depth_m', e.target.value)} />
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Диаметр обсадки, мм:</label>
@@ -405,7 +453,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         </div>
         <div className={fieldRowClass}>
           <label className={labelClass}>Разбуривание, м:</label>
-          <input className={inputClass} type="text" step="0.10" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} onBlur={(e) => handleBlurFormat('reaming_m', e.target.value)} />
+          <input className={inputClass} type="text" step="0.10" value={form.reaming_m} onChange={(e) => handleChange('reaming_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('reaming_m', e.target.value)} />
         </div>
       </div>
 
@@ -414,7 +462,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ГСО, м:</label>
           <div>
-            <input className={inputClass} type="text" step="0.10" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} onBlur={(e) => handleBlurFormat('gso_m', e.target.value)} disabled={!form.gso_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.gso_m} onChange={(e) => handleChange('gso_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('gso_m', e.target.value)} disabled={!form.gso_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.gso_manual} onChange={(e) => handleChange('gso_manual', e.target.checked)} className="mr-1.5" />
               Вручную
@@ -424,7 +472,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ГСП, м:</label>
           <div>
-            <input className={inputClass} type="text" step="0.10" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} onBlur={(e) => handleBlurFormat('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.gsp_m} onChange={(e) => handleChange('gsp_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('gsp_m', e.target.value)} disabled={!form.gsp_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.gsp_manual} onChange={(e) => handleChange('gsp_manual', e.target.checked)} className="mr-1.5" />
               Вручную
@@ -434,7 +482,7 @@ function GeneralForm({ borehole, onUpdate }: { borehole: Borehole; onUpdate: (da
         <div className={fieldRowClass}>
           <label className={labelClass}>ММГ, м:</label>
           <div>
-            <input className={inputClass} type="text" step="0.10" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} onBlur={(e) => handleBlurFormat('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
+            <input className={inputClass} type="text" step="0.10" value={form.mmg_m} onChange={(e) => handleChange('mmg_m', e.target.value)} onBlur={(e) => handleBlurFormatStep('mmg_m', e.target.value)} disabled={!form.mmg_manual} />
             <label className="flex items-center text-xs mt-1">
               <input type="checkbox" checked={form.mmg_manual} onChange={(e) => handleChange('mmg_manual', e.target.checked)} className="mr-1.5" />
               Вручную
