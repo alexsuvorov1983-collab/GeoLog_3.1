@@ -172,18 +172,18 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     return depths.map(d => d.toFixed(2)).join('; ');
   };
 
-  const inputClass = "w-full px-1 py-0.5 text-xs border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
-  const invalidClass = "w-full px-1 py-0.5 text-xs border-2 border-red-500 bg-red-50 rounded focus:border-red-600 focus:outline-none";
+  const inputClass = "w-full px-1 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
+  const invalidClass = "w-full px-1 py-1 text-sm border-2 border-red-500 bg-red-50 rounded focus:border-red-600 focus:outline-none";
 
   return (
     <div className="flex flex-col h-full">
       {/* Селектор скважины */}
       <div className="flex items-center gap-2 px-2 py-1 bg-[#f5f5f5] border-b border-[#c0c0c0]">
-        <label className="text-xs font-semibold">Скважина:</label>
+        <label className="text-sm font-semibold">Скважина:</label>
         <select
           value={boreholeId}
           onChange={(e) => onSelectBorehole?.(e.target.value)}
-          className="px-2 py-0.5 text-xs border border-[#c0c0c0] rounded bg-white"
+          className="px-2 py-1 text-sm border border-[#c0c0c0] rounded bg-white"
         >
           {allBoreholes.map(bh => (
             <option key={bh.id} value={bh.id}>{bh.number}</option>
@@ -193,7 +193,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
 
       {/* Таблица */}
       <div className="flex-1 overflow-auto">
-        <table className="text-xs border-collapse w-full" style={{ tableLayout: 'fixed' }}>
+        <table className="text-sm border-collapse w-full" style={{ tableLayout: 'fixed' }}>
           <thead className="sticky top-0 z-10">
             <tr className="bg-[#e8e8e8] border-b border-[#c0c0c0]">
               {columns.map(col => (
@@ -291,27 +291,27 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* Монолиты (только чтение) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-xs">
+                  <td className="px-1 py-1 border-r border-[#e8e8e8] text-sm">
                     {formatDepths(undisturbedDepths)}
                   </td>
                   
                   {/* Нарушенные (только чтение) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-xs">
+                  <td className="px-1 py-1 border-r border-[#e8e8e8] text-sm">
                     {formatDepths(disturbedDepths)}
                   </td>
                   
                   {/* Пробы воды (только чтение) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-xs">
+                  <td className="px-1 py-1 border-r border-[#e8e8e8] text-sm">
                     {formatDepths(waterDepths)}
                   </td>
                   
                   {/* УПВ (только чтение) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-xs">
+                  <td className="px-1 py-1 border-r border-[#e8e8e8] text-sm">
                     {formatDepths(upvDepths)}
                   </td>
                   
                   {/* УППВ (только чтение) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-xs">
+                  <td className="px-1 py-1 border-r border-[#e8e8e8] text-sm">
                     {formatDepths(uuvDepths)}
                   </td>
                   
@@ -336,7 +336,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
       <div className="px-2 py-1 bg-[#f5f5f5] border-t border-[#c0c0c0]">
         <button
           onClick={handleAddLayer}
-          className="text-xs text-blue-600 hover:text-blue-800 underline"
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
         >
           Добавить новый слой...
         </button>
