@@ -296,7 +296,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
             </tr>
           </thead>
           <tbody>
-            {sortedLayers.map(layer => {
+          {sortedLayers.map(layer => {
               const isValid = isLayerValid(layer);
               const undisturbedDepths = getSamplesForLayer(layer, 'Монолит');
               const disturbedDepths = getSamplesForLayer(layer, 'Нарушенный');
@@ -417,18 +417,19 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                 </tr>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Кнопка добавления слоя */}
-      <div className="px-2 py-1 bg-[#f5f5f5] border-t border-[#c0c0c0]">
-        <button
-          onClick={handleAddLayer}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
-        >
-          Добавить новый слой...
-        </button>
+          {/* Кнопка добавления слоя */}
+          <tr>
+            <td colSpan={columns.length} className="px-2 py-1 text-center bg-[#f9f9f9]">
+              <button
+                onClick={handleAddLayer}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Добавить новый слой...
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       </div>
     </div>
   );
