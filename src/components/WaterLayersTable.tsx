@@ -178,7 +178,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     handleLayerChange(layerId, field, checked);
   };
 
-  // Добавление нового слоя после выбранного
+  // Добавление нового слоя после выбранного или в конце
   const handleAddLayer = (): string => {
     const layers = borehole.water_layers || [];
     
@@ -191,19 +191,26 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
       uuvDate: borehole.end_date || ''
     };
     
-    // Если есть выбранный слой, добавляем новый после него
+    // Определяем, после какого слоя добавлять новый
+    let referenceLayer: WaterLayer | null = null;
+    
     if (selectedLayerId) {
-      const selectedLayer = sortedLayers.find(l => l.id === selectedLayerId);
-      if (selectedLayer) {
-        // Находим максимальную глубину у выбранного слоя
-        const maxDepth = Math.max(
-          selectedLayer.upv ?? 0,
-          selectedLayer.uuv ?? 0,
-          selectedLayer.bottom ?? 0
-        );
-        // Присваиваем новому слою глубину на 1 больше, чтобы он оказался после выбранного
-        newLayer.upv = maxDepth + 1;
-      }
+      // Если есть выбранный слой, добавляем новый после него
+      referenceLayer = sortedLayers.find(l => l.id === selectedLayerId) || null;
+    } else if (sortedLayers.length > 0) {
+      // Если нет выбранного слоя, но есть существующие, добавляем после последнего
+      referenceLayer = sortedLayers[sortedLayers.length - 1];
+    }
+    
+    if (referenceLayer) {
+      // Находим максимальную глубину у опорного слоя
+      const maxDepth = Math.max(
+        referenceLayer.upv ?? 0,
+        referenceLayer.uuv ?? 0,
+        referenceLayer.bottom ?? 0
+      );
+      // Присваиваем новому слою глубину на 1 больше, чтобы он оказался после опорного
+      newLayer.upv = maxDepth + 1;
     }
     
     onUpdate({ water_layers: [...layers, newLayer] });
@@ -426,9 +433,10 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
             {/* Кнопка добавления слоя */}
             <tr>
-              <td colSpan={3} className="px-2 py-1 text-left bg-[#f9f9f9]">
+              <td colSpan={3} className="px-2 py-1 text-left bg-[#f9f9f9]" onClick={(e) => e.stopPropagation()}>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const newLayerId = handleAddLayer();
                     setFocusTarget({ layerId: newLayerId, field: 'upv' });
                   }}
