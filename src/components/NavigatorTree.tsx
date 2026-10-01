@@ -24,6 +24,11 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
   const boreholes = GeoLogData.getAll();
   const dicts = GeoLogData.getDicts();
 
+  // Подсчёт проб типа "water"
+  const waterSamplesCount = boreholes.reduce((count, bh) => {
+    return count + (bh.samples?.filter(s => s.sample_type === 'water').length || 0);
+  }, 0);
+
   const treeData: TreeNode[] = [
     {
       id: 'geology', label: 'ГЕОЛОГИЯ', icon: '🌍', children: [
@@ -50,7 +55,7 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
     {
       id: 'lab', label: 'ЛАБОРАТОРИЯ', icon: '🧪', children: [
         { id: 'soil-samples', label: 'Пробы грунта', commandId: 'doc.open.soil-samples', icon: '🏔️' },
-        { id: 'water-samples', label: 'Пробы воды', commandId: 'doc.open.water-samples', icon: '💧' },
+        { id: 'water-samples', label: `Пробы воды (${waterSamplesCount})`, commandId: 'doc.open.water-samples', icon: '💧' },
       ]
     },
     {

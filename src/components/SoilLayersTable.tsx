@@ -81,23 +81,27 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     return depths.sort((a, b) => a - b);
   };
 
-  // Получение уровней воды для слоя
+  // Получение уровней воды для слоя (из новой модели водных слоёв)
   const getWaterLevelsForLayer = (layer: SoilLayer, waterType: string): number[] => {
     const waterLayers = borehole.water_layers || [];
     const depths: number[] = [];
     
     waterLayers.forEach(wl => {
-      if (wl.water_type !== waterType) return;
+      // Определяем значение глубины из новой модели
+      const depthValue = waterType === 'UPV' ? wl.upv : wl.uuv;
+      
+      // Пропускаем, если значение отсутствует или отмечено как "Нет"
+      if (depthValue === undefined || depthValue === null) return;
+      if (waterType === 'UPV' && wl.upvAbsent) return;
+      if (waterType === 'UUV' && wl.uuvAbsent) return;
       
       const isFirstLayer = sortedLayers.length > 0 && sortedLayers[0].id === layer.id;
       const inLayer = isFirstLayer 
-        ? wl.depth_m >= layer.depth_from_m && wl.depth_m <= layer.depth_to_m
-        : wl.depth_m > layer.depth_from_m && wl.depth_m <= layer.depth_to_m;
+        ? depthValue >= layer.depth_from_m && depthValue <= layer.depth_to_m
+        : depthValue > layer.depth_from_m && depthValue <= layer.depth_to_m;
       
       if (inLayer) {
-        // УПВ/УППВ = elev_m - absoluteMark (глубина воды)
-        const absoluteMark = borehole.elev_m - wl.depth_m;
-        depths.push(absoluteMark);
+        depths.push(depthValue);
       }
     });
     

@@ -3,6 +3,7 @@ import { Borehole, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
 import SoilLayersTable from './SoilLayersTable';
+import WaterLayersTable from './WaterLayersTable';
 
 interface Props {
   borehole: Borehole | null;
@@ -66,7 +67,7 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
       <div className="flex-1 overflow-auto p-2">
         {activeTab === 'general' && <GeneralForm borehole={borehole} onUpdate={onUpdate} />}
         {activeTab === 'soil' && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
-        {activeTab === 'water' && <WaterLayersTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
+        {activeTab === 'water' && boreholeId && <WaterLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'samples' && <SamplesTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'additional' && <AdditionalTab borehole={borehole} />}

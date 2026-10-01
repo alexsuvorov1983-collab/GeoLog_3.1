@@ -55,8 +55,20 @@ export interface SoilLayer {
 export interface WaterLayer {
   id: string;
   borehole_id: string;
-  depth_m: number;
-  water_type: string;
+  depth_m: number; // для обратной совместимости
+  water_type: string; // для обратной совместимости
+  // Новые поля (схема v1.4)
+  upv?: number; // глубина УППВ, м
+  upvAbsent?: boolean; // отметка «Нет»
+  upvDate?: string; // дата замера УППВ
+  uuv?: number; // глубина УУПВ, м
+  uuvAbsent?: boolean; // отметка «Нет»
+  uuvDate?: string; // дата замера УУПВ
+  bottom?: number; // подошва слоя, м
+  horizon?: string; // ВГ, индекс водоносного горизонта
+  pressure?: number; // напор, м
+  depression?: number; // понижение, м
+  provenance?: string; // источник данных
 }
 
 export interface Sample {
@@ -100,8 +112,24 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'sl-003', borehole_id: 'bh-001', depth_from_m: 7.0, depth_to_m: 15.5, ground_type: 'Песок мелкий', ige_code: 'ИГЭ-3', classification: 'Песок пылеватый средней плотности', description: 'Песок пылеватый средней плотности неоднородный насыщенный водой, с прослоями супеси серой текучей, суглинка серого текучего' },
     ],
     water_layers: [
-      { id: 'wl-001', borehole_id: 'bh-001', depth_m: 3.20, water_type: 'Верховодка' },
-      { id: 'wl-002', borehole_id: 'bh-001', depth_m: 8.50, water_type: 'Грунтовые' },
+      { 
+        id: 'wl-001', 
+        borehole_id: 'bh-001', 
+        depth_m: 3.20, 
+        water_type: 'Верховодка',
+        upv: 3.52,
+        upvDate: '15.10.2019',
+        uuv: 3.30,
+        uuvDate: '20.10.2019',
+        bottom: 8.00,
+        horizon: 'В1'
+      },
+      { 
+        id: 'wl-002', 
+        borehole_id: 'bh-001', 
+        depth_m: 8.50, 
+        water_type: 'Грунтовые'
+      },
     ],
     samples: [
       { id: 'sp-001', borehole_id: 'bh-001', depth_m: 3.0, sample_type: 'Нарушенный', lab_number: 'Л-001' },
@@ -126,7 +154,16 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'sl-006', borehole_id: 'bh-002', depth_from_m: 12.0, depth_to_m: 22.0, ground_type: 'Песок крупный' },
     ],
     water_layers: [
-      { id: 'wl-003', borehole_id: 'bh-002', depth_m: 4.10, water_type: 'Верховодка' },
+      { 
+        id: 'wl-003', 
+        borehole_id: 'bh-002', 
+        depth_m: 4.10, 
+        water_type: 'Верховодка',
+        upvAbsent: true,
+        upvDate: '16.10.2019',
+        uuvAbsent: true,
+        uuvDate: '17.10.2019'
+      },
     ],
     samples: [
       { id: 'sp-003', borehole_id: 'bh-002', depth_m: 5.0, sample_type: 'Монолит', lab_number: 'Л-003' },
@@ -145,7 +182,15 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'sl-008', borehole_id: 'bh-003', depth_from_m: 1.5, depth_to_m: 10.0, ground_type: 'Супесь', description: 'Супесь пластичная' },
     ],
     water_layers: [
-      { id: 'wl-004', borehole_id: 'bh-003', depth_m: 2.80, water_type: 'Грунтовые' },
+      { 
+        id: 'wl-004', 
+        borehole_id: 'bh-003', 
+        depth_m: 2.80, 
+        water_type: 'Грунтовые',
+        upv: 3.80,
+        horizon: 'В2',
+        pressure: 1.20
+      },
     ],
     samples: [
       { id: 'sp-004', borehole_id: 'bh-003', depth_m: 2.0, sample_type: 'Нарушенный', lab_number: 'Л-004' },
@@ -363,5 +408,55 @@ export const GeoLogData = {
     });
     notify();
     Journal.logEvent('info', 'Скважины отсортированы по номеру', 'bore.sort');
+  },
+
+  // CRUD для водных слоёв
+  addWaterLayer(boreholeId: string, data: Partial<WaterLayer>): WaterLayer {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh) throw new Error(`Скважина ${boreholeId} не найдена`);
+    
+    if (!bh.water_layers) bh.water_layers = [];
+    
+    const newLayer: WaterLayer = {
+      id: 'wl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId,
+      depth_m: data.depth_m || 0,
+      water_type: data.water_type || '',
+      ...data,
+    };
+    
+    bh.water_layers.push(newLayer);
+    notify();
+    bus.emit('ui:catalog-changed', { collection: 'water_layers', id: newLayer.id });
+    Journal.logEvent('command', `Добавлен водный слой ${newLayer.id}`, 'water_layer.add');
+    return newLayer;
+  },
+
+  updateWaterLayer(boreholeId: string, layerId: string, data: Partial<WaterLayer>): WaterLayer | undefined {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh || !bh.water_layers) return undefined;
+    
+    const idx = bh.water_layers.findIndex(l => l.id === layerId);
+    if (idx === -1) return undefined;
+    
+    bh.water_layers[idx] = { ...bh.water_layers[idx], ...data };
+    notify();
+    bus.emit('ui:catalog-changed', { collection: 'water_layers', id: layerId });
+    Journal.logEvent('command', `Обновлён водный слой ${layerId}`, 'water_layer.update');
+    return bh.water_layers[idx];
+  },
+
+  deleteWaterLayer(boreholeId: string, layerId: string): boolean {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh || !bh.water_layers) return false;
+    
+    const idx = bh.water_layers.findIndex(l => l.id === layerId);
+    if (idx === -1) return false;
+    
+    bh.water_layers.splice(idx, 1);
+    notify();
+    bus.emit('ui:catalog-changed', { collection: 'water_layers', id: layerId });
+    Journal.logEvent('command', `Удалён водный слой ${layerId}`, 'water_layer.delete');
+    return true;
   },
 };
