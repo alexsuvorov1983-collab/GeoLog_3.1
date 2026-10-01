@@ -178,40 +178,34 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     handleLayerChange(layerId, field, checked);
   };
 
-  // Добавление нового слоя после выбранного или в конце
+  // Добавление нового слоя ниже существующих
   const handleAddLayer = (): string => {
     const layers = borehole.water_layers || [];
+    
+    // Находим максимальную глубину среди всех существующих слоёв
+    let maxDepth = 0;
+    if (layers.length > 0) {
+      layers.forEach(layer => {
+        const layerMax = Math.max(
+          layer.upv ?? 0,
+          layer.uuv ?? 0,
+          layer.bottom ?? 0
+        );
+        if (layerMax > maxDepth) {
+          maxDepth = layerMax;
+        }
+      });
+    }
     
     const newLayer: WaterLayer = {
       id: 'wl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_m: 0,
       water_type: '',
+      upv: maxDepth + 1, // Гарантированно больше всех существующих
       upvDate: borehole.date || '',
       uuvDate: borehole.end_date || ''
     };
-    
-    // Определяем, после какого слоя добавлять новый
-    let referenceLayer: WaterLayer | null = null;
-    
-    if (selectedLayerId) {
-      // Если есть выбранный слой, добавляем новый после него
-      referenceLayer = sortedLayers.find(l => l.id === selectedLayerId) || null;
-    } else if (sortedLayers.length > 0) {
-      // Если нет выбранного слоя, но есть существующие, добавляем после последнего
-      referenceLayer = sortedLayers[sortedLayers.length - 1];
-    }
-    
-    if (referenceLayer) {
-      // Находим максимальную глубину у опорного слоя
-      const maxDepth = Math.max(
-        referenceLayer.upv ?? 0,
-        referenceLayer.uuv ?? 0,
-        referenceLayer.bottom ?? 0
-      );
-      // Присваиваем новому слою глубину на 1 больше, чтобы он оказался после опорного
-      newLayer.upv = maxDepth + 1;
-    }
     
     onUpdate({ water_layers: [...layers, newLayer] });
     Journal.logEvent('command', `Добавлен водный слой`, 'water_layer.add');
