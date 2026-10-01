@@ -13,6 +13,7 @@ interface Props {
 
 export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSelectBorehole }: Props) {
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
   const allBoreholes = GeoLogData.getAll();
   const dicts = GeoLogData.getDicts();
   const igeCatalog = (dicts as any).ige_catalog || [];
@@ -244,6 +245,22 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
           <span>Добавить слой ниже</span>
         </button>
 
+        {/* Кнопка удалить слой */}
+        <button
+          onClick={() => {
+            if (selectedLayerId) {
+              handleDeleteLayer(selectedLayerId);
+              setSelectedLayerId(null);
+            }
+          }}
+          disabled={!selectedLayerId}
+          className="flex items-center gap-1 px-3 py-1 text-sm bg-white border border-[#c0c0c0] rounded hover:bg-[#ffe8e8] disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Удалить выбранный слой"
+        >
+          <span>🗑️</span>
+          <span>Удалить</span>
+        </button>
+
         <div className="w-px h-6 bg-[#c0c0c0] mx-1" />
 
         {/* Селектор скважины */}
@@ -288,9 +305,13 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
               const uuvDepths = getWaterLevelsForLayer(layer, 'UUV');
 
               return (
-                <tr key={layer.id} className="border-b border-[#e8e8e8] hover:bg-[#f0f0ff]">
+                <tr 
+                  key={layer.id} 
+                  className={`border-b border-[#e8e8e8] hover:bg-[#f0f0ff] cursor-pointer ${selectedLayerId === layer.id ? 'bg-[#c8d8ff]' : ''}`}
+                  onClick={() => setSelectedLayerId(layer.id)}
+                >
                   {/* Кровля */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
@@ -305,7 +326,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* Подошва */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
@@ -325,7 +346,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* ИГЭ (select) */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <select
                       className={inputClass}
                       value={layer.ige_code || ''}
@@ -339,7 +360,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* Классификация */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       className={inputClass}
@@ -349,7 +370,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* Описание */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
                     <textarea
                       className={inputClass}
                       style={{ minHeight: '40px', resize: 'vertical' }}
@@ -384,7 +405,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                   </td>
                   
                   {/* Удаление */}
-                  <td className="px-1 py-0.5 text-center">
+                  <td className="px-1 py-0.5 text-center" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleDeleteLayer(layer.id)}
                       className="text-red-600 hover:text-red-800 text-sm"
