@@ -142,17 +142,15 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     
     const newDepthFrom = lastLayer ? lastLayer.depth_to_m : 0;
     const newDepthTo = newDepthFrom + 1.00;
-    const firstIgeCode = igeCatalog.length > 0 ? igeCatalog[0].code : '';
-    const firstIgeName = igeCatalog.length > 0 ? igeCatalog[0].name : '';
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
       depth_to_m: newDepthTo,
-      ground_type: firstIgeName,
-      ige_code: firstIgeCode,
-      classification: firstIgeName,
+      ground_type: '',
+      ige_code: '',
+      classification: '',
       description: '',
     };
     
@@ -169,17 +167,15 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     
     const newDepthFrom = lastLayer ? lastLayer.depth_to_m : 0;
     const newDepthTo = newDepthFrom + 1.00;
-    const firstIgeCode = igeCatalog.length > 0 ? igeCatalog[0].code : '';
-    const firstIgeName = igeCatalog.length > 0 ? igeCatalog[0].name : '';
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
       depth_to_m: newDepthTo,
-      ground_type: firstIgeName,
-      ige_code: firstIgeCode,
-      classification: firstIgeName,
+      ground_type: '',
+      ige_code: '',
+      classification: '',
       description: '',
     };
     
@@ -196,17 +192,15 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     
     const newDepthTo = firstLayer ? firstLayer.depth_from_m : 1.00;
     const newDepthFrom = Math.max(0, newDepthTo - 1.00);
-    const firstIgeCode = igeCatalog.length > 0 ? igeCatalog[0].code : '';
-    const firstIgeName = igeCatalog.length > 0 ? igeCatalog[0].name : '';
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
       depth_to_m: newDepthTo,
-      ground_type: firstIgeName,
-      ige_code: firstIgeCode,
-      classification: firstIgeName,
+      ground_type: '',
+      ige_code: '',
+      classification: '',
       description: '',
     };
     
