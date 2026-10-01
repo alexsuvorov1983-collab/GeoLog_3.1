@@ -258,7 +258,7 @@ export const GeoLogData = {
       end_date: data.end_date || data.date || new Date().toLocaleDateString('ru-RU'),
       modified_at: new Date().toLocaleString('ru-RU'),
       rev: 1,
-      user: 'Пользователь',
+      user: '',
       ...data,
     };
     boreholes.push(newBh);
