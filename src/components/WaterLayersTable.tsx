@@ -162,7 +162,11 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
   // Добавление нового слоя
   const handleAddLayer = (): string => {
-    const newLayer = GeoLogData.addWaterLayer(boreholeId, {});
+    // Автоматически подставляем даты из полей "Начата" и "Окончена"
+    const newLayer = GeoLogData.addWaterLayer(boreholeId, {
+      upvDate: borehole.date || '',
+      uuvDate: borehole.end_date || ''
+    });
     return newLayer.id;
   };
 
@@ -236,7 +240,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   onClick={() => setSelectedLayerId(layer.id)}
                 >
                   {/* УППВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
                     {layer.upvAbsent ? (
                       <div className="flex items-center gap-1">
                         <span className="text-sm text-gray-500">Нет</span>
@@ -266,7 +270,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* УУПВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
                     {layer.uuvAbsent ? (
                       <div className="flex items-center gap-1">
                         <span className="text-sm text-gray-500">Нет</span>
@@ -296,7 +300,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Подошва */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
                     <input
                       ref={(el) => { inputRefs.current[`${layer.id}_bottom`] = el; }}
                       type="text"
@@ -307,19 +311,15 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                     />
                   </td>
 
-                  {/* ВГ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={getInputValue(layer.id, 'horizon', layer.horizon)}
-                      onChange={(e) => handleInputChange(layer.id, 'horizon', e.target.value)}
-                      onBlur={() => handleInputBlur(layer.id, 'horizon')}
-                    />
+                  {/* ВГ - расчётное поле (Подошва - УППВ) */}
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-center">
+                    {layer.bottom !== undefined && layer.upv !== undefined 
+                      ? (layer.bottom - layer.upv).toFixed(2) 
+                      : ''}
                   </td>
 
                   {/* Дата УППВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
                     <input
                       type="text"
                       className={inputClass}
@@ -331,7 +331,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Дата УУПВ */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]">
                     <input
                       type="text"
                       className={inputClass}
@@ -342,26 +342,24 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                     />
                   </td>
 
-                  {/* Напор */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={getInputValue(layer.id, 'pressure', layer.pressure)}
-                      onChange={(e) => handleInputChange(layer.id, 'pressure', e.target.value)}
-                      onBlur={() => handleInputBlur(layer.id, 'pressure')}
-                    />
+                  {/* Напор - расчётное поле (УППВ - УУПВ, если положительное) */}
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-center">
+                    {layer.upv !== undefined && layer.uuv !== undefined 
+                      ? (() => {
+                          const diff = layer.upv - layer.uuv;
+                          return diff > 0 ? diff.toFixed(2) : '';
+                        })()
+                      : ''}
                   </td>
 
-                  {/* Понижение */}
-                  <td className="px-1 py-0.5 border-r border-[#e8e8e8]" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={getInputValue(layer.id, 'depression', layer.depression)}
-                      onChange={(e) => handleInputChange(layer.id, 'depression', e.target.value)}
-                      onBlur={() => handleInputBlur(layer.id, 'depression')}
-                    />
+                  {/* Понижение - расчётное поле (УППВ - УУПВ, если отрицательное) */}
+                  <td className="px-1 py-0.5 border-r border-[#e8e8e8] text-center">
+                    {layer.upv !== undefined && layer.uuv !== undefined 
+                      ? (() => {
+                          const diff = layer.upv - layer.uuv;
+                          return diff < 0 ? Math.abs(diff).toFixed(2) : '';
+                        })()
+                      : ''}
                   </td>
 
                   {/* Пробы */}
@@ -370,7 +368,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
                   </td>
 
                   {/* Удаление */}
-                  <td className="px-1 py-0.5 text-center" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-1 py-0.5 text-center">
                     <button
                       onClick={() => handleDeleteLayer(layer.id)}
                       className="text-red-600 hover:text-red-800 text-sm"
