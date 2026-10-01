@@ -226,10 +226,15 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
 
   // Получение значения для отображения в поле ввода
   const getInputValue = (layerId: string, field: string, actualValue: number): string => {
-    const key = `${layerId}_${field}`;
+    // Если есть временное введённое значение, используем его
     if (inputValues[layerId] && inputValues[layerId][field] !== undefined) {
       return inputValues[layerId][field];
     }
+    // Если значение равно 0 (новый слой для depth_to_m), показываем пустую строку
+    if (actualValue === 0) {
+      return '';
+    }
+    // Иначе показываем отформатированное значение
     return actualValue.toFixed(1);
   };
 
@@ -393,7 +398,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
-                      value={layer.depth_to_m === 0 ? '' : getInputValue(layer.id, 'depth_to_m', layer.depth_to_m)}
+                      value={getInputValue(layer.id, 'depth_to_m', layer.depth_to_m)}
                       onChange={(e) => {
                         handleInputChange(layer.id, 'depth_to_m', e.target.value);
                       }}
