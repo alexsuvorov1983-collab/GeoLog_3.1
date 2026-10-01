@@ -141,13 +141,12 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
       : null;
     
     const newDepthFrom = lastLayer ? lastLayer.depth_to_m : 0;
-    const newDepthTo = newDepthFrom + 1.00;
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
-      depth_to_m: newDepthTo,
+      depth_to_m: 0,
       ground_type: '',
       ige_code: '',
       classification: '',
@@ -166,13 +165,12 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
       : null;
     
     const newDepthFrom = lastLayer ? lastLayer.depth_to_m : 0;
-    const newDepthTo = newDepthFrom + 1.00;
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
-      depth_to_m: newDepthTo,
+      depth_to_m: 0,
       ground_type: '',
       ige_code: '',
       classification: '',
@@ -190,14 +188,13 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
       ? [...layers].sort((a, b) => a.depth_from_m - b.depth_from_m)[0]
       : null;
     
-    const newDepthTo = firstLayer ? firstLayer.depth_from_m : 1.00;
-    const newDepthFrom = Math.max(0, newDepthTo - 1.00);
+    const newDepthFrom = 0;
     
     const newLayer: SoilLayer = {
       id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       borehole_id: boreholeId,
       depth_from_m: newDepthFrom,
-      depth_to_m: newDepthTo,
+      depth_to_m: 0,
       ground_type: '',
       ige_code: '',
       classification: '',
@@ -312,7 +309,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                     <input
                       type="text"
                       className={isValid ? inputClass : invalidClass}
-                      value={layer.depth_to_m.toFixed(2)}
+                      value={layer.depth_to_m === 0 ? '' : layer.depth_to_m.toFixed(2)}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value.replace(',', '.'));
                         if (!isNaN(val)) {
