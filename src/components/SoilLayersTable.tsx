@@ -422,6 +422,13 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
                       onBlur={() => {
                         handleInputBlur(layer.id, 'depth_to_m');
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleInputBlur(layer.id, 'depth_to_m');
+                          handleAddLayerBelow();
+                        }
+                      }}
                     />
                   </td>
                   
