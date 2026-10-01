@@ -1,6 +1,10 @@
-// GeoLog.Data (1.1) — хранилище данных со схемой v1.3
+// GeoLog.Data (1.1) — хранилище данных со схемой v1.4
+// GeoLog 7.4 main.tsx rev.2 (01.10.2026) | schema v1.4
 import { bus } from './eventBus';
 import { Journal } from './journal';
+
+const STORAGE_KEY = 'geolog_state_v1.4';
+const OLD_STORAGE_KEY = 'geolog_state_v1.3';
 
 // Схема v1.3 — поля скважины
 export interface Borehole {
@@ -43,6 +47,8 @@ export interface SoilLayer {
   depth_from_m: number;
   depth_to_m: number;
   ground_type: string;
+  ige_code?: string;
+  classification?: string;
   description?: string;
 }
 
@@ -74,6 +80,11 @@ export interface DictItem {
   name: string;
 }
 
+export interface IGEItem {
+  code: string;
+  name: string;
+}
+
 // Фикстура — 5 скважин (2.1)
 const fixtureBoreholes: Borehole[] = [
   {
@@ -84,9 +95,9 @@ const fixtureBoreholes: Borehole[] = [
     gso_m: 3.20, gsp_m: 8.50, mmg_m: 12.00,
     modified_at: '15.03.2024 14:30:00', rev: 1, user: 'Инженер',
     soil_layers: [
-      { id: 'sl-001', borehole_id: 'bh-001', depth_from_m: 0, depth_to_m: 2.5, ground_type: 'Насыпной грунт', description: 'Песок с примесью строительного мусора' },
-      { id: 'sl-002', borehole_id: 'bh-001', depth_from_m: 2.5, depth_to_m: 7.0, ground_type: 'Суглинок', description: 'Суглинок тугопластичный' },
-      { id: 'sl-003', borehole_id: 'bh-001', depth_from_m: 7.0, depth_to_m: 15.5, ground_type: 'Песок мелкий', description: 'Песок мелкий средней плотности водонас.' },
+      { id: 'sl-001', borehole_id: 'bh-001', depth_from_m: 0, depth_to_m: 2.5, ground_type: 'Насыпной грунт', ige_code: 'ИГЭ-1', classification: 'Суглинок полутвёрдый', description: 'ПРС: Супесь коричневая пластичная, с корнями растений' },
+      { id: 'sl-002', borehole_id: 'bh-001', depth_from_m: 2.5, depth_to_m: 7.0, ground_type: 'Суглинок', ige_code: 'ИГЭ-2', classification: 'Суглинок тугопластичный', description: 'Суглинок тугопластичный, коричневый, с гравием и галькой до 10%' },
+      { id: 'sl-003', borehole_id: 'bh-001', depth_from_m: 7.0, depth_to_m: 15.5, ground_type: 'Песок мелкий', ige_code: 'ИГЭ-3', classification: 'Песок пылеватый средней плотности', description: 'Песок пылеватый средней плотности неоднородный насыщенный водой, с прослоями супеси серой текучей, суглинка серого текучего' },
     ],
     water_layers: [
       { id: 'wl-001', borehole_id: 'bh-001', depth_m: 3.20, water_type: 'Верховодка' },
@@ -95,6 +106,7 @@ const fixtureBoreholes: Borehole[] = [
     samples: [
       { id: 'sp-001', borehole_id: 'bh-001', depth_m: 3.0, sample_type: 'Нарушенный', lab_number: 'Л-001' },
       { id: 'sp-002', borehole_id: 'bh-001', depth_m: 7.5, sample_type: 'Монолит', lab_number: 'Л-002' },
+      { id: 'sp-003', borehole_id: 'bh-001', depth_m: 8.0, sample_type: 'water', lab_number: 'В-1' },
     ],
     thermometry: [
       { id: 'th-001', borehole_id: 'bh-001', depth_m: 5.0, temperature_c: 8.2 },
@@ -225,6 +237,13 @@ const dicts = {
     { id: 'rc-2', name: 'Базальт' },
     { id: 'rc-3', name: 'Диорит' },
   ],
+  ige_catalog: [
+    { code: 'ИГЭ-1', name: 'Суглинок полутвёрдый' },
+    { code: 'ИГЭ-2', name: 'Суглинок тугопластичный' },
+    { code: 'ИГЭ-3', name: 'Песок пылеватый средней плотности' },
+    { code: 'ИГЭ-4', name: 'Глина твёрдая' },
+    { code: 'ИГЭ-5', name: 'Песок крупный' },
+  ],
 };
 
 // Состояние хранилища
@@ -244,6 +263,23 @@ export const GeoLogData = {
 
   getById(id: string): Borehole | undefined {
     return boreholes.find((b) => b.id === id);
+  },
+
+  // Миграция v1.3 → v1.4
+  migrateData(oldBoreholes: any[]): Borehole[] {
+    return oldBoreholes.map(bh => ({
+      ...bh,
+      soil_layers: (bh.soil_layers || []).map((layer: any) => ({
+        ...layer,
+        ige_code: layer.ige_code || undefined,
+        classification: layer.classification || layer.ground_type || undefined,
+        description: layer.description || undefined,
+      })),
+      samples: (bh.samples || []).map((sample: any) => ({
+        ...sample,
+        sample_type: sample.sample_type || 'disturbed',
+      })),
+    }));
   },
 
   create(data: Partial<Borehole>): Borehole {

@@ -329,6 +329,7 @@ export default function App() {
             borehole={selectedBorehole}
             boreholeId={selectedBoreholeId}
             height={bottomPanelHeight}
+            onSelectBorehole={selectBorehole}
             onUpdate={(data: Partial<Borehole>) => {
               if (selectedBoreholeId) {
                 GeoLogData.update(selectedBoreholeId, data);

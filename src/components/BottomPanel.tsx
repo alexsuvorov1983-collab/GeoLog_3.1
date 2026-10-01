@@ -2,17 +2,19 @@ import { useState, useEffect } from 'react';
 import { Borehole, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
+import SoilLayersTable from './SoilLayersTable';
 
 interface Props {
   borehole: Borehole | null;
   onUpdate: (data: Partial<Borehole>) => void;
   height?: number;
   boreholeId?: string | null;
+  onSelectBorehole?: (id: string) => void;
 }
 
 type TabId = 'general' | 'soil' | 'water' | 'samples' | 'thermometry' | 'additional';
 
-export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 260 }: Props) {
+export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 260, onSelectBorehole }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
 
   const tabs: { id: TabId; label: string }[] = [
@@ -63,7 +65,7 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
       {/* Tab Content */}
       <div className="flex-1 overflow-auto p-2">
         {activeTab === 'general' && <GeneralForm borehole={borehole} onUpdate={onUpdate} />}
-        {activeTab === 'soil' && <SoilLayersTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
+        {activeTab === 'soil' && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'water' && <WaterLayersTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'samples' && <SamplesTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
