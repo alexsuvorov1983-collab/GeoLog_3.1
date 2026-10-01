@@ -145,6 +145,8 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
 
     if (Object.keys(update).length > 0) {
       GeoLogData.updateWaterLayer(boreholeId, layerId, update);
+      
+      // Очищаем временное значение
       setInputValues(prev => {
         const newValues = { ...prev };
         if (newValues[layerId]) {
@@ -152,12 +154,16 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
         }
         return newValues;
       });
+      
+      // Вызываем onUpdate для перерисовки родительского компонента
+      onUpdate({});
     }
   };
 
   // Обработчик изменения чекбокса "Нет"
   const handleAbsentChange = (layerId: string, field: 'upvAbsent' | 'uuvAbsent', checked: boolean) => {
     GeoLogData.updateWaterLayer(boreholeId, layerId, { [field]: checked });
+    onUpdate({});
   };
 
   // Добавление нового слоя
@@ -167,6 +173,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
       upvDate: borehole.date || '',
       uuvDate: borehole.end_date || ''
     });
+    onUpdate({});
     return newLayer.id;
   };
 
@@ -176,6 +183,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     if (selectedLayerId === layerId) {
       setSelectedLayerId(null);
     }
+    onUpdate({});
   };
 
   // Установка фокуса
