@@ -419,7 +419,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
             })}
           {/* Кнопка добавления слоя */}
           <tr>
-            <td colSpan={columns.length} className="px-2 py-1 text-center bg-[#f9f9f9]">
+            <td colSpan={3} className="px-2 py-1 text-left bg-[#f9f9f9]">
               <button
                 onClick={handleAddLayer}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
