@@ -178,7 +178,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     handleLayerChange(layerId, field, checked);
   };
 
-  // Добавление нового слоя
+  // Добавление нового слоя после выбранного
   const handleAddLayer = (): string => {
     const layers = borehole.water_layers || [];
     
@@ -191,7 +191,17 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
       uuvDate: borehole.end_date || ''
     };
     
-    onUpdate({ water_layers: [...layers, newLayer] });
+    // Если есть выбранный слой, добавляем новый после него
+    if (selectedLayerId) {
+      const selectedIndex = sortedLayers.findIndex(l => l.id === selectedLayerId);
+      const updatedLayers = [...sortedLayers];
+      updatedLayers.splice(selectedIndex + 1, 0, newLayer);
+      onUpdate({ water_layers: updatedLayers });
+    } else {
+      // Если нет выбранного слоя, добавляем в конец
+      onUpdate({ water_layers: [...layers, newLayer] });
+    }
+    
     Journal.logEvent('command', `Добавлен водный слой`, 'water_layer.add');
     return newLayer.id;
   };
