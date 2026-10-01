@@ -133,7 +133,7 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     Journal.logEvent('command', `Обновлён слой ${layerId}`, 'layer.update');
   };
 
-  // Добавление нового слоя
+  // Добавление нового слоя (после последнего)
   const handleAddLayer = () => {
     const layers = borehole.soil_layers || [];
     const lastLayer = layers.length > 0 
@@ -160,6 +160,60 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
     Journal.logEvent('command', `Создан новый слой`, 'layer.create');
   };
 
+  // Добавление слоя ниже (после последнего)
+  const handleAddLayerBelow = () => {
+    const layers = borehole.soil_layers || [];
+    const lastLayer = layers.length > 0 
+      ? [...layers].sort((a, b) => b.depth_to_m - a.depth_to_m)[0]
+      : null;
+    
+    const newDepthFrom = lastLayer ? lastLayer.depth_to_m : 0;
+    const newDepthTo = newDepthFrom + 1.00;
+    const firstIgeCode = igeCatalog.length > 0 ? igeCatalog[0].code : '';
+    const firstIgeName = igeCatalog.length > 0 ? igeCatalog[0].name : '';
+    
+    const newLayer: SoilLayer = {
+      id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId,
+      depth_from_m: newDepthFrom,
+      depth_to_m: newDepthTo,
+      ground_type: firstIgeName,
+      ige_code: firstIgeCode,
+      classification: firstIgeName,
+      description: '',
+    };
+    
+    onUpdate({ soil_layers: [...layers, newLayer] });
+    Journal.logEvent('command', `Добавлен слой ниже`, 'layer.create_below');
+  };
+
+  // Добавление слоя выше (перед первым)
+  const handleAddLayerAbove = () => {
+    const layers = borehole.soil_layers || [];
+    const firstLayer = layers.length > 0 
+      ? [...layers].sort((a, b) => a.depth_from_m - b.depth_from_m)[0]
+      : null;
+    
+    const newDepthTo = firstLayer ? firstLayer.depth_from_m : 1.00;
+    const newDepthFrom = Math.max(0, newDepthTo - 1.00);
+    const firstIgeCode = igeCatalog.length > 0 ? igeCatalog[0].code : '';
+    const firstIgeName = igeCatalog.length > 0 ? igeCatalog[0].name : '';
+    
+    const newLayer: SoilLayer = {
+      id: 'sl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      borehole_id: boreholeId,
+      depth_from_m: newDepthFrom,
+      depth_to_m: newDepthTo,
+      ground_type: firstIgeName,
+      ige_code: firstIgeCode,
+      classification: firstIgeName,
+      description: '',
+    };
+    
+    onUpdate({ soil_layers: [...layers, newLayer] });
+    Journal.logEvent('command', `Добавлен слой выше`, 'layer.create_above');
+  };
+
   // Удаление слоя
   const handleDeleteLayer = (layerId: string) => {
     const updatedLayers = (borehole.soil_layers || []).filter(l => l.id !== layerId);
@@ -177,8 +231,31 @@ export default function SoilLayersTable({ borehole, boreholeId, onUpdate, onSele
 
   return (
     <div className="flex flex-col h-full">
-      {/* Селектор скважины */}
+      {/* Панель инструментов */}
       <div className="flex items-center gap-2 px-2 py-1 bg-[#f5f5f5] border-b border-[#c0c0c0]">
+        {/* Кнопка добавить слой выше */}
+        <button
+          onClick={handleAddLayerAbove}
+          className="flex items-center gap-1 px-3 py-1 text-sm bg-white border border-[#c0c0c0] rounded hover:bg-[#e8e8ff]"
+          title="Добавить слой выше"
+        >
+          <span>⬆️</span>
+          <span>Добавить слой выше</span>
+        </button>
+
+        {/* Кнопка добавить слой ниже */}
+        <button
+          onClick={handleAddLayerBelow}
+          className="flex items-center gap-1 px-3 py-1 text-sm bg-white border border-[#c0c0c0] rounded hover:bg-[#e8e8ff]"
+          title="Добавить слой ниже"
+        >
+          <span>⬇️</span>
+          <span>Добавить слой ниже</span>
+        </button>
+
+        <div className="w-px h-6 bg-[#c0c0c0] mx-1" />
+
+        {/* Селектор скважины */}
         <label className="text-sm font-semibold">Скважина:</label>
         <select
           value={boreholeId}
