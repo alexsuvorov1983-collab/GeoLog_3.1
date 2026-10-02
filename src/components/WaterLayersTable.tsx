@@ -118,7 +118,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
     Journal.logEvent('command', `Обновлён водный слой ${layerId}`, 'water_layer.update');
   };
 
-  // Обработчик изменения значения в input
+  // Обработчик изменения значения в input - сохраняем сразу
   const handleInputChange = (layerId: string, field: string, value: string) => {
     // Сохраняем в локальное состояние для отображения
     setInputValues(prev => ({
@@ -128,39 +128,37 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
         [field]: value
       }
     }));
+
+    // Сразу сохраняем в данные слоя
+    if (value === '') {
+      handleLayerChange(layerId, field as keyof WaterLayer, undefined);
+    } else {
+      // Числовые поля
+      if (['upv', 'uuv', 'bottom', 'pressure', 'depression'].includes(field)) {
+        const normalizedValue = value.replace(',', '.');
+        const num = parseFloat(normalizedValue);
+        if (!isNaN(num)) {
+          handleLayerChange(layerId, field as keyof WaterLayer, num);
+        }
+      } else {
+        // Текстовые поля (horizon, dates)
+        handleLayerChange(layerId, field as keyof WaterLayer, value);
+      }
+    }
   };
 
-  // Обработчик потери фокуса - форматирование и сохранение
+  // Обработчик потери фокуса - только форматируем числовые значения
   const handleInputBlur = (layerId: string, field: string) => {
-    const inputValue = inputValues[layerId]?.[field];
-    
-    if (inputValue === undefined || inputValue === '') {
-      // Если поле пустое, очищаем значение
-      handleLayerChange(layerId, field as keyof WaterLayer, undefined);
-      setInputValues(prev => {
-        const newValues = { ...prev };
-        if (newValues[layerId]) {
-          delete newValues[layerId][field];
-        }
-        return newValues;
-      });
-      return;
-    }
-
     const layer = borehole.water_layers?.find(l => l.id === layerId);
     if (!layer) return;
 
-    // Числовые поля
+    // Форматируем числовые поля до двух знаков после запятой
     if (['upv', 'uuv', 'bottom', 'pressure', 'depression'].includes(field)) {
-      const normalizedValue = inputValue.replace(',', '.');
-      const num = parseFloat(normalizedValue);
-      if (!isNaN(num)) {
-        const roundedValue = roundToTwoDecimals(num);
-        handleLayerChange(layerId, field as keyof WaterLayer, roundedValue);
+      const value = (layer as any)[field];
+      if (value !== undefined && value !== null && typeof value === 'number') {
+        const formattedValue = roundToTwoDecimals(value);
+        handleLayerChange(layerId, field as keyof WaterLayer, formattedValue);
       }
-    } else {
-      // Текстовые поля (horizon, dates)
-      handleLayerChange(layerId, field as keyof WaterLayer, inputValue);
     }
     
     // Очищаем временное значение
