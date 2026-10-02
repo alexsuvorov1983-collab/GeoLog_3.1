@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
-import SoilSamplesTable from './SoilSamplesTable';
+import AllSamplesTable from './AllSamplesTable';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
@@ -27,6 +27,8 @@ interface Props {
   boreholes: Borehole[];
   selectedBoreholeId: string | null;
   onSelectBorehole: (id: string) => void;
+  selectedSampleId?: string | null;
+  onSelectSample?: (id: string | null) => void;
   onCreateBorehole?: () => void;
   onDeleteBorehole?: () => void;
   onLoadFromCatalog?: () => void;
@@ -144,7 +146,7 @@ function SortableTab({ doc, isActive, onActivate, onClose }: {
   );
 }
 
-export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, onReorder, boreholes, selectedBoreholeId, onSelectBorehole, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: Props) {
+export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, onReorder, boreholes, selectedBoreholeId, onSelectBorehole, selectedSampleId, onSelectSample, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -201,6 +203,8 @@ export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, on
             boreholes={boreholes}
             selectedId={selectedBoreholeId}
             onSelect={onSelectBorehole}
+            selectedSampleId={selectedSampleId}
+            onSelectSample={onSelectSample}
             onCreateBorehole={onCreateBorehole}
             onDeleteBorehole={onDeleteBorehole}
             onLoadFromCatalog={onLoadFromCatalog}
@@ -211,11 +215,13 @@ export default function MDIArea({ openDocs, activeDocId, onActivate, onClose, on
   );
 }
 
-function DocContent({ docId, boreholes, selectedId, onSelect, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: { 
+function DocContent({ docId, boreholes, selectedId, onSelect, selectedSampleId, onSelectSample, onCreateBorehole, onDeleteBorehole, onLoadFromCatalog }: { 
   docId: string; 
   boreholes: Borehole[]; 
   selectedId: string | null; 
   onSelect: (id: string) => void;
+  selectedSampleId?: string | null;
+  onSelectSample?: (id: string | null) => void;
   onCreateBorehole?: () => void;
   onDeleteBorehole?: () => void;
   onLoadFromCatalog?: () => void;
@@ -262,10 +268,10 @@ function DocContent({ docId, boreholes, selectedId, onSelect, onCreateBorehole, 
       );
     }
     return (
-      <SoilSamplesTable 
-        borehole={selectedBorehole}
-        boreholeId={selectedBorehole.id}
-        onUpdate={() => {}}
+      <AllSamplesTable 
+        boreholes={boreholes}
+        selectedSampleId={selectedSampleId}
+        onSelectSample={onSelectSample}
         onSelectBorehole={onSelect}
       />
     );

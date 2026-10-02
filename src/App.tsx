@@ -15,6 +15,7 @@ import Splitter from './components/Splitter';
 
 export default function App() {
   const [selectedBoreholeId, setSelectedBoreholeId] = useState<string | null>(null);
+  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
   const [openDocs, setOpenDocs] = useState<{ id: string; title: string; dirty: boolean }[]>([
     { id: 'doc-boreholes', title: 'Скважины', dirty: false },
   ]);
@@ -315,6 +316,8 @@ export default function App() {
               boreholes={boreholes}
               selectedBoreholeId={selectedBoreholeId}
               onSelectBorehole={selectBorehole}
+              selectedSampleId={selectedSampleId}
+              onSelectSample={setSelectedSampleId}
               onCreateBorehole={handleCreateBorehole}
               onDeleteBorehole={handleDeleteBorehole}
               onLoadFromCatalog={handleLoadFromCatalog}
@@ -328,6 +331,7 @@ export default function App() {
           <BottomPanel
             borehole={selectedBorehole}
             boreholeId={selectedBoreholeId}
+            selectedSampleId={selectedSampleId}
             height={bottomPanelHeight}
             onSelectBorehole={selectBorehole}
             onUpdate={(data: Partial<Borehole>) => {

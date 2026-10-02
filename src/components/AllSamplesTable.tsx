@@ -3,76 +3,42 @@ import { Borehole, Sample, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 
 interface Props {
-  borehole: Borehole;
-  boreholeId: string;
+  boreholes: Borehole[];
   selectedSampleId?: string | null;
-  onUpdate: (data: Partial<Borehole>) => void;
+  onSelectSample?: (id: string | null) => void;
   onSelectBorehole?: (id: string) => void;
 }
 
-type CompositionType = 'dispersed' | 'rock' | 'frozen_dispersed' | 'frozen_rock';
-
-export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleId, onUpdate, onSelectBorehole }: Props) {
-  const [compositionFilter, setCompositionFilter] = useState<CompositionType | 'all'>('all');
+export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectSample, onSelectBorehole }: Props) {
   const [editingCell, setEditingCell] = useState<{ sampleId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   
-  const allBoreholes = GeoLogData.getAll();
-  
-  // Фильтрация проб - показываем только выбранную пробу
-  const filteredSamples = useMemo(() => {
-    const samples = borehole?.samples || [];
-    if (selectedSampleId) {
-      return samples.filter(s => s.id === selectedSampleId);
-    }
-    // Если проба не выбрана, показываем все пробы текущей скважины
-    if (compositionFilter === 'all') {
-      return samples.filter(s => s.sample_type !== 'water');
-    }
-    return samples.filter(s => s.composition_type === compositionFilter);
-  }, [borehole?.samples, compositionFilter, selectedSampleId]);
-  
-  // Проверка на наличие borehole
-  if (!borehole) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        Выберите скважину для просмотра проб
-      </div>
-    );
-  }
+  // Получение всех проб из всех скважин
+  const allSamples = useMemo(() => {
+    const samples: Array<{ sample: Sample; borehole: Borehole }> = [];
+    boreholes.forEach(borehole => {
+      (borehole.samples || []).forEach(sample => {
+        if (sample.sample_type !== 'water') {
+          samples.push({ sample, borehole });
+        }
+      });
+    });
+    return samples;
+  }, [boreholes]);
   
   // Обработчик изменения поля пробы
-  const handleSampleChange = (sampleId: string, field: keyof Sample, value: any) => {
+  const handleSampleChange = (boreholeId: string, sampleId: string, field: keyof Sample, value: any) => {
+    const borehole = boreholes.find(b => b.id === boreholeId);
+    if (!borehole) return;
+    
     const allSamples = [...(borehole.samples || [])];
     const updatedSamples = allSamples.map(sample => {
       if (sample.id !== sampleId) return sample;
       return { ...sample, [field]: value };
     });
-    onUpdate({ samples: updatedSamples });
+    
+    GeoLogData.update(boreholeId, { samples: updatedSamples });
     Journal.logEvent('command', `Обновлена проба ${sampleId}`, 'sample.update');
-  };
-  
-  // Добавление новой пробы
-  const handleAddSample = () => {
-    const samples = borehole.samples || [];
-    const newSample: Sample = {
-      id: 'sp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
-      borehole_id: boreholeId,
-      depth_m: 0,
-      sample_type: 'Монолит',
-      lab_number: '',
-      field_number: '',
-      composition_type: 'dispersed',
-    };
-    onUpdate({ samples: [...samples, newSample] });
-    Journal.logEvent('command', `Добавлена проба`, 'sample.add');
-  };
-  
-  // Удаление пробы
-  const handleDeleteSample = (sampleId: string) => {
-    const updatedSamples = (borehole.samples || []).filter(s => s.id !== sampleId);
-    onUpdate({ samples: updatedSamples });
-    Journal.logEvent('command', `Удалена проба ${sampleId}`, 'sample.delete');
   };
   
   // Начало редактирования ячейки
@@ -85,18 +51,16 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
   const handleCellBlur = () => {
     if (editingCell) {
       const { sampleId, field } = editingCell;
-      const sample = borehole.samples?.find(s => s.id === sampleId);
-      if (sample) {
-        // Определяем тип поля и преобразуем значение
+      const sampleData = allSamples.find(s => s.sample.id === sampleId);
+      if (sampleData) {
         let value: any = editValue;
         
-        // Числовые поля
         if (['depth_m', 'W', 'WL', 'WP', 'rho', 'rhod', 'rhos', 'c', 'phi', 'Eoed', 'Rc_dry', 'Rc_sat', 'RQD'].includes(field)) {
           const num = parseFloat(editValue.replace(',', '.'));
           value = isNaN(num) ? undefined : num;
         }
         
-        handleSampleChange(sampleId, field as keyof Sample, value);
+        handleSampleChange(sampleData.borehole.id, sampleId, field as keyof Sample, value);
       }
       setEditingCell(null);
       setEditValue('');
@@ -119,74 +83,16 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
   
   return (
     <div className="flex flex-col h-full">
-      {/* Панель инструментов */}
-      <div className="flex items-center gap-2 px-2 py-1 bg-[#f5f5f5] border-b border-[#c0c0c0]">
-        <label className="text-sm font-semibold">Скважина:</label>
-        <select
-          value={boreholeId}
-          onChange={(e) => onSelectBorehole?.(e.target.value)}
-          className="px-2 py-1 text-sm border border-[#c0c0c0] rounded bg-white"
-        >
-          {allBoreholes.map(bh => (
-            <option key={bh.id} value={bh.id}>{bh.number}</option>
-          ))}
-        </select>
-        
-        <div className="w-px h-6 bg-[#c0c0c0] mx-2" />
-        
-        {/* Переключатель композиций */}
-        <label className="text-sm font-semibold">Композиция:</label>
-        <button
-          onClick={() => setCompositionFilter('all')}
-          className={`px-2 py-1 text-xs border rounded ${compositionFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-white'}`}
-        >
-          Все
-        </button>
-        <button
-          onClick={() => setCompositionFilter('dispersed')}
-          className={`px-2 py-1 text-xs border rounded ${compositionFilter === 'dispersed' ? 'bg-blue-500 text-white' : 'bg-white'}`}
-        >
-          Дисперсный
-        </button>
-        <button
-          onClick={() => setCompositionFilter('rock')}
-          className={`px-2 py-1 text-xs border rounded ${compositionFilter === 'rock' ? 'bg-blue-500 text-white' : 'bg-white'}`}
-        >
-          Скальный
-        </button>
-        <button
-          onClick={() => setCompositionFilter('frozen_dispersed')}
-          className={`px-2 py-1 text-xs border rounded ${compositionFilter === 'frozen_dispersed' ? 'bg-blue-500 text-white' : 'bg-white'}`}
-        >
-          Мёрзлый дисперсный
-        </button>
-        <button
-          onClick={() => setCompositionFilter('frozen_rock')}
-          className={`px-2 py-1 text-xs border rounded ${compositionFilter === 'frozen_rock' ? 'bg-blue-500 text-white' : 'bg-white'}`}
-        >
-          Мёрзлый скальный
-        </button>
-        
-        <div className="ml-auto">
-          <button
-            onClick={handleAddSample}
-            className="px-3 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
-          >
-            + Добавить пробу
-          </button>
-        </div>
-      </div>
-      
-      {/* Таблица проб */}
+      {/* Таблица всех проб */}
       <div className="flex-1 overflow-auto">
         <table className="text-xs border-collapse" style={{ tableLayout: 'auto' }}>
           <thead className="sticky top-0 z-20 bg-[#e8e8e8]">
             <tr>
               {/* Закреплённые служебные колонки */}
               <th className={fixedCellClass} style={{ left: '0px', minWidth: '40px' }}>№ п/п</th>
-              <th className={fixedCellClass} style={{ left: '40px', minWidth: '100px' }}>Полевой №</th>
-              <th className={fixedCellClass} style={{ left: '140px', minWidth: '100px' }}>Лаб. №</th>
-              <th className={fixedCellClass} style={{ left: '240px', minWidth: '80px' }}>№ выр.</th>
+              <th className={fixedCellClass} style={{ left: '40px', minWidth: '80px' }}>Скважина</th>
+              <th className={fixedCellClass} style={{ left: '120px', minWidth: '100px' }}>Полевой №</th>
+              <th className={fixedCellClass} style={{ left: '220px', minWidth: '100px' }}>Лаб. №</th>
               <th className={fixedCellClass} style={{ left: '320px', minWidth: '80px' }}>Глубина, м</th>
               <th className={fixedCellClass} style={{ left: '400px', minWidth: '120px' }}>Литология</th>
               <th className={fixedCellClass} style={{ left: '520px', minWidth: '200px' }}>Описание</th>
@@ -206,18 +112,28 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
               <th className={cellClass}>Rc вс, МПа</th>
               <th className={cellClass}>Rq вод, МПа</th>
               <th className={cellClass}>RQD, %</th>
-              <th className={cellClass} style={{ minWidth: '50px' }}>🗑️</th>
             </tr>
           </thead>
           <tbody>
-            {filteredSamples.map((sample, index) => (
-              <tr key={sample.id} className="hover:bg-[#f0f0ff]">
+            {allSamples.map(({ sample, borehole }, index) => (
+              <tr 
+                key={sample.id} 
+                className={`hover:bg-[#f0f0ff] cursor-pointer ${selectedSampleId === sample.id ? 'bg-[#c8d8ff]' : ''}`}
+                onClick={() => {
+                  onSelectSample?.(sample.id);
+                  onSelectBorehole?.(borehole.id);
+                }}
+              >
                 {/* Закреплённые служебные колонки */}
                 <td className={fixedCellClass} style={{ left: '0px' }}>{index + 1}</td>
+                <td className={fixedCellClass} style={{ left: '40px' }}>{borehole.number}</td>
                 <td 
                   className={fixedCellClass} 
-                  style={{ left: '40px' }}
-                  onClick={() => handleCellClick(sample.id, 'field_number', sample.field_number)}
+                  style={{ left: '120px' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'field_number', sample.field_number);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'field_number' ? (
                     <input
@@ -235,8 +151,11 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={fixedCellClass} 
-                  style={{ left: '140px' }}
-                  onClick={() => handleCellClick(sample.id, 'lab_number', sample.lab_number)}
+                  style={{ left: '220px' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'lab_number', sample.lab_number);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'lab_number' ? (
                     <input
@@ -252,11 +171,13 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                     sample.lab_number || ''
                   )}
                 </td>
-                <td className={fixedCellClass} style={{ left: '240px' }}>{borehole.number}</td>
                 <td 
                   className={fixedCellClass} 
                   style={{ left: '320px' }}
-                  onClick={() => handleCellClick(sample.id, 'depth_m', sample.depth_m)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'depth_m', sample.depth_m);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'depth_m' ? (
                     <input
@@ -275,7 +196,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 <td 
                   className={fixedCellClass} 
                   style={{ left: '400px' }}
-                  onClick={() => handleCellClick(sample.id, 'lithology', sample.lithology)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'lithology', sample.lithology);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'lithology' ? (
                     <input
@@ -294,7 +218,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 <td 
                   className={fixedCellClass} 
                   style={{ left: '520px' }}
-                  onClick={() => handleCellClick(sample.id, 'description', sample.description)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'description', sample.description);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'description' ? (
                     <input
@@ -314,7 +241,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 {/* Прокручиваемые колонки */}
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'ige_code', sample.ige_code)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'ige_code', sample.ige_code);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'ige_code' ? (
                     <input
@@ -333,7 +263,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 <td className={cellClass}>{sample.composition_type || 'dispersed'}</td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'W', sample.W)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'W', sample.W);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'W' ? (
                     <input
@@ -351,7 +284,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'WL', sample.WL)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'WL', sample.WL);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'WL' ? (
                     <input
@@ -369,7 +305,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'WP', sample.WP)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'WP', sample.WP);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'WP' ? (
                     <input
@@ -387,7 +326,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rho', sample.rho)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'rho', sample.rho);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'rho' ? (
                     <input
@@ -405,7 +347,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rhod', sample.rhod)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'rhod', sample.rhod);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'rhod' ? (
                     <input
@@ -423,7 +368,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rhos', sample.rhos)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'rhos', sample.rhos);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'rhos' ? (
                     <input
@@ -441,7 +389,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'c', sample.c)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'c', sample.c);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'c' ? (
                     <input
@@ -459,7 +410,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'phi', sample.phi)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'phi', sample.phi);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'phi' ? (
                     <input
@@ -477,7 +431,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Eoed', sample.Eoed)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'Eoed', sample.Eoed);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'Eoed' ? (
                     <input
@@ -495,7 +452,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Rc_dry', sample.Rc_dry)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'Rc_dry', sample.Rc_dry);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_dry' ? (
                     <input
@@ -513,7 +473,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Rc_sat', sample.Rc_sat)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'Rc_sat', sample.Rc_sat);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_sat' ? (
                     <input
@@ -531,7 +494,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                 </td>
                 <td 
                   className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'RQD', sample.RQD)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCellClick(sample.id, 'RQD', sample.RQD);
+                  }}
                 >
                   {editingCell?.sampleId === sample.id && editingCell?.field === 'RQD' ? (
                     <input
@@ -546,14 +512,6 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
                   ) : (
                     sample.RQD !== undefined ? sample.RQD.toFixed(2) : ''
                   )}
-                </td>
-                <td className={cellClass} style={{ minWidth: '50px' }}>
-                  <button
-                    onClick={() => handleDeleteSample(sample.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    🗑️
-                  </button>
                 </td>
               </tr>
             ))}

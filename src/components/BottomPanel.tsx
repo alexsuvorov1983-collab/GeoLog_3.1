@@ -11,12 +11,13 @@ interface Props {
   onUpdate: (data: Partial<Borehole>) => void;
   height?: number;
   boreholeId?: string | null;
+  selectedSampleId?: string | null;
   onSelectBorehole?: (id: string) => void;
 }
 
 type TabId = 'general' | 'soil' | 'water' | 'samples' | 'thermometry' | 'additional';
 
-export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 260, onSelectBorehole }: Props) {
+export default function BottomPanel({ borehole, boreholeId, selectedSampleId, onUpdate, height = 260, onSelectBorehole }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
 
   const tabs: { id: TabId; label: string }[] = [
@@ -69,7 +70,7 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
         {activeTab === 'general' && <GeneralForm borehole={borehole} onUpdate={onUpdate} />}
         {activeTab === 'soil' && borehole && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'water' && borehole && boreholeId && <WaterLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
-        {activeTab === 'samples' && borehole && boreholeId && <SoilSamplesTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
+        {activeTab === 'samples' && borehole && boreholeId && <SoilSamplesTable borehole={borehole} boreholeId={boreholeId} selectedSampleId={selectedSampleId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'additional' && <AdditionalTab borehole={borehole} />}
       </div>
