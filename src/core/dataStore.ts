@@ -39,6 +39,9 @@ export interface Borehole {
   samples?: Sample[];
   // Thermometry
   thermometry?: ThermometryEntry[];
+  
+  // Лабораторные опыты (новая схема v1.5)
+  soil_tests?: SoilTest[];
 }
 
 export interface SoilLayer {
@@ -77,6 +80,112 @@ export interface Sample {
   depth_m: number;
   sample_type: string;
   lab_number?: string;
+  
+  // Новые поля для лабораторной карточки (схема v1.5)
+  field_number?: string; // Полевой номер
+  ige_code?: string; // Привязка к ИГЭ
+  composition_type?: 'dispersed' | 'rock' | 'frozen_dispersed' | 'frozen_rock'; // Тип композиции
+  lithology?: string; // Литология (для скальных)
+  description?: string; // Описание грунта
+  note?: string; // Примечание
+  
+  // Гранулометрический состав, %
+  granulometry?: {
+    f200?: number; // >200 мм
+    f100?: number; // 200-100 мм
+    f60?: number; // 100-60 мм
+    f10?: number; // 60-10 мм
+    f5?: number; // 10-5 мм
+    f2?: number; // 5-2 мм
+    f1?: number; // 2-1 мм
+    f05?: number; // 1-0.5 мм
+    f025?: number; // 0.5-0.25 мм
+    f01?: number; // 0.25-0.1 мм
+    f005?: number; // 0.1-0.05 мм
+    f001?: number; // 0.05-0.01 мм
+    f0005?: number; // 0.01-0.005 мм
+    f0002?: number; // <0.005 мм (по ГОСТ 12536-2014)
+    f0002_gost?: number; // <0.002 мм (по ГОСТ 12536-2014)
+  };
+  
+  // q1, q2 для определения коэффициентов выветрелости
+  q1?: number;
+  q2?: number;
+  
+  // Влажность
+  W?: number; // Природная влажность, %
+  WL?: number; // Влажность на границе текучести
+  WP?: number; // Влажность на границе раскатывания
+  
+  // Влажности для мёрзлых грунтов
+  Wtot?: number; // Общая влажность
+  Wm?: number; // Влажность за счёт незамерзшей воды
+  Wi?: number; // Влажность за счёт льда-включений
+  Ww?: number; // Влажность за счёт льда-цемента
+  Wic?: number; // Влажность за счёт незамерзшей воды в мёрзлых
+  
+  // Плотности
+  rho?: number; // Плотность грунта, г/см³
+  rhod?: number; // Плотность сухого грунта, г/см³
+  rhos?: number; // Плотность частиц, г/см³
+  rhof?: number; // Плотность мёрзлого грунта, г/см³
+  rhodf?: number; // Плотность сухого мёрзлого грунта, г/см³
+  
+  // Пористость и коэффициент пористости
+  n?: number; // Пористость, %
+  nf?: number; // Пористость мёрзлого, %
+  e?: number; // Коэффициент пористости
+  ef?: number; // Коэффициент пористости мёрзлого
+  
+  // Коэффициент водонасыщения
+  Sr?: number;
+  Srf?: number; // Для мёрзлых
+  
+  // Прочностные характеристики
+  c?: number; // Сцепление, кПа (одноплоскостной срез, ест.)
+  phi?: number; // Угол внутреннего трения, град (ест.)
+  c_sat?: number; // Сцепление замоченное, кПа
+  phi_sat?: number; // Угол внутреннего трения замоченный, град
+  
+  // Компрессионные характеристики
+  Eoed?: number; // Модуль деформации, МПа (ест.)
+  Eoed_sat?: number; // Модуль деформации, МПа (замоч.)
+  
+  // Трёхосные испытания
+  c_tri?: number; // Сцепление трёхосное
+  phi_tri?: number; // Угол трёхосный
+  E_tri?: number; // Модуль деформации трёхосный
+  cu?: number; // Недренированная прочность
+  nu?: number; // Коэффициент Пуассона
+  Ekoed?: number; // Модуль упругости
+  
+  // Скальные показатели
+  Rc_dry?: number; // Предел прочности на сжатие всухую, МПа
+  Rc_sat?: number; // Предел прочности на сжатие водонасыщенный, МПа
+  RQD?: number; // Индекс качества керна
+  Ksof?: number; // Коэффициент размягчаемости
+  Kwr?: number; // Коэффициент выветрелости
+  
+  // Мёрзлые показатели
+  itot?: number; // Льдистость общая
+  ii?: number; // Льдистость включений
+  Tbf?: number; // Температура начала замерзания
+  
+  // Другие показатели
+  Dsal?: number; // Засолённость, %
+  Ddp?: number; // Степень разложения, %
+  Ir?: number; // Относительное содержание органики
+  Kf?: number; // Коэффициент фильтрации, м/сут
+}
+
+// Интерфейс для лабораторных опытов (вложенная карточка)
+export interface SoilTest {
+  id: string;
+  sample_id: string;
+  test_type: 'compression' | 'shear' | 'triaxial' | 'cone' | 'granulometry' | 'moisture' | 'swell' | 'subsidence' | 'frost' | 'consolidation' | 'chemical' | 'rock' | 'frozen';
+  data?: Record<string, any>; // Данные опыта (зависят от типа)
+  results?: Record<string, any>; // Результаты расчёта
+  created_at?: string;
 }
 
 export interface ThermometryEntry {
@@ -135,6 +244,49 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'sp-001', borehole_id: 'bh-001', depth_m: 3.0, sample_type: 'Нарушенный', lab_number: 'Л-001' },
       { id: 'sp-002', borehole_id: 'bh-001', depth_m: 7.5, sample_type: 'Монолит', lab_number: 'Л-002' },
       { id: 'sp-003', borehole_id: 'bh-001', depth_m: 8.0, sample_type: 'water', lab_number: 'В-1' },
+      // Демо-пробы для вкладки "Пробы грунта" (5 типов)
+      { 
+        id: 'sp-demo-001', borehole_id: 'bh-001', depth_m: 4.5, sample_type: 'Монолит', lab_number: 'Л-101',
+        field_number: 'П-001', ige_code: 'ИГЭ-3', composition_type: 'dispersed',
+        description: 'Песок пылеватый средней плотности',
+        granulometry: { f200: 0, f100: 0, f60: 0, f10: 2.5, f5: 8.3, f2: 15.2, f1: 18.7, f05: 22.4, f025: 16.8, f01: 9.6, f005: 4.2, f001: 1.8, f0005: 0.5 },
+        W: 18.5, WL: 26.0, WP: 19.0,
+        rho: 1.92, rhod: 1.62, rhos: 2.68,
+      },
+      { 
+        id: 'sp-demo-002', borehole_id: 'bh-001', depth_m: 6.0, sample_type: 'Монолит', lab_number: 'Л-102',
+        field_number: 'П-002', ige_code: 'ИГЭ-2', composition_type: 'dispersed',
+        description: 'Суглинок полутвёрдый',
+        granulometry: { f200: 0, f100: 0, f60: 0, f10: 0, f5: 1.2, f2: 3.8, f1: 8.5, f05: 15.3, f025: 22.7, f01: 24.6, f005: 14.8, f001: 6.4, f0005: 2.7 },
+        W: 14.2, WL: 32.0, WP: 18.5,
+        rho: 2.01, rhod: 1.76, rhos: 2.71,
+        c: 28, phi: 16, c_sat: 18, phi_sat: 12,
+        Eoed: 15.5, Eoed_sat: 9.8,
+      },
+      { 
+        id: 'sp-demo-003', borehole_id: 'bh-001', depth_m: 9.0, sample_type: 'Монолит', lab_number: 'Л-103',
+        field_number: 'П-003', ige_code: 'ИГЭ-5', composition_type: 'dispersed',
+        description: 'Галечник с песчаным заполнителем',
+        granulometry: { f200: 35.0, f100: 22.0, f60: 8.0, f10: 5.0, f5: 6.5, f2: 8.2, f1: 5.8, f05: 4.5, f025: 2.8, f01: 1.5, f005: 0.5, f001: 0.2 },
+        q1: 850, q2: 620,
+        W: 12.8, rho: 2.15, rhod: 1.91, rhos: 2.65,
+      },
+      { 
+        id: 'sp-demo-004', borehole_id: 'bh-001', depth_m: 12.5, sample_type: 'Монолит', lab_number: 'Л-104',
+        field_number: 'П-004', ige_code: 'ИГЭ-6', composition_type: 'rock',
+        lithology: 'Известняк',
+        description: 'Известняк трещиноватый, среднепрочный',
+        Rc_dry: 45.2, Rc_sat: 32.8, RQD: 68, Ksof: 0.72,
+      },
+      { 
+        id: 'sp-demo-005', borehole_id: 'bh-001', depth_m: 14.0, sample_type: 'Монолит', lab_number: 'Л-105',
+        field_number: 'П-005', ige_code: 'ИГЭ-7', composition_type: 'frozen_dispersed',
+        description: 'Суглинок мёрзлый тугопластичный',
+        granulometry: { f200: 0, f100: 0, f60: 0, f10: 0, f5: 2.1, f2: 4.5, f1: 9.2, f05: 16.8, f025: 23.4, f01: 22.1, f005: 13.5, f001: 5.8, f0005: 2.6 },
+        Wtot: 28.5, Wm: 8.2, Wi: 15.3, Ww: 5.0, Wic: 7.8,
+        rhof: 2.10, rhodf: 1.68, rhos: 2.69,
+        itot: 0.32, ii: 0.08, Tbf: -1.8,
+      },
     ],
     thermometry: [
       { id: 'th-001', borehole_id: 'bh-001', depth_m: 5.0, temperature_c: 8.2 },
