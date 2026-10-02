@@ -179,12 +179,93 @@ export interface Sample {
 }
 
 // Интерфейс для лабораторных опытов (вложенная карточка)
+// Интерфейсы для лабораторных опытов (Этап 5)
+
+export interface CompressionMeasurement {
+  pressure_mpa: number; // Давление, МПа
+  height_mm: number; // Высота образца, мм
+  deformation_mm: number; // Абсолютная деформация, мм
+}
+
+export interface CompressionTestData {
+  initial_height_mm: number; // Начальная высота образца
+  ring_area_cm2: number; // Площадь кольца, см²
+  initial_moisture?: number; // Начальная влажность, %
+  initial_density?: number; // Начальная плотность, г/см³
+  measurements: CompressionMeasurement[]; // Замеры
+  final_height_mm?: number; // Высота после опыта (ручной ввод)
+}
+
+export interface CompressionTestResults {
+  e0?: number; // Начальный коэффициент пористости
+  m0?: number; // Коэффициент сжимаемости, МПа⁻¹
+  Eoed?: number; // Модуль деформации, МПа (естественное состояние)
+  Eoed_sat?: number; // Модуль деформации, МПа (водонасыщенное)
+  compression_coeff?: number; // Коэффициент компрессии
+}
+
+export interface ShearMeasurement {
+  normal_stress_kpa: number; // Нормальное напряжение, кПа
+  shear_stress_kpa: number; // Касательное напряжение, кПа
+  displacement_mm?: number; // Смещение, мм
+}
+
+export interface ShearTestData {
+  condition: 'natural' | 'saturated' | 'frozen'; // Состояние
+  measurements: ShearMeasurement[]; // Замеры
+  test_type?: 'plane' | 'triaxial' | 'frozen_surface'; // Тип среза
+}
+
+export interface ShearTestResults {
+  c?: number; // Сцепление, кПа
+  phi?: number; // Угол внутреннего трения, град
+  correlation?: number; // Коэффициент корреляции
+}
+
+export interface GranulometryMeasurement {
+  fraction_mm: string; // Фракция (например, "200-100")
+  weight_g: number; // Вес, г
+  percentage?: number; // Процент, %
+}
+
+export interface GranulometryTestData {
+  total_weight_g: number; // Общий вес пробы, г
+  measurements: GranulometryMeasurement[]; // Замеры по фракциям
+  wet_screening?: boolean; // Мокрый рассев
+  fraction_0002?: number; // Фракция <0.002 мм, %
+}
+
+export interface GranulometryTestResults {
+  particle_sum?: number; // Сумма частиц, %
+  filler?: number; // Заполнитель, %
+  sand_in_fine?: number; // Песок в мелкоземе, %
+  fractions: Record<string, number>; // Проценты по фракциям
+}
+
+export interface MoistureMeasurement {
+  sample_weight_g: number; // Вес образца, г
+  dry_weight_g: number; // Вес после высушивания, г
+  moisture?: number; // Влажность, %
+}
+
+export interface MoistureDensityTestData {
+  fraction_type: 'fine' | 'coarse' | 'total'; // Тип фракции (<2мм, >2мм, общая)
+  measurements: MoistureMeasurement[]; // Замеры
+  calculate_density?: boolean; // Авторасчет плотности частиц
+}
+
+export interface MoistureDensityTestResults {
+  average_moisture?: number; // Средняя влажность, %
+  density?: number; // Плотность, г/см³
+  dry_density?: number; // Плотность сухого грунта, г/см³
+}
+
 export interface SoilTest {
   id: string;
   sample_id: string;
   test_type: 'compression' | 'shear' | 'triaxial' | 'cone' | 'granulometry' | 'moisture' | 'swell' | 'subsidence' | 'frost' | 'consolidation' | 'chemical' | 'rock' | 'frozen';
-  data?: Record<string, any>; // Данные опыта (зависят от типа)
-  results?: Record<string, any>; // Результаты расчёта
+  data?: CompressionTestData | ShearTestData | GranulometryTestData | MoistureDensityTestData | Record<string, any>;
+  results?: CompressionTestResults | ShearTestResults | GranulometryTestResults | MoistureDensityTestResults | Record<string, any>;
   created_at?: string;
 }
 

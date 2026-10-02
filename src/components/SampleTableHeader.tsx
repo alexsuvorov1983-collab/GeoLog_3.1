@@ -86,6 +86,15 @@ export default function SampleTableHeader({ compositionType }: SampleTableHeader
             );
           }
         })}
+        
+        {/* Колонка для кнопок опытов */}
+        <th
+          className={headerCellClass}
+          style={{ minWidth: '120px' }}
+          rowSpan={4}
+        >
+          Опыты
+        </th>
       </tr>
       
       {/* Уровень 3: Расшифровка групп (подзаголовки) */}

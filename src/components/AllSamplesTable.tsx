@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Borehole, Sample, GeoLogData } from '../core/dataStore';
+import { Borehole, Sample, SoilTest, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 import SampleTableHeader from './SampleTableHeader';
 import { serviceColumns, getColumnsByComposition } from './SampleTableColumns';
 import { calculateAllValues, validateResults, formatValue, CalculatedValues, ValidationErrors } from './SampleCalculations';
 import { classifySoil, ClassificationResult } from './SoilClassifier';
+import { CompressionTest, ShearTest, GranulometryTest, MoistureDensityTest } from './LaboratoryTests';
 
 interface Props {
   boreholes: Borehole[];
@@ -16,6 +17,7 @@ interface Props {
 export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectSample, onSelectBorehole }: Props) {
   const [editingCell, setEditingCell] = useState<{ sampleId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  const [openTestModal, setOpenTestModal] = useState<{ sampleId: string; testType: string; testId?: string } | null>(null);
   
   // Получение всех проб из всех скважин
   const allSamples = useMemo(() => {
@@ -128,6 +130,49 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
     
     GeoLogData.update(boreholeId, { samples: updatedSamples });
     Journal.logEvent('command', `Обновлена проба ${sampleId}`, 'sample.update');
+  };
+
+  // Создание нового лабораторного опыта
+  const handleCreateTest = (boreholeId: string, sampleId: string, testType: string) => {
+    const borehole = boreholes.find(b => b.id === boreholeId);
+    if (!borehole) return;
+
+    const newTest: SoilTest = {
+      id: 'test-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      sample_id: sampleId,
+      test_type: testType as any,
+      data: {},
+      results: {},
+      created_at: new Date().toISOString()
+    };
+
+    const tests = [...(borehole.soil_tests || []), newTest];
+    GeoLogData.update(boreholeId, { soil_tests: tests });
+    
+    setOpenTestModal({ sampleId, testType, testId: newTest.id });
+    Journal.logEvent('command', `Создан опыт ${testType} для пробы ${sampleId}`, 'test.create');
+  };
+
+  // Обновление лабораторного опыта
+  const handleUpdateTest = (boreholeId: string, updatedTest: SoilTest) => {
+    const borehole = boreholes.find(b => b.id === boreholeId);
+    if (!borehole) return;
+
+    const tests = (borehole.soil_tests || []).map(t => 
+      t.id === updatedTest.id ? updatedTest : t
+    );
+    
+    GeoLogData.update(boreholeId, { soil_tests: tests });
+  };
+
+  // Получение опыта для пробы
+  const getTestForSample = (boreholeId: string, sampleId: string, testType: string): SoilTest | undefined => {
+    const borehole = boreholes.find(b => b.id === boreholeId);
+    if (!borehole) return undefined;
+
+    return (borehole.soil_tests || []).find(t => 
+      t.sample_id === sampleId && t.test_type === testType
+    );
   };
   
   // Начало редактирования ячейки
@@ -278,12 +323,89 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
                     </td>
                   );
                 })}
+                
+                {/* Колонка с кнопками опытов */}
+                <td className={cellClass} style={{ minWidth: '120px' }} onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'compression');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-blue-500 text-white rounded hover:bg-blue-600"
+                      title="Компрессионные испытания"
+                    >
+                      К
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'shear');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-green-500 text-white rounded hover:bg-green-600"
+                      title="Одноплоскостной срез"
+                    >
+                      С
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'granulometry');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-purple-500 text-white rounded hover:bg-purple-600"
+                      title="Гранулометрический состав"
+                    >
+                      Г
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'moisture');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-orange-500 text-white rounded hover:bg-orange-600"
+                      title="Влажность и плотность"
+                    >
+                      В
+                    </button>
+                  </div>
+                </td>
               </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+      
+      {/* Модальные окна для лабораторных опытов */}
+      {openTestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setOpenTestModal(null)}>
+          <div className="bg-white rounded-lg shadow-2xl w-[90%] h-[90%] max-w-6xl" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const testBorehole = boreholes.find(b => b.id === allSamples.find(s => s.sample.id === openTestModal.sampleId)?.borehole.id);
+              if (!testBorehole) return null;
+              
+              const test = getTestForSample(testBorehole.id, openTestModal.sampleId, openTestModal.testType);
+              if (!test) return null;
+
+              const handleClose = () => setOpenTestModal(null);
+              const handleUpdate = (updatedTest: SoilTest) => handleUpdateTest(testBorehole.id, updatedTest);
+
+              switch (openTestModal.testType) {
+                case 'compression':
+                  return <CompressionTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'shear':
+                  return <ShearTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'granulometry':
+                  return <GranulometryTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'moisture':
+                  return <MoistureDensityTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                default:
+                  return null;
+              }
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
