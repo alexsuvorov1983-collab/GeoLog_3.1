@@ -19,12 +19,13 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
   const [editValue, setEditValue] = useState<string>('');
   const [newDepthValue, setNewDepthValue] = useState<string>('');
   const [localSelectedBoreholeId, setLocalSelectedBoreholeId] = useState<string>('all');
+  const [refreshKey, setRefreshKey] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
     return GeoLogData.getAllThermoSessions();
-  }, [boreholes]);
+  }, [boreholes, refreshKey]);
 
   // Фильтрация сессий: показываем только последнюю сессию для каждой скважины
   const filteredSessions = useMemo(() => {
@@ -79,6 +80,9 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
     GeoLogData.updateThermoSession(borehole.id, sessionId, { measurements: updatedMeasurements });
     Journal.logEvent('command', `Обновлена температура на глубине ${depth}м для сессии ${sessionId}`, 'thermo.update');
+    
+    // Принудительно обновляем данные
+    setRefreshKey(prev => prev + 1);
   }, [allSessions, boreholes]);
 
   // Добавление новой глубины
@@ -98,8 +102,8 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Добавление новой сессии
   const handleAddSession = useCallback(() => {
-    const boreholeId = selectedBoreholeId && selectedBoreholeId !== 'all' 
-      ? selectedBoreholeId 
+    const boreholeId = localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
+      ? localSelectedBoreholeId 
       : boreholes[0]?.id;
     
     if (!boreholeId) {
@@ -114,7 +118,10 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
       provenance: { type: 'manual' },
     });
     Journal.logEvent('command', `Добавлена новая термометрическая сессия`, 'thermo.add_session');
-  }, [selectedBoreholeId, boreholes]);
+    
+    // Принудительно обновляем данные
+    setRefreshKey(prev => prev + 1);
+  }, [localSelectedBoreholeId, boreholes]);
 
   // Удаление сессии
   const handleDeleteSession = useCallback((sessionId: string) => {
@@ -125,6 +132,9 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
     GeoLogData.deleteThermoSession(session.boreholeId, sessionId);
     Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
+    
+    // Принудительно обновляем данные
+    setRefreshKey(prev => prev + 1);
   }, [allSessions]);
 
   // Обработчик начала редактирования ячейки
@@ -230,21 +240,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
         <div className="ml-auto flex gap-2">
           <button
-            onClick={() => {
-              if (localSelectedBoreholeId && localSelectedBoreholeId !== 'all') {
-                // Если выбрана конкретная скважина, добавляем замер для неё
-                GeoLogData.addThermoSession(localSelectedBoreholeId, {
-                  date: new Date().toISOString().split('T')[0],
-                  campaign: '',
-                  measurements: [],
-                  provenance: { type: 'manual' },
-                });
-                Journal.logEvent('command', `Добавлена новая термометрическая сессия для скважины`, 'thermo.add_session');
-              } else {
-                // Иначе используем стандартную функцию
-                handleAddSession();
-              }
-            }}
+            onClick={handleAddSession}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
             {localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
