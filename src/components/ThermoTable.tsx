@@ -44,7 +44,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
   // Получение всех уникальных глубин
   const allDepths = useMemo(() => {
     return GeoLogData.getAllThermoDepths();
-  }, [boreholes]);
+  }, [boreholes, refreshKey]);
 
   // Получение температуры для сессии и глубины
   const getTemperature = useCallback((sessionId: string, depth: number): number | undefined => {
@@ -132,12 +132,25 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Удаление сессии
   const handleDeleteSession = useCallback((sessionId: string) => {
-    const session = allSessions.find(s => s.id === sessionId);
-    if (!session) return;
-
     if (!confirm('Удалить эту термометрическую сессию?')) return;
 
-    GeoLogData.deleteThermoSession(session.boreholeId, sessionId);
+    // Находим сессию в boreholes
+    let foundBoreholeId: string | null = null;
+    for (const bh of boreholes) {
+      const session = bh.thermoSessions?.find(s => s.id === sessionId);
+      if (session) {
+        foundBoreholeId = bh.id;
+        break;
+      }
+    }
+
+    if (!foundBoreholeId) {
+      alert('Сессия не найдена');
+      return;
+    }
+
+    // Удаляем сессию
+    GeoLogData.deleteThermoSession(foundBoreholeId, sessionId);
     Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
     
     // Принудительно обновляем данные
@@ -147,7 +160,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     if (onUpdate) {
       onUpdate({});
     }
-  }, [allSessions, onUpdate]);
+  }, [boreholes, onUpdate]);
 
   // Обработчик начала редактирования ячейки
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
