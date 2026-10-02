@@ -23,15 +23,20 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
-    return GeoLogData.getAllThermoSessions();
+    const sessions = GeoLogData.getAllThermoSessions();
+    console.log('ThermoTable: все сессии', sessions.map(s => ({ id: s.id, boreholeId: s.boreholeId, boreholeNumber: s.boreholeNumber, date: s.date })));
+    return sessions;
   }, [boreholes]);
 
   // Фильтрация сессий по выбранной скважине (используем локальное состояние)
   const filteredSessions = useMemo(() => {
     if (!localSelectedBoreholeId || localSelectedBoreholeId === 'all') {
+      console.log('ThermoTable: показываем все сессии', allSessions.length);
       return allSessions;
     }
-    return allSessions.filter(s => s.boreholeId === localSelectedBoreholeId);
+    const filtered = allSessions.filter(s => s.boreholeId === localSelectedBoreholeId);
+    console.log('ThermoTable: фильтр по скважине', localSelectedBoreholeId, 'найдено сессий:', filtered.length);
+    return filtered;
   }, [allSessions, localSelectedBoreholeId]);
 
   // Получение всех уникальных глубин
