@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Borehole, Sample, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
+import SampleTableHeader from './SampleTableHeader';
+import { serviceColumns, getColumnsByComposition } from './SampleTableColumns';
 
 interface Props {
   borehole: Borehole;
@@ -40,6 +42,13 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
       </div>
     );
   }
+  
+  // Определение типа композиции для отображения
+  const compositionType = filteredSamples.length > 0 
+    ? (filteredSamples[0].composition_type || 'dispersed')
+    : 'dispersed';
+  
+  const compositionColumns = getColumnsByComposition(compositionType);
   
   // Обработчик изменения поля пробы
   const handleSampleChange = (sampleId: string, field: keyof Sample, value: any) => {
@@ -87,7 +96,6 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
       const { sampleId, field } = editingCell;
       const sample = borehole.samples?.find(s => s.id === sampleId);
       if (sample) {
-        // Определяем тип поля и преобразуем значение
         let value: any = editValue;
         
         // Числовые поля
@@ -180,373 +188,91 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
       {/* Таблица проб */}
       <div className="flex-1 overflow-auto">
         <table className="text-xs border-collapse" style={{ tableLayout: 'auto' }}>
-          <thead className="sticky top-0 z-20 bg-[#e8e8e8]">
-            <tr>
-              {/* Закреплённые служебные колонки */}
-              <th className={fixedCellClass} style={{ left: '0px', minWidth: '40px' }}>№ п/п</th>
-              <th className={fixedCellClass} style={{ left: '40px', minWidth: '100px' }}>Полевой №</th>
-              <th className={fixedCellClass} style={{ left: '140px', minWidth: '100px' }}>Лаб. №</th>
-              <th className={fixedCellClass} style={{ left: '240px', minWidth: '80px' }}>№ выр.</th>
-              <th className={fixedCellClass} style={{ left: '320px', minWidth: '80px' }}>Глубина, м</th>
-              <th className={fixedCellClass} style={{ left: '400px', minWidth: '120px' }}>Литология</th>
-              <th className={fixedCellClass} style={{ left: '520px', minWidth: '200px' }}>Описание</th>
-              
-              {/* Прокручиваемые колонки */}
-              <th className={cellClass}>ИГЭ</th>
-              <th className={cellClass}>Тип</th>
-              <th className={cellClass}>W, %</th>
-              <th className={cellClass}>WL, %</th>
-              <th className={cellClass}>WP, %</th>
-              <th className={cellClass}>ρ, г/см³</th>
-              <th className={cellClass}>ρd, г/см³</th>
-              <th className={cellClass}>ρs, г/см³</th>
-              <th className={cellClass}>c, кПа</th>
-              <th className={cellClass}>φ, град</th>
-              <th className={cellClass}>E, МПа</th>
-              <th className={cellClass}>Rc вс, МПа</th>
-              <th className={cellClass}>Rq вод, МПа</th>
-              <th className={cellClass}>RQD, %</th>
-              <th className={cellClass} style={{ minWidth: '50px' }}>🗑️</th>
-            </tr>
-          </thead>
+          <SampleTableHeader compositionType={compositionType} />
           <tbody>
             {filteredSamples.map((sample, index) => (
               <tr key={sample.id} className="hover:bg-[#f0f0ff]">
-                {/* Закреплённые служебные колонки */}
-                <td className={fixedCellClass} style={{ left: '0px' }}>{index + 1}</td>
-                <td 
-                  className={fixedCellClass} 
-                  style={{ left: '40px' }}
-                  onClick={() => handleCellClick(sample.id, 'field_number', sample.field_number)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'field_number' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.field_number || ''
-                  )}
-                </td>
-                <td 
-                  className={fixedCellClass} 
-                  style={{ left: '140px' }}
-                  onClick={() => handleCellClick(sample.id, 'lab_number', sample.lab_number)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'lab_number' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.lab_number || ''
-                  )}
-                </td>
-                <td className={fixedCellClass} style={{ left: '240px' }}>{borehole.number}</td>
-                <td 
-                  className={fixedCellClass} 
-                  style={{ left: '320px' }}
-                  onClick={() => handleCellClick(sample.id, 'depth_m', sample.depth_m)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'depth_m' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.depth_m.toFixed(2)
-                  )}
-                </td>
-                <td 
-                  className={fixedCellClass} 
-                  style={{ left: '400px' }}
-                  onClick={() => handleCellClick(sample.id, 'lithology', sample.lithology)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'lithology' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.lithology || ''
-                  )}
-                </td>
-                <td 
-                  className={fixedCellClass} 
-                  style={{ left: '520px' }}
-                  onClick={() => handleCellClick(sample.id, 'description', sample.description)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'description' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.description || ''
-                  )}
-                </td>
+                {/* Служебные колонки */}
+                {serviceColumns.map(col => {
+                  let value: any = '';
+                  if (col.key === 'index') value = index + 1;
+                  else if (col.key === 'borehole_number') value = borehole.number;
+                  else value = (sample as any)[col.key];
+                  
+                  const displayValue = col.key === 'depth_m' 
+                    ? (value !== undefined ? Number(value).toFixed(col.precision || 2) : '')
+                    : (value !== undefined && value !== null ? String(value) : '');
+                  
+                  return (
+                    <td
+                      key={col.key}
+                      className={fixedCellClass}
+                      style={{ 
+                        left: col.fixed ? `${serviceColumns.slice(0, serviceColumns.indexOf(col)).reduce((sum, c) => sum + (c.width || 80), 0)}px` : undefined,
+                        width: `${col.width || 80}px`,
+                        minWidth: `${col.width || 80}px`
+                      }}
+                      onClick={(e) => {
+                        if (col.editable) {
+                          e.stopPropagation();
+                          handleCellClick(sample.id, col.key, value);
+                        }
+                      }}
+                    >
+                      {editingCell?.sampleId === sample.id && editingCell?.field === col.key ? (
+                        <input
+                          type="text"
+                          className={inputClass}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleCellBlur}
+                          onKeyDown={handleCellKeyDown}
+                          autoFocus
+                        />
+                      ) : (
+                        displayValue
+                      )}
+                    </td>
+                  );
+                })}
                 
-                {/* Прокручиваемые колонки */}
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'ige_code', sample.ige_code)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'ige_code' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.ige_code || ''
-                  )}
-                </td>
-                <td className={cellClass}>{sample.composition_type || 'dispersed'}</td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'W', sample.W)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'W' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.W !== undefined ? sample.W.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'WL', sample.WL)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'WL' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.WL !== undefined ? sample.WL.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'WP', sample.WP)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'WP' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.WP !== undefined ? sample.WP.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rho', sample.rho)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rho' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.rho !== undefined ? sample.rho.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rhod', sample.rhod)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rhod' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.rhod !== undefined ? sample.rhod.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'rhos', sample.rhos)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rhos' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.rhos !== undefined ? sample.rhos.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'c', sample.c)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'c' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.c !== undefined ? sample.c.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'phi', sample.phi)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'phi' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.phi !== undefined ? sample.phi.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Eoed', sample.Eoed)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Eoed' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.Eoed !== undefined ? sample.Eoed.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Rc_dry', sample.Rc_dry)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_dry' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.Rc_dry !== undefined ? sample.Rc_dry.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'Rc_sat', sample.Rc_sat)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_sat' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.Rc_sat !== undefined ? sample.Rc_sat.toFixed(2) : ''
-                  )}
-                </td>
-                <td 
-                  className={cellClass}
-                  onClick={() => handleCellClick(sample.id, 'RQD', sample.RQD)}
-                >
-                  {editingCell?.sampleId === sample.id && editingCell?.field === 'RQD' ? (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={handleCellKeyDown}
-                      autoFocus
-                    />
-                  ) : (
-                    sample.RQD !== undefined ? sample.RQD.toFixed(2) : ''
-                  )}
-                </td>
+                {/* Колонки композиции */}
+                {compositionColumns.map(col => {
+                  const value = (sample as any)[col.key];
+                  const displayValue = value !== undefined && value !== null 
+                    ? Number(value).toFixed(col.precision || 2) 
+                    : '';
+                  
+                  return (
+                    <td
+                      key={col.key}
+                      className={cellClass}
+                      style={{ width: `${col.width || 80}px`, minWidth: `${col.width || 80}px` }}
+                      onClick={(e) => {
+                        if (col.editable) {
+                          e.stopPropagation();
+                          handleCellClick(sample.id, col.key, value);
+                        }
+                      }}
+                    >
+                      {editingCell?.sampleId === sample.id && editingCell?.field === col.key ? (
+                        <input
+                          type="text"
+                          className={inputClass}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleCellBlur}
+                          onKeyDown={handleCellKeyDown}
+                          autoFocus
+                        />
+                      ) : (
+                        displayValue
+                      )}
+                    </td>
+                  );
+                })}
+                
+                {/* Кнопка удаления */}
                 <td className={cellClass} style={{ minWidth: '50px' }}>
                   <button
                     onClick={() => handleDeleteSample(sample.id)}
