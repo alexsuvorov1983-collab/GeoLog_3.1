@@ -24,8 +24,14 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
-    return GeoLogData.getAllThermoSessions();
-  }, [boreholes, refreshKey]);
+    const sessions = GeoLogData.getAllThermoSessions();
+    console.log('ThermoTable: получены сессии', { 
+      sessionsCount: sessions.length, 
+      boreholesCount: boreholes.length,
+      localSelectedBoreholeId 
+    });
+    return sessions;
+  }, [boreholes, refreshKey, localSelectedBoreholeId]);
 
   // Фильтрация сессий: показываем только последнюю сессию для каждой скважины
   const filteredSessions = useMemo(() => {
@@ -102,25 +108,36 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Добавление новой сессии
   const handleAddSession = useCallback(() => {
+    console.log('handleAddSession вызвана', { localSelectedBoreholeId, boreholesCount: boreholes.length });
+    
     const boreholeId = localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
       ? localSelectedBoreholeId 
       : boreholes[0]?.id;
     
+    console.log('Выбран boreholeId:', boreholeId);
+    
     if (!boreholeId) {
+      console.error('Нет доступных скважин!');
       alert('Нет доступных скважин');
       return;
     }
 
-    GeoLogData.addThermoSession(boreholeId, {
-      date: new Date().toISOString().split('T')[0],
-      campaign: '',
-      measurements: [],
-      provenance: { type: 'manual' },
-    });
-    Journal.logEvent('command', `Добавлена новая термометрическая сессия`, 'thermo.add_session');
-    
-    // Принудительно обновляем данные
-    setRefreshKey(prev => prev + 1);
+    try {
+      const newSession = GeoLogData.addThermoSession(boreholeId, {
+        date: new Date().toISOString().split('T')[0],
+        campaign: '',
+        measurements: [],
+        provenance: { type: 'manual' },
+      });
+      console.log('Сессия добавлена:', newSession);
+      Journal.logEvent('command', `Добавлена новая термометрическая сессия`, 'thermo.add_session');
+      
+      // Принудительно обновляем данные
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Ошибка при добавлении сессии:', error);
+      alert('Ошибка при добавлении замера: ' + (error as Error).message);
+    }
   }, [localSelectedBoreholeId, boreholes]);
 
   // Удаление сессии
@@ -240,7 +257,10 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
         <div className="ml-auto flex gap-2">
           <button
-            onClick={handleAddSession}
+            onClick={() => {
+              console.log('Кнопка нажата!', { localSelectedBoreholeId, boreholes });
+              handleAddSession();
+            }}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
             {localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
