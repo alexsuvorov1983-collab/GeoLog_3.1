@@ -31,8 +31,8 @@ export default function SampleTableHeader({ compositionType }: SampleTableHeader
     }
   });
   
-  const fixedCellClass = "px-1 py-0.5 text-[10px] border-r border-b border-[#c0c0c0] bg-[#e8e8e8] font-semibold text-center sticky top-0 z-20";
-  const headerCellClass = "px-1 py-0.5 text-[10px] border-r border-b border-[#c0c0c0] bg-[#e8e8e8] font-semibold text-center sticky top-0 z-10";
+  const fixedCellClass = "px-1 py-0 text-[10px] border-r border-b border-[#c0c0c0] bg-[#e8e8e8] font-semibold text-center sticky top-0 z-20";
+  const headerCellClass = "px-1 py-0 text-[10px] border-r border-b border-[#c0c0c0] bg-[#e8e8e8] font-semibold text-center sticky top-0 z-10";
   
   return (
     <thead>
@@ -49,9 +49,9 @@ export default function SampleTableHeader({ compositionType }: SampleTableHeader
             }}
             rowSpan={4} // Занимает все 4 уровня
           >
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center gap-0 leading-tight">
               <span>{col.label}</span>
-              {col.unit && <span className="text-[9px] text-gray-500">{col.unit}</span>}
+              {col.unit && <span className="text-[8px] text-gray-500">{col.unit}</span>}
             </div>
           </th>
         ))}
@@ -112,9 +112,9 @@ export default function SampleTableHeader({ compositionType }: SampleTableHeader
             className={headerCellClass}
             style={{ width: `${col.width || 80}px`, minWidth: `${col.width || 80}px` }}
           >
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center gap-0 leading-tight">
               <span>{col.label}</span>
-              {col.unit && <span className="text-[10px] text-gray-500">{col.unit}</span>}
+              {col.unit && <span className="text-[8px] text-gray-500">{col.unit}</span>}
             </div>
           </th>
         ))}

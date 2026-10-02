@@ -121,9 +121,9 @@ export default function SoilSamplesTable({ borehole, boreholeId, selectedSampleI
     }
   };
   
-  const inputClass = "w-full px-0.5 py-0.5 text-[10px] border border-blue-400 bg-white rounded focus:outline-none";
-  const cellClass = "px-1 py-0.5 text-[10px] border-r border-b border-[#e8e8e8] cursor-pointer hover:bg-[#f0f0ff] min-w-[45px]";
-  const fixedCellClass = "px-1 py-0.5 text-[10px] border-r border-b border-[#e8e8e8] bg-[#f9f9f9] sticky left-0 z-10";
+  const inputClass = "w-full px-0.5 py-0 text-[10px] border border-blue-400 bg-white rounded focus:outline-none";
+  const cellClass = "px-1 py-0 text-[10px] border-r border-b border-[#e8e8e8] cursor-pointer hover:bg-[#f0f0ff] min-w-[45px]";
+  const fixedCellClass = "px-1 py-0 text-[10px] border-r border-b border-[#e8e8e8] bg-[#f9f9f9] sticky left-0 z-10";
   
   return (
     <div className="flex flex-col h-full">
