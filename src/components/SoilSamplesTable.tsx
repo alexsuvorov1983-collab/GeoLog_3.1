@@ -17,21 +17,13 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
   
   const allBoreholes = GeoLogData.getAll();
   
-  // Отладочный вывод
-  console.log('SoilSamplesTable render:', { boreholeId, hasBorehole: !!borehole, samplesCount: borehole?.samples?.length || 0 });
-  
   // Фильтрация проб по типу композиции
   const filteredSamples = useMemo(() => {
     const samples = borehole?.samples || [];
-    console.log('filteredSamples calculation:', { totalSamples: samples.length, filter: compositionFilter });
     if (compositionFilter === 'all') {
-      const filtered = samples.filter(s => s.sample_type !== 'water'); // Исключаем пробы воды
-      console.log('filtered (all):', filtered.length);
-      return filtered;
+      return samples.filter(s => s.sample_type !== 'water'); // Исключаем пробы воды
     }
-    const filtered = samples.filter(s => s.composition_type === compositionFilter);
-    console.log('filtered by composition:', filtered.length);
-    return filtered;
+    return samples.filter(s => s.composition_type === compositionFilter);
   }, [borehole?.samples, compositionFilter]);
   
   // Получение пробы по ID

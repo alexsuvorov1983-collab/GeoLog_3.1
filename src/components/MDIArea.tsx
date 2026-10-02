@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
+import SoilSamplesTable from './SoilSamplesTable';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
@@ -242,6 +243,32 @@ function DocContent({ docId, boreholes, selectedId, onSelect, onCreateBorehole, 
       onDeleteBorehole={onDeleteBorehole}
       onLoadFromCatalog={onLoadFromCatalog}
     />;
+  }
+
+  if (docId === 'doc-soil-samples') {
+    const selectedBorehole = selectedId ? boreholes.find(b => b.id === selectedId) : null;
+    if (!selectedBorehole) {
+      return (
+        <div className="p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-3xl">🏔️</span>
+            <div>
+              <h2 className="text-base font-bold">Пробы грунта</h2>
+              <p className="text-sm text-[#808080]">Лабораторные пробы грунта</p>
+            </div>
+          </div>
+          <div className="text-sm text-[#808080]">Выберите скважину в таблице для просмотра проб</div>
+        </div>
+      );
+    }
+    return (
+      <SoilSamplesTable 
+        borehole={selectedBorehole}
+        boreholeId={selectedBorehole.id}
+        onUpdate={() => {}}
+        onSelectBorehole={onSelect}
+      />
+    );
   }
 
   const config = docConfigs[docId];
