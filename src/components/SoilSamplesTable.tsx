@@ -12,8 +12,9 @@ interface Props {
 type CompositionType = 'dispersed' | 'rock' | 'frozen_dispersed' | 'frozen_rock';
 
 export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSelectBorehole }: Props) {
-  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
   const [compositionFilter, setCompositionFilter] = useState<CompositionType | 'all'>('all');
+  const [editingCell, setEditingCell] = useState<{ sampleId: string; field: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
   
   const allBoreholes = GeoLogData.getAll();
   
@@ -21,16 +22,10 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
   const filteredSamples = useMemo(() => {
     const samples = borehole?.samples || [];
     if (compositionFilter === 'all') {
-      return samples.filter(s => s.sample_type !== 'water'); // Исключаем пробы воды
+      return samples.filter(s => s.sample_type !== 'water');
     }
     return samples.filter(s => s.composition_type === compositionFilter);
   }, [borehole?.samples, compositionFilter]);
-  
-  // Получение пробы по ID
-  const selectedSample = useMemo(() => {
-    if (!selectedSampleId || !borehole) return null;
-    return (borehole.samples || []).find(s => s.id === selectedSampleId) || null;
-  }, [borehole?.samples, selectedSampleId]);
   
   // Проверка на наличие borehole
   if (!borehole) {
@@ -65,7 +60,6 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
       composition_type: 'dispersed',
     };
     onUpdate({ samples: [...samples, newSample] });
-    setSelectedSampleId(newSample.id);
     Journal.logEvent('command', `Добавлена проба`, 'sample.add');
   };
   
@@ -73,13 +67,50 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
   const handleDeleteSample = (sampleId: string) => {
     const updatedSamples = (borehole.samples || []).filter(s => s.id !== sampleId);
     onUpdate({ samples: updatedSamples });
-    if (selectedSampleId === sampleId) {
-      setSelectedSampleId(null);
-    }
     Journal.logEvent('command', `Удалена проба ${sampleId}`, 'sample.delete');
   };
   
-  const inputClass = "w-full px-1 py-1 text-sm border border-[#c0c0c0] bg-white rounded focus:border-blue-400 focus:outline-none";
+  // Начало редактирования ячейки
+  const handleCellClick = (sampleId: string, field: string, currentValue: any) => {
+    setEditingCell({ sampleId, field });
+    setEditValue(currentValue !== undefined && currentValue !== null ? String(currentValue) : '');
+  };
+  
+  // Сохранение изменений ячейки
+  const handleCellBlur = () => {
+    if (editingCell) {
+      const { sampleId, field } = editingCell;
+      const sample = borehole.samples?.find(s => s.id === sampleId);
+      if (sample) {
+        // Определяем тип поля и преобразуем значение
+        let value: any = editValue;
+        
+        // Числовые поля
+        if (['depth_m', 'W', 'WL', 'WP', 'rho', 'rhod', 'rhos', 'c', 'phi', 'Eoed', 'Rc_dry', 'Rc_sat', 'RQD'].includes(field)) {
+          const num = parseFloat(editValue.replace(',', '.'));
+          value = isNaN(num) ? undefined : num;
+        }
+        
+        handleSampleChange(sampleId, field as keyof Sample, value);
+      }
+      setEditingCell(null);
+      setEditValue('');
+    }
+  };
+  
+  // Обработка Enter в ячейке
+  const handleCellKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleCellBlur();
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+      setEditValue('');
+    }
+  };
+  
+  const inputClass = "w-full px-1 py-0.5 text-xs border border-blue-400 bg-white rounded focus:outline-none";
+  const cellClass = "px-2 py-1 text-xs border-r border-b border-[#e8e8e8] cursor-pointer hover:bg-[#f0f0ff] min-w-[80px]";
+  const fixedCellClass = "px-2 py-1 text-xs border-r border-b border-[#e8e8e8] bg-[#f9f9f9] sticky left-0 z-10";
   
   return (
     <div className="flex flex-col h-full">
@@ -130,166 +161,399 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
         >
           Мёрзлый скальный
         </button>
-      </div>
-      
-      {/* Основная область: список проб слева + таблица справа */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Список проб слева */}
-        <div className="w-48 bg-[#f9f9f9] border-r border-[#c0c0c0] overflow-y-auto">
-          <div className="p-2 border-b border-[#c0c0c0] bg-[#e8e8e8]">
-            <div className="text-xs font-semibold">Пробы ({filteredSamples.length})</div>
-          </div>
-          {filteredSamples.map(sample => (
-            <div
-              key={sample.id}
-              className={`px-2 py-1 border-b border-[#e8e8e8] cursor-pointer hover:bg-[#e0e8ff] ${selectedSampleId === sample.id ? 'bg-[#c8d8ff]' : ''}`}
-              onClick={() => setSelectedSampleId(sample.id)}
-            >
-              <div className="text-xs font-semibold">{sample.lab_number || 'Без номера'}</div>
-              <div className="text-xs text-gray-600">Глубина: {sample.depth_m.toFixed(2)} м</div>
-              <div className="text-xs text-gray-500">{sample.description || 'Нет описания'}</div>
-            </div>
-          ))}
+        
+        <div className="ml-auto">
           <button
             onClick={handleAddSample}
-            className="w-full px-2 py-1 text-xs text-blue-600 hover:bg-[#e0e8ff] border-b border-[#e8e8e8]"
+            className="px-3 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
             + Добавить пробу
           </button>
         </div>
-        
-        {/* Таблица справа */}
-        <div className="flex-1 overflow-auto">
-          {selectedSample ? (
-            <div className="p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-bold">Проба: {selectedSample.lab_number || 'Без номера'}</h3>
-                <button
-                  onClick={() => handleDeleteSample(selectedSample.id)}
-                  className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+      </div>
+      
+      {/* Таблица проб */}
+      <div className="flex-1 overflow-auto">
+        <table className="text-xs border-collapse" style={{ tableLayout: 'auto' }}>
+          <thead className="sticky top-0 z-20 bg-[#e8e8e8]">
+            <tr>
+              {/* Закреплённые служебные колонки */}
+              <th className={fixedCellClass} style={{ left: '0px', minWidth: '40px' }}>№ п/п</th>
+              <th className={fixedCellClass} style={{ left: '40px', minWidth: '100px' }}>Полевой №</th>
+              <th className={fixedCellClass} style={{ left: '140px', minWidth: '100px' }}>Лаб. №</th>
+              <th className={fixedCellClass} style={{ left: '240px', minWidth: '80px' }}>№ выр.</th>
+              <th className={fixedCellClass} style={{ left: '320px', minWidth: '80px' }}>Глубина, м</th>
+              <th className={fixedCellClass} style={{ left: '400px', minWidth: '120px' }}>Литология</th>
+              <th className={fixedCellClass} style={{ left: '520px', minWidth: '200px' }}>Описание</th>
+              
+              {/* Прокручиваемые колонки */}
+              <th className={cellClass}>ИГЭ</th>
+              <th className={cellClass}>Тип</th>
+              <th className={cellClass}>W, %</th>
+              <th className={cellClass}>WL, %</th>
+              <th className={cellClass}>WP, %</th>
+              <th className={cellClass}>ρ, г/см³</th>
+              <th className={cellClass}>ρd, г/см³</th>
+              <th className={cellClass}>ρs, г/см³</th>
+              <th className={cellClass}>c, кПа</th>
+              <th className={cellClass}>φ, град</th>
+              <th className={cellClass}>E, МПа</th>
+              <th className={cellClass}>Rc вс, МПа</th>
+              <th className={cellClass}>Rq вод, МПа</th>
+              <th className={cellClass}>RQD, %</th>
+              <th className={cellClass} style={{ minWidth: '50px' }}>🗑️</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSamples.map((sample, index) => (
+              <tr key={sample.id} className="hover:bg-[#f0f0ff]">
+                {/* Закреплённые служебные колонки */}
+                <td className={fixedCellClass} style={{ left: '0px' }}>{index + 1}</td>
+                <td 
+                  className={fixedCellClass} 
+                  style={{ left: '40px' }}
+                  onClick={() => handleCellClick(sample.id, 'field_number', sample.field_number)}
                 >
-                  Удалить пробу
-                </button>
-              </div>
-              
-              {/* Служебные колонки (Уровень 1) */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Полевой номер:</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={selectedSample.field_number || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'field_number', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Лабораторный номер:</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={selectedSample.lab_number || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'lab_number', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">№ выработки:</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={borehole.number}
-                    readOnly
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Глубина отбора, м:</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={selectedSample.depth_m.toFixed(2)}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value.replace(',', '.'));
-                      if (!isNaN(val)) {
-                        handleSampleChange(selectedSample.id, 'depth_m', val);
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">ИГЭ:</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={selectedSample.ige_code || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'ige_code', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold block mb-1">Тип композиции:</label>
-                  <select
-                    className={inputClass}
-                    value={selectedSample.composition_type || 'dispersed'}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'composition_type', e.target.value)}
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'field_number' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.field_number || ''
+                  )}
+                </td>
+                <td 
+                  className={fixedCellClass} 
+                  style={{ left: '140px' }}
+                  onClick={() => handleCellClick(sample.id, 'lab_number', sample.lab_number)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'lab_number' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.lab_number || ''
+                  )}
+                </td>
+                <td className={fixedCellClass} style={{ left: '240px' }}>{borehole.number}</td>
+                <td 
+                  className={fixedCellClass} 
+                  style={{ left: '320px' }}
+                  onClick={() => handleCellClick(sample.id, 'depth_m', sample.depth_m)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'depth_m' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.depth_m.toFixed(2)
+                  )}
+                </td>
+                <td 
+                  className={fixedCellClass} 
+                  style={{ left: '400px' }}
+                  onClick={() => handleCellClick(sample.id, 'lithology', sample.lithology)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'lithology' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.lithology || ''
+                  )}
+                </td>
+                <td 
+                  className={fixedCellClass} 
+                  style={{ left: '520px' }}
+                  onClick={() => handleCellClick(sample.id, 'description', sample.description)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'description' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.description || ''
+                  )}
+                </td>
+                
+                {/* Прокручиваемые колонки */}
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'ige_code', sample.ige_code)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'ige_code' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.ige_code || ''
+                  )}
+                </td>
+                <td className={cellClass}>{sample.composition_type || 'dispersed'}</td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'W', sample.W)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'W' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.W !== undefined ? sample.W.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'WL', sample.WL)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'WL' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.WL !== undefined ? sample.WL.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'WP', sample.WP)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'WP' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.WP !== undefined ? sample.WP.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'rho', sample.rho)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rho' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.rho !== undefined ? sample.rho.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'rhod', sample.rhod)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rhod' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.rhod !== undefined ? sample.rhod.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'rhos', sample.rhos)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'rhos' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.rhos !== undefined ? sample.rhos.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'c', sample.c)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'c' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.c !== undefined ? sample.c.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'phi', sample.phi)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'phi' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.phi !== undefined ? sample.phi.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'Eoed', sample.Eoed)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Eoed' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.Eoed !== undefined ? sample.Eoed.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'Rc_dry', sample.Rc_dry)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_dry' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.Rc_dry !== undefined ? sample.Rc_dry.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'Rc_sat', sample.Rc_sat)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'Rc_sat' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.Rc_sat !== undefined ? sample.Rc_sat.toFixed(2) : ''
+                  )}
+                </td>
+                <td 
+                  className={cellClass}
+                  onClick={() => handleCellClick(sample.id, 'RQD', sample.RQD)}
+                >
+                  {editingCell?.sampleId === sample.id && editingCell?.field === 'RQD' ? (
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={handleCellKeyDown}
+                      autoFocus
+                    />
+                  ) : (
+                    sample.RQD !== undefined ? sample.RQD.toFixed(2) : ''
+                  )}
+                </td>
+                <td className={cellClass} style={{ minWidth: '50px' }}>
+                  <button
+                    onClick={() => handleDeleteSample(sample.id)}
+                    className="text-red-600 hover:text-red-800"
                   >
-                    <option value="dispersed">Дисперсный</option>
-                    <option value="rock">Скальный</option>
-                    <option value="frozen_dispersed">Мёрзлый дисперсный</option>
-                    <option value="frozen_rock">Мёрзлый скальный</option>
-                  </select>
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs font-semibold block mb-1">Литология (для скальных):</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={selectedSample.lithology || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'lithology', e.target.value)}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs font-semibold block mb-1">Описание грунта:</label>
-                  <textarea
-                    className={inputClass}
-                    rows={2}
-                    value={selectedSample.description || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'description', e.target.value)}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs font-semibold block mb-1">Примечание:</label>
-                  <textarea
-                    className={inputClass}
-                    rows={2}
-                    value={selectedSample.note || ''}
-                    onChange={(e) => handleSampleChange(selectedSample.id, 'note', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              {/* Здесь будут остальные группы параметров на следующих этапах */}
-              <div className="mt-4 p-3 bg-[#f0f0f0] border border-[#c0c0c0] rounded">
-                <div className="text-xs text-gray-600 italic">
-                  На следующих этапах здесь будут добавлены:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Гранулометрический состав (14 фракций)</li>
-                    <li>Влажности (W, WL, WP, Wtot, Wm, Wi, Ww)</li>
-                    <li>Плотности (ρ, ρd, ρs, ρf)</li>
-                    <li>Расчётные показатели (e, n, Sr, Ip, IL)</li>
-                    <li>Прочностные характеристики (c, φ)</li>
-                    <li>Компрессионные и трёхосные характеристики</li>
-                    <li>Скальные и мёрзлые показатели</li>
-                    <li>Классификатор ГОСТ 25100</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              Выберите пробу из списка слева
-            </div>
-          )}
-        </div>
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
