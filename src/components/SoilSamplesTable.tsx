@@ -17,6 +17,15 @@ export default function SoilSamplesTable({ borehole, boreholeId, onUpdate, onSel
   
   const allBoreholes = GeoLogData.getAll();
   
+  // Проверка на наличие borehole
+  if (!borehole) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Выберите скважину для просмотра проб
+      </div>
+    );
+  }
+  
   // Фильтрация проб по типу композиции
   const filteredSamples = useMemo(() => {
     const samples = borehole.samples || [];

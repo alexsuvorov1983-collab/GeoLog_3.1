@@ -23,7 +23,7 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
     { id: 'general', label: 'Общие' },
     { id: 'soil', label: 'Слои грунта' },
     { id: 'water', label: 'Слои воды' },
-    { id: 'samples', label: 'Пробы' },
+    { id: 'samples', label: 'Пробы грунта' },
     { id: 'thermometry', label: 'Термометрия' },
     { id: 'additional', label: 'Дополнительно' },
   ];
@@ -67,9 +67,9 @@ export default function BottomPanel({ borehole, boreholeId, onUpdate, height = 2
       {/* Tab Content */}
       <div className="flex-1 overflow-auto p-2">
         {activeTab === 'general' && <GeneralForm borehole={borehole} onUpdate={onUpdate} />}
-        {activeTab === 'soil' && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
-        {activeTab === 'water' && boreholeId && <WaterLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
-        {activeTab === 'samples' && boreholeId && <SoilSamplesTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
+        {activeTab === 'soil' && borehole && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
+        {activeTab === 'water' && borehole && boreholeId && <WaterLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
+        {activeTab === 'samples' && borehole && boreholeId && <SoilSamplesTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'thermometry' && <ThermometryTab borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} />}
         {activeTab === 'additional' && <AdditionalTab borehole={borehole} />}
       </div>
