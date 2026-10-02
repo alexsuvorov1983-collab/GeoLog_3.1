@@ -5,7 +5,7 @@ import SampleTableHeader from './SampleTableHeader';
 import { serviceColumns, getColumnsByComposition } from './SampleTableColumns';
 import { calculateAllValues, validateResults, formatValue, CalculatedValues, ValidationErrors } from './SampleCalculations';
 import { classifySoil, ClassificationResult } from './SoilClassifier';
-import { CompressionTest, ShearTest, GranulometryTest, MoistureDensityTest } from './LaboratoryTests';
+import { CompressionTest, ShearTest, GranulometryTest, MoistureDensityTest, TriaxialTest, ConeTest, SwellShrinkTest, SubsidenceTest, RockTest, FrozenTest } from './LaboratoryTests';
 
 interface Props {
   boreholes: Borehole[];
@@ -367,6 +367,66 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
                     >
                       В
                     </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'triaxial');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-indigo-500 text-white rounded hover:bg-indigo-600"
+                      title="Трёхосное сжатие"
+                    >
+                      Т
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'cone');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-pink-500 text-white rounded hover:bg-pink-600"
+                      title="Конус Бойченко"
+                    >
+                      Б
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'swell');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-teal-500 text-white rounded hover:bg-teal-600"
+                      title="Набухание и усадка"
+                    >
+                      Н
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'subsidence');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-cyan-500 text-white rounded hover:bg-cyan-600"
+                      title="Просадочность"
+                    >
+                      П
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'rock');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-amber-500 text-white rounded hover:bg-amber-600"
+                      title="Скальные показатели"
+                    >
+                      Км
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTest(borehole.id, sample.id, 'frozen');
+                      }}
+                      className="px-1 py-0.5 text-[9px] bg-sky-500 text-white rounded hover:bg-sky-600"
+                      title="Мёрзлые показатели"
+                    >
+                      М
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -399,6 +459,18 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
                   return <GranulometryTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
                 case 'moisture':
                   return <MoistureDensityTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'triaxial':
+                  return <TriaxialTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'cone':
+                  return <ConeTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'swell':
+                  return <SwellShrinkTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'subsidence':
+                  return <SubsidenceTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'rock':
+                  return <RockTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
+                case 'frozen':
+                  return <FrozenTest test={test} onUpdate={handleUpdate} onClose={handleClose} />;
                 default:
                   return null;
               }

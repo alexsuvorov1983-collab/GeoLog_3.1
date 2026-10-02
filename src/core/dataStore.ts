@@ -260,12 +260,145 @@ export interface MoistureDensityTestResults {
   dry_density?: number; // Плотность сухого грунта, г/см³
 }
 
+// Интерфейсы для Этапа 6: Дополнительные лабораторные опыты
+
+// Трёхосное сжатие (ГОСТ 12248)
+export interface TriaxialMeasurement {
+  axial_stress_mpa: number; // Осевое напряжение, МПа
+  radial_stress_mpa: number; // Радиальное напряжение, МПа
+  axial_strain?: number; // Осевая деформация
+  radial_strain?: number; // Радиальная деформация
+}
+
+export interface TriaxialTestData {
+  test_scheme: 'CU' | 'CD' | 'UU'; // CU - консолидированно-недренированное, CD - консолидированно-дренированное, UU - неконсолидированно-недренированное
+  measurements: TriaxialMeasurement[];
+  initial_void_ratio?: number; // Начальный коэффициент пористости
+}
+
+export interface TriaxialTestResults {
+  E_tri?: number; // Модуль деформации, МПа
+  nu?: number; // Коэффициент Пуассона
+  G?: number; // Модуль сдвига, МПа
+  K?: number; // Модуль объёмной деформации, МПа
+  cu?: number; // Сопротивление недренированному сдвигу, кПа
+  phi_tri?: number; // Угол внутреннего трения, град
+  c_tri?: number; // Сцепление, кПа
+}
+
+// Конус Бойченко
+export interface ConeMeasurement {
+  depth_mm: number; // Глубина погружения, мм
+  time_min?: number; // Время, мин
+}
+
+export interface ConeTestData {
+  cone_type: 'standard' | 'modified'; // Тип конуса
+  measurements: ConeMeasurement[];
+  transition_table?: Array<{ depth_mm: number; consistency_index: number }>; // Таблица перехода
+}
+
+export interface ConeTestResults {
+  consistency_index?: number; // Показатель консистенции
+  consistency_description?: string; // Описание консистенции
+}
+
+// Набухание и усадка
+export interface SwellShrinkMeasurement {
+  pressure_kpa: number; // Давление, кПа
+  deformation_mm: number; // Деформация, мм
+  time_hours?: number; // Время, часы
+}
+
+export interface SwellShrinkTestData {
+  initial_moisture?: number; // Начальная влажность, %
+  final_moisture?: number; // Конечная влажность, %
+  initial_height_mm?: number; // Начальная высота, мм
+  swell_measurements: SwellShrinkMeasurement[]; // Замеры набухания
+  shrink_measurements: SwellShrinkMeasurement[]; // Замеры усадки
+}
+
+export interface SwellShrinkTestResults {
+  Psw?: number; // Относительное набухание
+  moisture_swell?: number; // Влажность набухания, %
+  shrinkage?: number; // Относительная усадка
+  swell_pressure?: number; // Давление набухания, кПа
+}
+
+// Просадочность
+export interface SubsidenceMeasurement {
+  pressure_mpa: number; // Давление, МПа
+  deformation_mm: number; // Деформация, мм
+  is_saturated: boolean; // Замоченное состояние
+}
+
+export interface SubsidenceTestData {
+  initial_height_mm: number; // Начальная высота, мм
+  initial_moisture?: number; // Начальная влажность, %
+  measurements: SubsidenceMeasurement[];
+}
+
+export interface SubsidenceTestResults {
+  relative_subsidence?: Record<number, number>; // Относительная просадочность при каждом давлении
+  initial_subsidence_pressure?: number; // Начальное просадочное давление, МПа
+  household_pressure?: number; // Бытовое давление, МПа
+  E_sat?: number; // Модуль деформации при замачивании, МПа
+}
+
+// Скальные показатели
+export interface RockTestData {
+  Rc_dry_measurements?: Array<{ sample_id: string; force_kN: number; area_cm2: number }>; // Замеры Rc вс
+  Rc_sat_measurements?: Array<{ sample_id: string; force_kN: number; area_cm2: number }>; // Замеры Rc водон
+  RQD_measurements?: Array<{ core_length_m: number; intact_length_m: number }>; // Замеры RQD
+  tensile_strength?: number; // Прочность на растяжение, МПа
+  natural_slope_angle?: number; // Угол естественного откоса, град
+  core_density?: number; // Плотность обломков, г/см³
+}
+
+export interface RockTestResults {
+  Rc_dry?: number; // Предел прочности на сжатие всухую, МПа
+  Rc_sat?: number; // Предел прочности на сжатие водонасыщенный, МПа
+  RQD?: number; // Индекс качества керна, %
+  Ksof?: number; // Коэффициент размягчаемости
+  Kwr?: number; // Коэффициент выветрелости
+  mass_loss?: number; // Потери в массе, %
+  Young_modulus?: number; // Модуль Юнга, МПа
+  Poisson_ratio?: number; // Коэффициент Пуассона
+}
+
+// Мёрзлые показатели
+export interface FrozenTestData {
+  Tbf?: number; // Температура начала замерзания, °C
+  itot?: number; // Общая льдистость
+  ii?: number; // Льдистость включений
+  ice_cement?: number; // Льдистость льда-цемента
+  unfrozen_water?: number; // Содержание незамерзшей воды, %
+  thermal_measurements?: {
+    thermal_conductivity_frozen?: number; // Теплопроводность мёрзлого, Вт/(м·°C)
+    thermal_conductivity_thawed?: number; // Теплопроводность талого, Вт/(м·°C)
+    thermal_diffusivity_frozen?: number; // Температуропроводность мёрзлого, м²/сут
+    thermal_diffusivity_thawed?: number; // Температуропроводность талого, м²/сут
+    heat_capacity_frozen?: number; // Теплоемкость мёрзлого, кДж/(м³·°C)
+    heat_capacity_thawed?: number; // Теплоемкость талого, кДж/(м³·°C)
+  };
+  shear_strength_concrete?: number; // Сопротивление срезу по бетону, кПа
+  shear_strength_steel?: number; // Сопротивление срезу по стали, кПа
+}
+
+export interface FrozenTestResults {
+  Sr_prime?: number; // Степень заполнения пор льдом и незамёрзшей водой
+  relative_settlement?: number; // Относительная осадка мёрзлого грунта
+  compressibility_thaw?: number; // Сжимаемость при оттаивании
+  thaw_coefficient?: number; // Коэффициент оттаивания
+  Ef_02?: number; // Модуль деформации при 0.2 МПа, МПа
+}
+
 export interface SoilTest {
   id: string;
   sample_id: string;
   test_type: 'compression' | 'shear' | 'triaxial' | 'cone' | 'granulometry' | 'moisture' | 'swell' | 'subsidence' | 'frost' | 'consolidation' | 'chemical' | 'rock' | 'frozen';
-  data?: CompressionTestData | ShearTestData | GranulometryTestData | MoistureDensityTestData | Record<string, any>;
-  results?: CompressionTestResults | ShearTestResults | GranulometryTestResults | MoistureDensityTestResults | Record<string, any>;
+  data?: CompressionTestData | ShearTestData | GranulometryTestData | MoistureDensityTestData | TriaxialTestData | ConeTestData | SwellShrinkTestData | SubsidenceTestData | RockTestData | FrozenTestData | Record<string, any>;
+  results?: CompressionTestResults | ShearTestResults | GranulometryTestResults | MoistureDensityTestResults | TriaxialTestResults | ConeTestResults | SwellShrinkTestResults | SubsidenceTestResults | RockTestResults | FrozenTestResults | Record<string, any>;
   created_at?: string;
 }
 
