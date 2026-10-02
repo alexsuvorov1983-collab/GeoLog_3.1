@@ -45,6 +45,8 @@ export const dispersedColumns: ColumnConfig[] = [
   { key: 'f0002', label: '<0.005', width: 45, editable: true, level2: 'Гранулометрический состав, %', level3: 'фракции', unit: '%', precision: 1 },
   { key: 'f0002_gost', label: '<0.002', width: 45, editable: true, level2: 'Гранулометрический состав, %', level3: 'фракции ГОСТ', unit: '%', precision: 1 },
   { key: 'particle_sum', label: 'Сумма частиц', width: 60, editable: false, level2: 'Гранулометрический состав, %', level3: 'контроль', unit: '%', precision: 1 },
+  { key: 'filler', label: 'Заполнитель', width: 55, editable: false, level2: 'Гранулометрический состав, %', level3: 'заполнитель', unit: '%', precision: 1 },
+  { key: 'sandInFine', label: 'Песок в мел.', width: 55, editable: false, level2: 'Гранулометрический состав, %', level3: 'песок в мел.', unit: '%', precision: 1 },
   
   // Уровень 2: Влажность
   { key: 'W', label: 'W', width: 45, editable: true, level2: 'Природная влажность W, %', unit: '%', precision: 1 },
@@ -70,6 +72,10 @@ export const dispersedColumns: ColumnConfig[] = [
   // Уровень 2: Компрессионные характеристики
   { key: 'Eoed', label: 'E', width: 45, editable: true, level2: 'Компрес. модуль деформации, МПа', level3: 'ест.', unit: 'МПа', precision: 1 },
   { key: 'Eoed_sat', label: 'E вод.', width: 45, editable: true, level2: 'Компрес. модуль деформации, МПа', level3: 'замоч.', unit: 'МПа', precision: 1 },
+  
+  // Уровень 2: Коэффициенты
+  { key: 'K1', label: 'K1', width: 45, editable: false, level2: 'Определение коэффициентов', level3: 'выветрелости', precision: 2 },
+  { key: 'K0', label: 'K0', width: 45, editable: false, level2: 'Определение коэффициентов', level3: 'природное сост.', precision: 2 },
   
   // Уровень 2: ИГЭ
   { key: 'ige_code', label: 'ИГЭ', width: 60, editable: true, level2: 'Выход классификации', level3: 'Номер ИГЭ' },
