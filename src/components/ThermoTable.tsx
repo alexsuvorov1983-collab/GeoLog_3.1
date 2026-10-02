@@ -9,11 +9,12 @@ interface Props {
   boreholes: Borehole[];
   selectedBoreholeId?: string | null;
   onSelectBorehole?: (id: string) => void;
+  onUpdate?: (data?: any) => void;
 }
 
 type Orientation = 'horizontal' | 'vertical';
 
-export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBorehole }: Props) {
+export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBorehole, onUpdate }: Props) {
   const [orientation, setOrientation] = useState<Orientation>('horizontal');
   const [editingCell, setEditingCell] = useState<{ sessionId: string; depth: number } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -24,14 +25,8 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
-    const sessions = GeoLogData.getAllThermoSessions();
-    console.log('ThermoTable: получены сессии', { 
-      sessionsCount: sessions.length, 
-      boreholesCount: boreholes.length,
-      localSelectedBoreholeId 
-    });
-    return sessions;
-  }, [boreholes, refreshKey, localSelectedBoreholeId]);
+    return GeoLogData.getAllThermoSessions();
+  }, [boreholes, refreshKey]);
 
   // Фильтрация сессий: показываем только последнюю сессию для каждой скважины
   const filteredSessions = useMemo(() => {
@@ -89,7 +84,12 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     
     // Принудительно обновляем данные
     setRefreshKey(prev => prev + 1);
-  }, [allSessions, boreholes]);
+    
+    // Уведомляем родительский компонент об изменении
+    if (onUpdate) {
+      onUpdate({});
+    }
+  }, [allSessions, boreholes, onUpdate]);
 
   // Добавление новой глубины
   const handleAddDepth = useCallback(() => {
@@ -108,37 +108,35 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Добавление новой сессии
   const handleAddSession = useCallback(() => {
-    console.log('handleAddSession вызвана', { localSelectedBoreholeId, boreholesCount: boreholes.length });
-    
     const boreholeId = localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
       ? localSelectedBoreholeId 
       : boreholes[0]?.id;
     
-    console.log('Выбран boreholeId:', boreholeId);
-    
     if (!boreholeId) {
-      console.error('Нет доступных скважин!');
       alert('Нет доступных скважин');
       return;
     }
 
     try {
-      const newSession = GeoLogData.addThermoSession(boreholeId, {
+      GeoLogData.addThermoSession(boreholeId, {
         date: new Date().toISOString().split('T')[0],
         campaign: '',
         measurements: [],
         provenance: { type: 'manual' },
       });
-      console.log('Сессия добавлена:', newSession);
       Journal.logEvent('command', `Добавлена новая термометрическая сессия`, 'thermo.add_session');
       
       // Принудительно обновляем данные
       setRefreshKey(prev => prev + 1);
+      
+      // Уведомляем родительский компонент об изменении
+      if (onUpdate) {
+        onUpdate({});
+      }
     } catch (error) {
-      console.error('Ошибка при добавлении сессии:', error);
       alert('Ошибка при добавлении замера: ' + (error as Error).message);
     }
-  }, [localSelectedBoreholeId, boreholes]);
+  }, [localSelectedBoreholeId, boreholes, onUpdate]);
 
   // Удаление сессии
   const handleDeleteSession = useCallback((sessionId: string) => {
@@ -152,7 +150,12 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     
     // Принудительно обновляем данные
     setRefreshKey(prev => prev + 1);
-  }, [allSessions]);
+    
+    // Уведомляем родительский компонент об изменении
+    if (onUpdate) {
+      onUpdate({});
+    }
+  }, [allSessions, onUpdate]);
 
   // Обработчик начала редактирования ячейки
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
@@ -257,10 +260,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
         <div className="ml-auto flex gap-2">
           <button
-            onClick={() => {
-              console.log('Кнопка нажата!', { localSelectedBoreholeId, boreholes });
-              handleAddSession();
-            }}
+            onClick={handleAddSession}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
             {localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 

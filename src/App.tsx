@@ -336,13 +336,14 @@ export default function App() {
             height={bottomPanelHeight}
             onSelectBorehole={selectBorehole}
             onUpdate={(data: Partial<Borehole>) => {
-              if (selectedBoreholeId) {
+              // Если есть данные для обновления скважины и выбрана скважина
+              if (selectedBoreholeId && Object.keys(data).length > 0) {
                 GeoLogData.update(selectedBoreholeId, data);
                 markDirty('doc-boreholes');
-                // Увеличиваем dataVersion для перерисовки selectedBorehole
-                setDataVersion(v => v + 1);
-                forceUpdate((n) => n + 1);
               }
+              // Всегда увеличиваем dataVersion для перерисовки данных
+              setDataVersion(v => v + 1);
+              forceUpdate((n) => n + 1);
             }}
           />
         </div>
