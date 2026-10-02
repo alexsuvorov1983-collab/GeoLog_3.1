@@ -344,6 +344,21 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
                   </th>
                 ))}
               </tr>
+              {/* Строка с кнопками удаления столбцов */}
+              <tr>
+                <th className={fixedHeaderClass} style={{ left: '0px', minWidth: '80px' }}></th>
+                {filteredSessions.map(session => (
+                  <th key={`delete-${session.id}`} className={headerClass} style={{ minWidth: '100px' }}>
+                    <button
+                      onClick={() => handleDeleteSession(session.id)}
+                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                      title="Удалить этот замер"
+                    >
+                      🗑️ Удалить
+                    </button>
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {allDepths.map(depth => (
