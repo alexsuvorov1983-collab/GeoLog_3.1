@@ -10,7 +10,7 @@ import ThermoTable from './ThermoTable';
 interface Props {
   borehole: Borehole | null;
   boreholes: Borehole[];
-  onUpdate: (data: Partial<Borehole>) => void;
+  onUpdate: (data: Partial<Borehole>, boreholeId?: string) => void;
   height?: number;
   boreholeId?: string | null;
   selectedSampleId?: string | null;

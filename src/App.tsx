@@ -335,10 +335,13 @@ export default function App() {
             selectedSampleId={selectedSampleId}
             height={bottomPanelHeight}
             onSelectBorehole={selectBorehole}
-            onUpdate={(data?: Partial<Borehole>) => {
-              // Если есть данные для обновления скважины и выбрана скважина
-              if (selectedBoreholeId && data && Object.keys(data).length > 0) {
-                GeoLogData.update(selectedBoreholeId, data);
+            onUpdate={(data?: Partial<Borehole>, boreholeId?: string) => {
+              // Используем переданный boreholeId или selectedBoreholeId
+              const targetBoreholeId = boreholeId || selectedBoreholeId;
+              
+              // Если есть данные для обновления скважины и есть ID скважины
+              if (targetBoreholeId && data && Object.keys(data).length > 0) {
+                GeoLogData.update(targetBoreholeId, data);
                 markDirty('doc-boreholes');
               }
               // Всегда увеличиваем dataVersion для перерисовки данных
