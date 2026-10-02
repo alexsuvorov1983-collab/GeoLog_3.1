@@ -40,6 +40,9 @@ export interface Borehole {
   // Thermometry
   thermometry?: ThermometryEntry[];
   
+  // Термометрия - сессии замеров (новая структура)
+  thermoSessions?: ThermoSession[];
+  
   // Лабораторные опыты (новая схема v1.5)
   soil_tests?: SoilTest[];
 }
@@ -409,6 +412,27 @@ export interface ThermometryEntry {
   temperature_c: number;
 }
 
+// Термометрия - сессии замеров (новая структура для вкладки "Термометрия")
+export interface ThermoMeasurement {
+  depth: number;
+  temperature: number;
+}
+
+export interface ThermoSession {
+  id: string;
+  boreholeId: string;
+  date: string; // ISO формат YYYY-MM-DD
+  campaign?: string; // Название кампании
+  measurements: ThermoMeasurement[];
+  provenance?: {
+    type: 'manual' | 'xlsx_import';
+    fileName?: string;
+    sheetName?: string;
+    rowNumber?: number;
+    importedAt?: string;
+  };
+}
+
 // Справочники
 export interface DictItem {
   id: string;
@@ -506,6 +530,42 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'th-001', borehole_id: 'bh-001', depth_m: 5.0, temperature_c: 8.2 },
       { id: 'th-002', borehole_id: 'bh-001', depth_m: 10.0, temperature_c: 9.5 },
     ],
+    thermoSessions: [
+      {
+        id: 'ts-demo-001',
+        boreholeId: 'bh-001',
+        date: '2024-03-15',
+        campaign: 'Весенняя кампания 2024',
+        measurements: [
+          { depth: 0.5, temperature: 7.8 },
+          { depth: 1.0, temperature: 8.0 },
+          { depth: 1.5, temperature: 8.1 },
+          { depth: 2.0, temperature: 8.2 },
+          { depth: 3.0, temperature: 8.4 },
+          { depth: 5.0, temperature: 8.8 },
+          { depth: 7.0, temperature: 9.2 },
+          { depth: 10.0, temperature: 9.8 },
+        ],
+        provenance: { type: 'manual' },
+      },
+      {
+        id: 'ts-demo-002',
+        boreholeId: 'bh-001',
+        date: '2024-07-20',
+        campaign: 'Летняя кампания 2024',
+        measurements: [
+          { depth: 0.5, temperature: 12.5 },
+          { depth: 1.0, temperature: 12.3 },
+          { depth: 1.5, temperature: 12.1 },
+          { depth: 2.0, temperature: 11.9 },
+          { depth: 3.0, temperature: 11.5 },
+          { depth: 5.0, temperature: 10.8 },
+          { depth: 7.0, temperature: 10.2 },
+          { depth: 10.0, temperature: 9.6 },
+        ],
+        provenance: { type: 'manual' },
+      },
+    ],
   },
   {
     id: 'bh-002', number: 'С-2', norm_key: 'СК-002',
@@ -535,6 +595,26 @@ const fixtureBoreholes: Borehole[] = [
       { id: 'sp-003', borehole_id: 'bh-002', depth_m: 5.0, sample_type: 'Монолит', lab_number: 'Л-003' },
     ],
     thermometry: [],
+    thermoSessions: [
+      {
+        id: 'ts-demo-003',
+        boreholeId: 'bh-002',
+        date: '2024-03-16',
+        campaign: 'Весенняя кампания 2024',
+        measurements: [
+          { depth: 0.5, temperature: 7.5 },
+          { depth: 1.0, temperature: 7.8 },
+          { depth: 2.0, temperature: 8.2 },
+          { depth: 4.0, temperature: 8.8 },
+          { depth: 6.0, temperature: 9.3 },
+          { depth: 8.0, temperature: 9.7 },
+          { depth: 12.0, temperature: 10.4 },
+          { depth: 15.0, temperature: 10.8 },
+          { depth: 20.0, temperature: 11.2 },
+        ],
+        provenance: { type: 'manual' },
+      },
+    ],
   },
   {
     id: 'bh-003', number: 'С-3', norm_key: 'СК-003',
@@ -565,6 +645,22 @@ const fixtureBoreholes: Borehole[] = [
     thermometry: [
       { id: 'th-003', borehole_id: 'bh-003', depth_m: 5.0, temperature_c: 7.8 },
     ],
+    thermoSessions: [
+      {
+        id: 'ts-demo-004',
+        boreholeId: 'bh-003',
+        date: '2024-03-17',
+        campaign: 'Весенняя кампания 2024',
+        measurements: [
+          { depth: 0.5, temperature: 7.2 },
+          { depth: 1.0, temperature: 7.5 },
+          { depth: 2.0, temperature: 7.8 },
+          { depth: 5.0, temperature: 8.5 },
+          { depth: 8.0, temperature: 9.0 },
+        ],
+        provenance: { type: 'manual' },
+      },
+    ],
   },
   {
     id: 'bh-004', number: 'С-4', norm_key: 'СК-004',
@@ -589,6 +685,26 @@ const fixtureBoreholes: Borehole[] = [
     thermometry: [
       { id: 'th-004', borehole_id: 'bh-004', depth_m: 10.0, temperature_c: 10.2 },
       { id: 'th-005', borehole_id: 'bh-004', depth_m: 20.0, temperature_c: 11.8 },
+    ],
+    thermoSessions: [
+      {
+        id: 'ts-demo-005',
+        boreholeId: 'bh-004',
+        date: '2024-03-18',
+        campaign: 'Весенняя кампания 2024',
+        measurements: [
+          { depth: 0.5, temperature: 7.0 },
+          { depth: 1.0, temperature: 7.3 },
+          { depth: 2.0, temperature: 7.8 },
+          { depth: 4.0, temperature: 8.5 },
+          { depth: 6.0, temperature: 9.0 },
+          { depth: 10.0, temperature: 10.2 },
+          { depth: 15.0, temperature: 11.0 },
+          { depth: 20.0, temperature: 11.8 },
+          { depth: 25.0, temperature: 12.3 },
+        ],
+        provenance: { type: 'manual' },
+      },
     ],
   },
   {
@@ -824,5 +940,84 @@ export const GeoLogData = {
     bus.emit('ui:catalog-changed', { collection: 'water_layers', id: layerId });
     Journal.logEvent('command', `Удалён водный слой ${layerId}`, 'water_layer.delete');
     return true;
+  },
+
+  // CRUD для термометрических сессий
+  addThermoSession(boreholeId: string, data: Partial<ThermoSession>): ThermoSession {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh) throw new Error(`Скважина ${boreholeId} не найдена`);
+    
+    if (!bh.thermoSessions) bh.thermoSessions = [];
+    
+    const newSession: ThermoSession = {
+      id: 'ts-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      boreholeId: boreholeId,
+      date: data.date || new Date().toISOString().split('T')[0],
+      campaign: data.campaign || '',
+      measurements: data.measurements || [],
+      provenance: data.provenance || { type: 'manual' },
+    };
+    
+    bh.thermoSessions.push(newSession);
+    notify();
+    Journal.logEvent('command', `Добавлена термометрическая сессия ${newSession.id}`, 'thermo_session.add');
+    return newSession;
+  },
+
+  updateThermoSession(boreholeId: string, sessionId: string, data: Partial<ThermoSession>): ThermoSession | undefined {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh || !bh.thermoSessions) return undefined;
+    
+    const idx = bh.thermoSessions.findIndex(s => s.id === sessionId);
+    if (idx === -1) return undefined;
+    
+    bh.thermoSessions[idx] = { ...bh.thermoSessions[idx], ...data };
+    notify();
+    Journal.logEvent('command', `Обновлена термометрическая сессия ${sessionId}`, 'thermo_session.update');
+    return bh.thermoSessions[idx];
+  },
+
+  deleteThermoSession(boreholeId: string, sessionId: string): boolean {
+    const bh = boreholes.find(b => b.id === boreholeId);
+    if (!bh || !bh.thermoSessions) return false;
+    
+    const idx = bh.thermoSessions.findIndex(s => s.id === sessionId);
+    if (idx === -1) return false;
+    
+    bh.thermoSessions.splice(idx, 1);
+    notify();
+    Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo_session.delete');
+    return true;
+  },
+
+  // Получить все уникальные глубины из всех сессий проекта
+  getAllThermoDepths(): number[] {
+    const depthSet = new Set<number>();
+    
+    boreholes.forEach(bh => {
+      (bh.thermoSessions || []).forEach(session => {
+        session.measurements.forEach(m => {
+          depthSet.add(m.depth);
+        });
+      });
+    });
+    
+    return Array.from(depthSet).sort((a, b) => a - b);
+  },
+
+  // Получить все сессии термометрии из всех скважин
+  getAllThermoSessions(): Array<ThermoSession & { boreholeNumber: string }> {
+    const sessions: Array<ThermoSession & { boreholeNumber: string }> = [];
+    
+    boreholes.forEach(bh => {
+      (bh.thermoSessions || []).forEach(session => {
+        sessions.push({
+          ...session,
+          boreholeNumber: bh.number,
+        });
+      });
+    });
+    
+    return sessions;
   },
 };

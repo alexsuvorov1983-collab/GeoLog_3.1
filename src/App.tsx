@@ -330,6 +330,7 @@ export default function App() {
           {/* Bottom Panel */}
           <BottomPanel
             borehole={selectedBorehole}
+            boreholes={boreholes}
             boreholeId={selectedBoreholeId}
             selectedSampleId={selectedSampleId}
             height={bottomPanelHeight}

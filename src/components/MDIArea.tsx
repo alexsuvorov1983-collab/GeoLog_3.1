@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
 import AllSamplesTable from './AllSamplesTable';
 import IgeStatistics from './IgeStatistics';
+import ThermoTable from './ThermoTable';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
@@ -281,6 +282,16 @@ function DocContent({ docId, boreholes, selectedId, onSelect, selectedSampleId, 
   if (docId === 'doc-ige') {
     return (
       <IgeStatistics boreholes={boreholes} />
+    );
+  }
+
+  if (docId === 'doc-thermometry') {
+    return (
+      <ThermoTable 
+        boreholes={boreholes}
+        selectedBoreholeId={selectedId}
+        onSelectBorehole={onSelect}
+      />
     );
   }
 
