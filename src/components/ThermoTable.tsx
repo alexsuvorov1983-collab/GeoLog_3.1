@@ -18,6 +18,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
   const [editingCell, setEditingCell] = useState<{ sessionId: string; depth: number } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [newDepthValue, setNewDepthValue] = useState<string>('');
+  const [localSelectedBoreholeId, setLocalSelectedBoreholeId] = useState<string>('all');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Получение всех сессий термометрии
@@ -25,13 +26,13 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     return GeoLogData.getAllThermoSessions();
   }, [boreholes]);
 
-  // Фильтрация сессий по выбранной скважине
+  // Фильтрация сессий по выбранной скважине (используем локальное состояние)
   const filteredSessions = useMemo(() => {
-    if (!selectedBoreholeId || selectedBoreholeId === 'all') {
+    if (!localSelectedBoreholeId || localSelectedBoreholeId === 'all') {
       return allSessions;
     }
-    return allSessions.filter(s => s.boreholeId === selectedBoreholeId);
-  }, [allSessions, selectedBoreholeId]);
+    return allSessions.filter(s => s.boreholeId === localSelectedBoreholeId);
+  }, [allSessions, localSelectedBoreholeId]);
 
   // Получение всех уникальных глубин
   const allDepths = useMemo(() => {
@@ -181,8 +182,8 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
         {/* Селектор скважины */}
         <label className="text-xs font-semibold">Скважина:</label>
         <select
-          value={selectedBoreholeId || 'all'}
-          onChange={(e) => onSelectBorehole?.(e.target.value)}
+          value={localSelectedBoreholeId}
+          onChange={(e) => setLocalSelectedBoreholeId(e.target.value)}
           className="px-2 py-1 text-xs border border-[#c0c0c0] rounded bg-white"
         >
           <option value="all">Все скважины</option>
