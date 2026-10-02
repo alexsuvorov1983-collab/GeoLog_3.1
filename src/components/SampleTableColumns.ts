@@ -79,6 +79,13 @@ export const dispersedColumns: ColumnConfig[] = [
   
   // Уровень 2: ИГЭ
   { key: 'ige_code', label: 'ИГЭ', width: 60, editable: true, level2: 'Выход классификации', level3: 'Номер ИГЭ' },
+  
+  // Уровень 2: Выход классификации
+  { key: 'soilName', label: 'Наименование', width: 180, editable: false, level2: 'Выход классификации', level3: 'Наименование грунта по ГОСТ' },
+  { key: 'soilType', label: 'Вид', width: 100, editable: false, level2: 'Выход классификации', level3: 'Вид грунта' },
+  { key: 'polyusProjectName', label: 'ПолюсПроект', width: 150, editable: false, level2: 'Выход классификации', level3: 'Название по ПолюсПроект' },
+  { key: 'frostSusceptibility', label: 'Пучинистость', width: 90, editable: false, level2: 'Выход классификации', level3: 'Категория пучинистости' },
+  { key: 'roundness', label: 'Окатанность', width: 80, editable: false, level2: 'Выход классификации', level3: 'Окатанность обломков' },
 ];
 
 // Композиция "Скальный" (Н-ка_СК)
@@ -96,6 +103,11 @@ export const rockColumns: ColumnConfig[] = [
   
   // Уровень 2: ИГЭ
   { key: 'ige_code', label: 'ИГЭ', width: 60, editable: true, level2: 'Выход классификации', level3: 'Номер ИГЭ' },
+  
+  // Уровень 2: Выход классификации
+  { key: 'soilName', label: 'Наименование', width: 180, editable: false, level2: 'Выход классификации', level3: 'Наименование грунта по ГОСТ' },
+  { key: 'soilType', label: 'Вид', width: 100, editable: false, level2: 'Выход классификации', level3: 'Вид грунта' },
+  { key: 'polyusProjectName', label: 'ПолюсПроект', width: 150, editable: false, level2: 'Выход классификации', level3: 'Название по ПолюсПроект' },
 ];
 
 // Композиция "Мёрзлый дисперсный" (Н-ка_МЗ)
@@ -124,6 +136,12 @@ export const frozenDispersedColumns: ColumnConfig[] = [
   
   // Уровень 2: ИГЭ
   { key: 'ige_code', label: 'ИГЭ', width: 60, editable: true, level2: 'Выход классификации', level3: 'Номер ИГЭ' },
+  
+  // Уровень 2: Выход классификации
+  { key: 'soilName', label: 'Наименование', width: 180, editable: false, level2: 'Выход классификации', level3: 'Наименование грунта по ГОСТ' },
+  { key: 'soilType', label: 'Вид', width: 100, editable: false, level2: 'Выход классификации', level3: 'Вид грунта' },
+  { key: 'polyusProjectName', label: 'ПолюсПроект', width: 150, editable: false, level2: 'Выход классификации', level3: 'Название по ПолюсПроект' },
+  { key: 'frostSusceptibility', label: 'Пучинистость', width: 90, editable: false, level2: 'Выход классификации', level3: 'Категория пучинистости' },
 ];
 
 // Композиция "Мёрзлый скальный" (Н-ка_МЗСК)
@@ -138,6 +156,12 @@ export const frozenRockColumns: ColumnConfig[] = [
   
   // Уровень 2: ИГЭ
   { key: 'ige_code', label: 'ИГЭ', width: 60, editable: true, level2: 'Выход классификации', level3: 'Номер ИГЭ' },
+  
+  // Уровень 2: Выход классификации
+  { key: 'soilName', label: 'Наименование', width: 180, editable: false, level2: 'Выход классификации', level3: 'Наименование грунта по ГОСТ' },
+  { key: 'soilType', label: 'Вид', width: 100, editable: false, level2: 'Выход классификации', level3: 'Вид грунта' },
+  { key: 'polyusProjectName', label: 'ПолюсПроект', width: 150, editable: false, level2: 'Выход классификации', level3: 'Название по ПолюсПроект' },
+  { key: 'frostSusceptibility', label: 'Пучинистость', width: 90, editable: false, level2: 'Выход классификации', level3: 'Категория пучинистости' },
 ];
 
 // Функция получения колонок по типу композиции

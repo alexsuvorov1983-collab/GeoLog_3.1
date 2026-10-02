@@ -4,6 +4,7 @@ import { Journal } from '../core/journal';
 import SampleTableHeader from './SampleTableHeader';
 import { serviceColumns, getColumnsByComposition } from './SampleTableColumns';
 import { calculateAllValues, validateResults, formatValue, CalculatedValues, ValidationErrors } from './SampleCalculations';
+import { classifySoil, ClassificationResult } from './SoilClassifier';
 
 interface Props {
   boreholes: Borehole[];
@@ -36,8 +37,8 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
   
   const compositionColumns = getColumnsByComposition(compositionType);
   
-  // Функция получения значения для отображения (с учётом расчётных полей)
-  const getDisplayValue = (sample: Sample, colKey: string, calculated: CalculatedValues, errors: ValidationErrors): { value: string; isError: boolean } => {
+  // Функция получения значения для отображения (с учётом расчётных полей и классификации)
+  const getDisplayValue = (sample: Sample, colKey: string, calculated: CalculatedValues, errors: ValidationErrors, classification: ClassificationResult): { value: string; isError: boolean } => {
     // Расчётные поля
     if (colKey === 'particle_sum') {
       const val = calculated.particleSum;
@@ -79,6 +80,23 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
     }
     if (colKey === 'K0') {
       return { value: formatValue(calculated.K0, 2), isError: false };
+    }
+    
+    // Поля классификации
+    if (colKey === 'soilName') {
+      return { value: classification.soilName || '', isError: false };
+    }
+    if (colKey === 'soilType') {
+      return { value: classification.soilType || '', isError: false };
+    }
+    if (colKey === 'polyusProjectName') {
+      return { value: classification.polyusProjectName || '', isError: false };
+    }
+    if (colKey === 'frostSusceptibility') {
+      return { value: classification.frostSusceptibility || '', isError: false };
+    }
+    if (colKey === 'roundness') {
+      return { value: classification.roundness || '', isError: false };
     }
     
     // Обычные поля из sample
@@ -163,6 +181,7 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
               // Вычисляем расчётные значения для этой пробы
               const calculated = calculateAllValues(sample);
               const errors = validateResults(sample, calculated);
+              const classification = classifySoil(sample, calculated);
               
               return (
               <tr 
@@ -219,7 +238,7 @@ export default function AllSamplesTable({ boreholes, selectedSampleId, onSelectS
                 
                 {/* Колонки композиции */}
                 {compositionColumns.map(col => {
-                  const { value: displayValue, isError } = getDisplayValue(sample, col.key, calculated, errors);
+                  const { value: displayValue, isError } = getDisplayValue(sample, col.key, calculated, errors, classification);
                   const value = (sample as any)[col.key];
                   
                   // Определяем класс ячейки в зависимости от типа
