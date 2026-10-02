@@ -189,32 +189,7 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
       uuvDate: borehole.end_date || ''
     };
     
-    // Определяем, после какого слоя добавлять новый
-    let referenceLayer: WaterLayer | null = null;
-    
-    if (selectedLayerId) {
-      // Если есть выбранный слой, добавляем новый после него
-      referenceLayer = sortedLayers.find(l => l.id === selectedLayerId) || null;
-    } else if (sortedLayers.length > 0) {
-      // Если нет выбранного слоя, но есть существующие, добавляем после последнего
-      referenceLayer = sortedLayers[sortedLayers.length - 1];
-    }
-    
-    if (referenceLayer) {
-      // Находим максимальную глубину у опорного слоя
-      const maxDepth = Math.max(
-        referenceLayer.upv ?? 0,
-        referenceLayer.uuv ?? 0,
-        referenceLayer.bottom ?? 0
-      );
-      // Присваиваем новому слою глубину на 1 больше, чтобы он оказался после опорного
-      // Используем bottom вместо upv, чтобы гарантировать правильное позиционирование
-      newLayer.bottom = maxDepth + 1;
-      newLayer.upv = maxDepth + 0.5;
-    } else {
-      // Если нет существующих слоёв, начинаем с 0
-      newLayer.upv = 0;
-    }
+
     
     onUpdate({ water_layers: [...layers, newLayer] });
     Journal.logEvent('command', `Добавлен водный слой`, 'water_layer.add');
