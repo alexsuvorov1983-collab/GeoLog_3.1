@@ -28,7 +28,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     return GeoLogData.getAllThermoSessions();
   }, [boreholes, refreshKey]);
 
-  // Фильтрация сессий: показываем только последнюю сессию для каждой скважины
+  // Фильтрация сессий: показываем все сессии для выбранной скважины
   const filteredSessions = useMemo(() => {
     let sessions = allSessions;
     
@@ -37,16 +37,8 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
       sessions = sessions.filter(s => s.boreholeId === localSelectedBoreholeId);
     }
     
-    // Группируем по скважине и берем только последнюю сессию для каждой
-    const latestByBorehole = new Map<string, typeof allSessions[0]>();
-    sessions.forEach(session => {
-      const existing = latestByBorehole.get(session.boreholeId);
-      if (!existing || new Date(session.date) > new Date(existing.date)) {
-        latestByBorehole.set(session.boreholeId, session);
-      }
-    });
-    
-    return Array.from(latestByBorehole.values());
+    // Показываем все сессии, сортируя по дате (новые сверху)
+    return sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allSessions, localSelectedBoreholeId]);
 
   // Получение всех уникальных глубин
