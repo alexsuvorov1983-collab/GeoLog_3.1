@@ -17,6 +17,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useColumnResize, ColumnResizer } from './ResizableTable';
 import AllSamplesTable from './AllSamplesTable';
+import IgeStatistics from './IgeStatistics';
 
 interface Props {
   openDocs: { id: string; title: string; dirty: boolean }[];
@@ -274,6 +275,12 @@ function DocContent({ docId, boreholes, selectedId, onSelect, selectedSampleId, 
         onSelectSample={onSelectSample}
         onSelectBorehole={onSelect}
       />
+    );
+  }
+
+  if (docId === 'doc-ige') {
+    return (
+      <IgeStatistics boreholes={boreholes} />
     );
   }
 
