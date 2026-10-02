@@ -23,20 +23,28 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
-    const sessions = GeoLogData.getAllThermoSessions();
-    console.log('ThermoTable: все сессии', sessions.map(s => ({ id: s.id, boreholeId: s.boreholeId, boreholeNumber: s.boreholeNumber, date: s.date })));
-    return sessions;
+    return GeoLogData.getAllThermoSessions();
   }, [boreholes]);
 
-  // Фильтрация сессий по выбранной скважине (используем локальное состояние)
+  // Фильтрация сессий: показываем только последнюю сессию для каждой скважины
   const filteredSessions = useMemo(() => {
-    if (!localSelectedBoreholeId || localSelectedBoreholeId === 'all') {
-      console.log('ThermoTable: показываем все сессии', allSessions.length);
-      return allSessions;
+    let sessions = allSessions;
+    
+    // Фильтруем по выбранной скважине, если выбрана конкретная
+    if (localSelectedBoreholeId && localSelectedBoreholeId !== 'all') {
+      sessions = sessions.filter(s => s.boreholeId === localSelectedBoreholeId);
     }
-    const filtered = allSessions.filter(s => s.boreholeId === localSelectedBoreholeId);
-    console.log('ThermoTable: фильтр по скважине', localSelectedBoreholeId, 'найдено сессий:', filtered.length);
-    return filtered;
+    
+    // Группируем по скважине и берем только последнюю сессию для каждой
+    const latestByBorehole = new Map<string, typeof allSessions[0]>();
+    sessions.forEach(session => {
+      const existing = latestByBorehole.get(session.boreholeId);
+      if (!existing || new Date(session.date) > new Date(existing.date)) {
+        latestByBorehole.set(session.boreholeId, session);
+      }
+    });
+    
+    return Array.from(latestByBorehole.values());
   }, [allSessions, localSelectedBoreholeId]);
 
   // Получение всех уникальных глубин
@@ -222,10 +230,27 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
         <div className="ml-auto flex gap-2">
           <button
-            onClick={handleAddSession}
+            onClick={() => {
+              if (localSelectedBoreholeId && localSelectedBoreholeId !== 'all') {
+                // Если выбрана конкретная скважина, добавляем замер для неё
+                GeoLogData.addThermoSession(localSelectedBoreholeId, {
+                  date: new Date().toISOString().split('T')[0],
+                  campaign: '',
+                  measurements: [],
+                  provenance: { type: 'manual' },
+                });
+                Journal.logEvent('command', `Добавлена новая термометрическая сессия для скважины`, 'thermo.add_session');
+              } else {
+                // Иначе используем стандартную функцию
+                handleAddSession();
+              }
+            }}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
-            + Добавить замер
+            {localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
+              ? `+ Добавить замер для ${boreholes.find(b => b.id === localSelectedBoreholeId)?.number || 'скважины'}`
+              : '+ Добавить замер'
+            }
           </button>
         </div>
       </div>
