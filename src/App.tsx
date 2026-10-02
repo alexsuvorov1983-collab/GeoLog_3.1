@@ -334,8 +334,8 @@ export default function App() {
               if (selectedBoreholeId) {
                 GeoLogData.update(selectedBoreholeId, data);
                 markDirty('doc-boreholes');
-                // Принудительно обновляем selectedBoreholeId для перерендера
-                setSelectedBoreholeId(selectedBoreholeId);
+                // Увеличиваем dataVersion для перерисовки selectedBorehole
+                setDataVersion(v => v + 1);
                 forceUpdate((n) => n + 1);
               }
             }}
