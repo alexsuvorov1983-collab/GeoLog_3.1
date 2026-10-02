@@ -210,7 +210,12 @@ export default function WaterLayersTable({ borehole, boreholeId, onUpdate, onSel
         referenceLayer.bottom ?? 0
       );
       // Присваиваем новому слою глубину на 1 больше, чтобы он оказался после опорного
-      newLayer.upv = maxDepth + 1;
+      // Используем bottom вместо upv, чтобы гарантировать правильное позиционирование
+      newLayer.bottom = maxDepth + 1;
+      newLayer.upv = maxDepth + 0.5;
+    } else {
+      // Если нет существующих слоёв, начинаем с 0
+      newLayer.upv = 0;
     }
     
     onUpdate({ water_layers: [...layers, newLayer] });
