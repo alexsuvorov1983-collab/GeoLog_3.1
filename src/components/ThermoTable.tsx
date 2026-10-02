@@ -132,25 +132,36 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
 
   // Удаление сессии
   const handleDeleteSession = useCallback((sessionId: string) => {
-    if (!confirm('Удалить эту термометрическую сессию?')) return;
+    console.log('handleDeleteSession вызвана для sessionId:', sessionId);
+    
+    if (!confirm('Удалить эту термометрическую сессию?')) {
+      console.log('Удаление отменено пользователем');
+      return;
+    }
 
     // Находим сессию в boreholes
     let foundBoreholeId: string | null = null;
     for (const bh of boreholes) {
+      console.log('Проверяем скважину:', bh.id, 'сессий:', bh.thermoSessions?.length || 0);
       const session = bh.thermoSessions?.find(s => s.id === sessionId);
       if (session) {
         foundBoreholeId = bh.id;
+        console.log('Сессия найдена в скважине:', foundBoreholeId);
         break;
       }
     }
 
     if (!foundBoreholeId) {
+      console.error('Сессия не найдена в boreholes');
       alert('Сессия не найдена');
       return;
     }
 
     // Удаляем сессию
-    GeoLogData.deleteThermoSession(foundBoreholeId, sessionId);
+    console.log('Вызываем GeoLogData.deleteThermoSession');
+    const result = GeoLogData.deleteThermoSession(foundBoreholeId, sessionId);
+    console.log('Результат удаления:', result);
+    
     Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
     
     // Принудительно обновляем данные
@@ -158,6 +169,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     
     // Уведомляем родительский компонент об изменении
     if (onUpdate) {
+      console.log('Вызываем onUpdate');
       onUpdate({});
     }
   }, [boreholes, onUpdate]);

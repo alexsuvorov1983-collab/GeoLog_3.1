@@ -335,9 +335,9 @@ export default function App() {
             selectedSampleId={selectedSampleId}
             height={bottomPanelHeight}
             onSelectBorehole={selectBorehole}
-            onUpdate={(data: Partial<Borehole>) => {
+            onUpdate={(data?: Partial<Borehole>) => {
               // Если есть данные для обновления скважины и выбрана скважина
-              if (selectedBoreholeId && Object.keys(data).length > 0) {
+              if (selectedBoreholeId && data && Object.keys(data).length > 0) {
                 GeoLogData.update(selectedBoreholeId, data);
                 markDirty('doc-boreholes');
               }
