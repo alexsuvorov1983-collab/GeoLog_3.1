@@ -286,9 +286,12 @@ function DocContent({ docId, boreholes, selectedId, onSelect, selectedSampleId, 
   }
 
   if (docId === 'doc-thermometry') {
+    const selectedBorehole = selectedId ? boreholes.find(b => b.id === selectedId) || null : null;
     return (
       <ThermoTable 
+        borehole={selectedBorehole}
         boreholes={boreholes}
+        boreholeId={selectedId}
         selectedBoreholeId={selectedId}
         onSelectBorehole={onSelect}
       />

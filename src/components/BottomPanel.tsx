@@ -73,7 +73,7 @@ export default function BottomPanel({ borehole, boreholes, boreholeId, selectedS
         {activeTab === 'soil' && borehole && boreholeId && <SoilLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'water' && borehole && boreholeId && <WaterLayersTable borehole={borehole} boreholeId={boreholeId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
         {activeTab === 'samples' && borehole && boreholeId && <SoilSamplesTable borehole={borehole} boreholeId={boreholeId} selectedSampleId={selectedSampleId} onUpdate={onUpdate} onSelectBorehole={onSelectBorehole} />}
-        {activeTab === 'thermometry' && <ThermoTable boreholes={boreholes} selectedBoreholeId={boreholeId} onSelectBorehole={onSelectBorehole} onUpdate={onUpdate} />}
+        {activeTab === 'thermometry' && <ThermoTable borehole={borehole} boreholes={boreholes} boreholeId={boreholeId} selectedBoreholeId={boreholeId} onSelectBorehole={onSelectBorehole} onUpdate={onUpdate} />}
         {activeTab === 'additional' && <AdditionalTab borehole={borehole} />}
       </div>
     </div>

@@ -6,7 +6,9 @@ import { Borehole, ThermoSession, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 
 interface Props {
+  borehole?: Borehole | null;
   boreholes: Borehole[];
+  boreholeId?: string | null;
   selectedBoreholeId?: string | null;
   onSelectBorehole?: (id: string) => void;
   onUpdate?: (data?: any, boreholeId?: string) => void;
@@ -14,7 +16,7 @@ interface Props {
 
 type Orientation = 'horizontal' | 'vertical';
 
-export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBorehole, onUpdate }: Props) {
+export default function ThermoTable({ borehole, boreholes, boreholeId, selectedBoreholeId, onSelectBorehole, onUpdate }: Props) {
   const [orientation, setOrientation] = useState<Orientation>('horizontal');
   const [editingCell, setEditingCell] = useState<{ sessionId: string; depth: number } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -54,13 +56,14 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     return measurement?.temperature;
   }, [allSessions]);
 
-  // Обновление температуры
+  // Обновление температуры (точно как в WaterLayersTable)
   const handleTemperatureChange = useCallback((sessionId: string, depth: number, value: string) => {
     const session = allSessions.find(s => s.id === sessionId);
     if (!session) return;
 
-    const borehole = boreholes.find(b => b.id === session.boreholeId);
-    if (!borehole) return;
+    // Используем текущую скважину или находим скважину
+    const targetBorehole = borehole || boreholes.find(b => b.id === session.boreholeId);
+    if (!targetBorehole) return;
 
     const numValue = parseFloat(value.replace(',', '.'));
     
@@ -72,20 +75,20 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     }
 
     // Создаем обновленный массив сессий
-    const updatedSessions = (borehole.thermoSessions || []).map(s => 
+    const updatedSessions = (targetBorehole.thermoSessions || []).map(s => 
       s.id === sessionId ? { ...s, measurements: updatedMeasurements } : s
     );
 
-    // Обновляем данные через onUpdate, передавая boreholeId
+    // Обновляем данные через onUpdate (как в WaterLayersTable)
     if (onUpdate) {
-      onUpdate({ thermoSessions: updatedSessions }, borehole.id);
+      onUpdate({ thermoSessions: updatedSessions }, targetBorehole.id);
     }
     
     Journal.logEvent('command', `Обновлена температура на глубине ${depth}м для сессии ${sessionId}`, 'thermo.update');
     
     // Принудительно обновляем данные
     setRefreshKey(prev => prev + 1);
-  }, [allSessions, boreholes, onUpdate]);
+  }, [allSessions, borehole, boreholes, onUpdate]);
 
   // Добавление новой глубины
   const handleAddDepth = useCallback(() => {
@@ -102,21 +105,21 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     Journal.logEvent('command', `Добавлена новая глубина ${depth}м`, 'thermo.add_depth');
   }, [newDepthValue, allDepths]);
 
-  // Добавление новой сессии
+  // Добавление новой сессии (точно как в WaterLayersTable)
   const handleAddSession = useCallback(() => {
-    const boreholeId = localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
+    const targetBoreholeId = localSelectedBoreholeId && localSelectedBoreholeId !== 'all' 
       ? localSelectedBoreholeId 
-      : boreholes[0]?.id;
+      : boreholeId || boreholes[0]?.id;
     
-    if (!boreholeId) {
+    if (!targetBoreholeId) {
       alert('Нет доступных скважин');
       return;
     }
 
     try {
-      // Находим скважину
-      const borehole = boreholes.find(b => b.id === boreholeId);
-      if (!borehole) {
+      // Используем текущую скважину или находим скважину
+      const targetBorehole = borehole || boreholes.find(b => b.id === targetBoreholeId);
+      if (!targetBorehole) {
         alert('Скважина не найдена');
         return;
       }
@@ -124,7 +127,7 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
       // Создаем новую сессию
       const newSession: ThermoSession = {
         id: 'ts-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
-        boreholeId: boreholeId,
+        boreholeId: targetBoreholeId,
         date: new Date().toISOString().split('T')[0],
         campaign: '',
         measurements: [],
@@ -132,11 +135,11 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
       };
 
       // Добавляем сессию в массив
-      const updatedSessions = [...(borehole.thermoSessions || []), newSession];
+      const updatedSessions = [...(targetBorehole.thermoSessions || []), newSession];
       
-      // Обновляем данные через onUpdate, передавая boreholeId
+      // Обновляем данные через onUpdate (как в WaterLayersTable)
       if (onUpdate) {
-        onUpdate({ thermoSessions: updatedSessions }, boreholeId);
+        onUpdate({ thermoSessions: updatedSessions }, targetBoreholeId);
       }
       
       Journal.logEvent('command', `Добавлена новая термометрическая сессия`, 'thermo.add_session');
@@ -146,35 +149,35 @@ export default function ThermoTable({ boreholes, selectedBoreholeId, onSelectBor
     } catch (error) {
       alert('Ошибка при добавлении замера: ' + (error as Error).message);
     }
-  }, [localSelectedBoreholeId, boreholes, onUpdate]);
+  }, [localSelectedBoreholeId, borehole, boreholeId, boreholes, onUpdate]);
 
-  // Удаление сессии (по аналогии с WaterLayersTable)
+  // Удаление сессии (точно как в WaterLayersTable)
   const handleDeleteSession = useCallback((sessionId: string) => {
     if (!confirm('Удалить эту термометрическую сессию?')) return;
 
-    // Находим скважину, которой принадлежит сессия
-    const borehole = boreholes.find(bh => 
+    // Используем текущую скважину или находим скважину, которой принадлежит сессия
+    const targetBorehole = borehole || boreholes.find(bh => 
       bh.thermoSessions?.some(s => s.id === sessionId)
     );
 
-    if (!borehole) {
+    if (!targetBorehole) {
       alert('Сессия не найдена');
       return;
     }
 
     // Создаем новый массив сессий без удаляемой
-    const updatedSessions = (borehole.thermoSessions || []).filter(s => s.id !== sessionId);
+    const updatedSessions = (targetBorehole.thermoSessions || []).filter(s => s.id !== sessionId);
     
-    // Обновляем данные через onUpdate (как в WaterLayersTable), передавая boreholeId
+    // Обновляем данные через onUpdate (как в WaterLayersTable)
     if (onUpdate) {
-      onUpdate({ thermoSessions: updatedSessions }, borehole.id);
+      onUpdate({ thermoSessions: updatedSessions }, targetBorehole.id);
     }
     
     Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
     
     // Принудительно обновляем данные
     setRefreshKey(prev => prev + 1);
-  }, [boreholes, onUpdate]);
+  }, [borehole, boreholes, onUpdate]);
 
   // Обработчик начала редактирования ячейки
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
