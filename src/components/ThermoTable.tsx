@@ -23,12 +23,18 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
   const [newDepthValue, setNewDepthValue] = useState<string>('');
   const [localSelectedBoreholeId, setLocalSelectedBoreholeId] = useState<string>('all');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Получение всех сессий термометрии
   const allSessions = useMemo(() => {
     return GeoLogData.getAllThermoSessions();
   }, [boreholes, refreshKey]);
+
+  // Сброс pendingDeleteId при изменении данных
+  useEffect(() => {
+    setPendingDeleteId(null);
+  }, [allSessions]);
 
   // Фильтрация сессий: показываем все сессии для выбранной скважины
   const filteredSessions = useMemo(() => {
@@ -151,56 +157,27 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
     }
   }, [localSelectedBoreholeId, borehole, boreholeId, boreholes, onUpdate]);
 
-  // Удаление сессии
+  // Удаление сессии - прямой вызов GeoLogData без onUpdate
   const handleDeleteSession = useCallback((sessionId: string) => {
-    console.log('🗑️ handleDeleteSession вызвана для sessionId:', sessionId);
-    
-    if (!confirm('Удалить эту термометрическую сессию?')) {
-      console.log('❌ Удаление отменено пользователем');
-      return;
-    }
-
     // Находим скважину, которой принадлежит сессия
-    let targetBorehole = borehole;
-    let targetBoreholeId = boreholeId;
-    
-    if (!targetBorehole || !targetBoreholeId) {
-      // Если borehole не передан, ищем его по sessionId
-      const foundBorehole = boreholes.find(bh => 
-        bh.thermoSessions?.some(s => s.id === sessionId)
-      );
-      if (foundBorehole) {
-        targetBorehole = foundBorehole;
-        targetBoreholeId = foundBorehole.id;
-      }
-    }
+    const foundBorehole = boreholes.find(bh => 
+      bh.thermoSessions?.some(s => s.id === sessionId)
+    );
 
-    console.log('🔍 targetBorehole:', targetBorehole?.id, 'targetBoreholeId:', targetBoreholeId);
-
-    if (!targetBorehole || !targetBoreholeId) {
-      console.error('❌ Сессия не найдена');
-      alert('Сессия не найдена');
+    if (!foundBorehole) {
       return;
     }
 
-    // Создаем новый массив сессий без удаляемой
-    const updatedSessions = (targetBorehole.thermoSessions || []).filter(s => s.id !== sessionId);
-    console.log('✅ updatedSessions:', updatedSessions.length, 'сессий');
+    // Прямое удаление из верхней коллекции через GeoLogData
+    const result = GeoLogData.deleteThermoSession(foundBorehole.id, sessionId);
     
-    // Обновляем данные через onUpdate
-    if (onUpdate) {
-      console.log('📤 Вызываем onUpdate с данными:', { thermoSessions: updatedSessions }, 'и boreholeId:', targetBoreholeId);
-      onUpdate({ thermoSessions: updatedSessions }, targetBoreholeId);
-    } else {
-      console.error('❌ onUpdate не определен!');
+    if (result) {
+      Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
+      
+      // Принудительно обновляем данные
+      setRefreshKey(prev => prev + 1);
     }
-    
-    Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
-    
-    // Принудительно обновляем данные
-    setRefreshKey(prev => prev + 1);
-    console.log('🔄 refreshKey обновлен');
-  }, [borehole, boreholeId, boreholes, onUpdate]);
+  }, [boreholes]);
 
   // Обработчик начала редактирования ячейки
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
@@ -373,12 +350,26 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
                     );
                   })}
                   <td className={cellClass}>
-                    <button
-                      onClick={() => handleDeleteSession(session.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      🗑️
-                    </button>
+                    {pendingDeleteId === session.id ? (
+                      <button
+                        onClick={() => {
+                          handleDeleteSession(session.id);
+                          setPendingDeleteId(null);
+                        }}
+                        className="text-red-600 hover:text-red-800 font-bold"
+                        title="Подтвердить удаление"
+                      >
+                        Точно?
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setPendingDeleteId(session.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Удалить этот замер"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -402,13 +393,26 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
                 <th className={fixedHeaderClass} style={{ left: '0px', minWidth: '80px' }}></th>
                 {filteredSessions.map(session => (
                   <th key={`delete-${session.id}`} className={headerClass} style={{ minWidth: '100px' }}>
-                    <button
-                      onClick={() => handleDeleteSession(session.id)}
-                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
-                      title="Удалить этот замер"
-                    >
-                      🗑️ Удалить
-                    </button>
+                    {pendingDeleteId === session.id ? (
+                      <button
+                        onClick={() => {
+                          handleDeleteSession(session.id);
+                          setPendingDeleteId(null);
+                        }}
+                        className="text-red-600 hover:text-red-800 text-xs px-2 py-1 font-bold"
+                        title="Подтвердить удаление"
+                      >
+                        Точно удалить?
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setPendingDeleteId(session.id)}
+                        className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                        title="Удалить этот замер"
+                      >
+                        🗑️ Удалить
+                      </button>
+                    )}
                   </th>
                 ))}
               </tr>
