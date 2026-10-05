@@ -58,8 +58,11 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
 
   // Генерация DXF
   const handleGenerate = () => {
+    console.log('🚀 Начало генерации DXF');
+    
     // Фильтруем только выбранные сессии с данными
     const selectedSessions = sessions.filter(s => selectedIds.has(s.id));
+    console.log('📊 Выбрано сессий:', selectedSessions.length);
     
     if (selectedSessions.length === 0) {
       alert('Выберите хотя бы одну сессию для экспорта');
@@ -68,6 +71,8 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
 
     // Проверяем сессии без данных
     const emptySessions = selectedSessions.filter(s => s.measurements.length === 0);
+    console.log('⚠️ Сессий без данных:', emptySessions.length);
+    
     if (emptySessions.length > 0) {
       Journal.logEvent('warning', 
         `Пропущено ${emptySessions.length} сессий без данных`, 
@@ -77,18 +82,26 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
 
     // Подготавливаем данные только для сессий с замерами
     const sessionsWithData = selectedSessions.filter(s => s.measurements.length > 0);
+    console.log('✅ Сессий с данными:', sessionsWithData.length);
+    
     const exportData = prepareExportData(boreholes, sessionsWithData, dateFormat);
+    console.log('📋 Данные для экспорта:', exportData);
 
     // Генерируем DXF
     const dxfContent = buildDXF(exportData, scaleMode);
+    console.log('📄 DXF контент (первые 500 символов):', dxfContent.substring(0, 500));
+    console.log('📏 Длина DXF:', dxfContent.length);
 
     // Формируем имя файла
     const today = new Date().toISOString().split('T')[0];
     const scaleLabel = scaleMode === 'both' ? '1-100_1-200' : `1-${scaleMode}`;
     const fileName = `Thermometry_${sessionsWithData.length}скв_${scaleLabel}_${today}.dxf`;
+    console.log('📁 Имя файла:', fileName);
 
     // Скачиваем файл
+    console.log('💾 Начинаем скачивание...');
     downloadDXF(dxfContent, fileName);
+    console.log('✅ Скачивание завершено');
 
     Journal.logEvent('command', 
       `Экспортировано ${sessionsWithData.length} сессий в DXF (масштаб ${scaleMode})`, 

@@ -207,19 +207,24 @@ function tablesSection(): string {
 
 // Сборка полного DXF файла
 export function buildDXF(list: ThermoExportEntry[], mode: ScaleMode): string {
+  console.log('🔨 buildDXF вызвана с', list.length, 'записями, режим:', mode);
+  
   let ent = '';
   let nx = 0;
   let nyBot = 0;
   
   if (mode === 'both') {
+    console.log('📐 Режим "оба": 1:100 слева + 1:200 справа');
     // Режим "оба": 1:100 слева + 1:200 справа
     const GAP = 165;
     const VGAP = 25;
     let y = 0;
     
-    list.forEach(e => {
+    list.forEach((e, idx) => {
+      console.log(`  Обработка записи ${idx + 1}:`, e.name, e.date);
       const h100 = tableHeight(e, 10);
       const h5 = tableHeight(e, 5);
+      console.log(`    Высота 1:100: ${h100}, 1:200: ${h5}`);
       ent += tableDXF(e, 0, y, 10);
       ent += tableDXF(e, GAP, y, 5);
       y -= (Math.max(h100, h5) + VGAP);
@@ -228,12 +233,15 @@ export function buildDXF(list: ThermoExportEntry[], mode: ScaleMode): string {
     nx = GAP + 60;
     nyBot = y;
   } else {
+    console.log(`📐 Одиночный масштаб 1:${mode}`);
     // Одиночный масштаб: сетка 4 колонки
     const u = mode === '200' ? 5 : 10;
     const COLS = 4;
     const SLOT_W = 110;
     
     const slots = Math.ceil(list.length / COLS);
+    console.log(`  Сетка: ${slots} рядов × ${COLS} колонок`);
+    
     const slotH: Record<number, number> = {};
     list.forEach((e, i) => {
       const sl = Math.floor(i / COLS);
@@ -255,6 +263,9 @@ export function buildDXF(list: ThermoExportEntry[], mode: ScaleMode): string {
     nyBot = -acc;
   }
   
+  console.log('📊 Габариты: nx =', nx, ', nyBot =', nyBot);
+  console.log('📝 Entities длина:', ent.length);
+  
   // HEADER секция
   const header = '0\nSECTION\n2\nHEADER\n' +
     '9\n$ACADVER\n1\nAC1009\n' +
@@ -269,19 +280,42 @@ export function buildDXF(list: ThermoExportEntry[], mode: ScaleMode): string {
   // Комментарий в начале файла
   const comment = '999\nОткройте в AutoCAD и выполните ZE+Enter\n';
   
-  return comment + header + tablesSection() + entities + '0\nEOF\n';
+  const result = comment + header + tablesSection() + entities + '0\nEOF\n';
+  console.log('✅ DXF файл собран, общая длина:', result.length);
+  
+  return result;
 }
 
 // Скачивание DXF файла
 export function downloadDXF(dxf: string, fileName: string): void {
-  const encoded = toCp1251(dxf);
-  const blob = new Blob([encoded.buffer as ArrayBuffer], { type: 'application/dxf' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  console.log('📥 downloadDXF вызвана с файлом:', fileName);
+  console.log('📏 Длина DXF строки:', dxf.length);
+  
+  try {
+    const encoded = toCp1251(dxf);
+    console.log('🔤 Кодирование CP1251 завершено, размер:', encoded.length, 'байт');
+    
+    // Преобразуем Uint8Array в ArrayBuffer для Blob
+    const arrayBuffer = encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
+    console.log('💾 ArrayBuffer создан, размер:', arrayBuffer.byteLength, 'байт');
+    
+    const blob = new Blob([arrayBuffer as unknown as BlobPart], { type: 'application/dxf' });
+    console.log('📦 Blob создан, размер:', blob.size, 'байт');
+    
+    const url = URL.createObjectURL(blob);
+    console.log('🔗 URL создан:', url);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    console.log('🖱️ Клик по ссылке...');
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log('✅ Скачивание инициировано');
+  } catch (error) {
+    console.error('❌ Ошибка при скачивании DXF:', error);
+    alert('Ошибка при создании файла DXF: ' + (error as Error).message);
+  }
 }
