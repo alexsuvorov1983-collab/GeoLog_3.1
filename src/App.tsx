@@ -336,17 +336,25 @@ export default function App() {
             height={bottomPanelHeight}
             onSelectBorehole={selectBorehole}
             onUpdate={(data?: Partial<Borehole>, boreholeId?: string) => {
+              console.log('📥 App.tsx onUpdate вызван с data:', data, 'и boreholeId:', boreholeId);
+              
               // Используем переданный boreholeId или selectedBoreholeId
               const targetBoreholeId = boreholeId || selectedBoreholeId;
+              console.log('🎯 targetBoreholeId:', targetBoreholeId);
               
               // Если есть данные для обновления скважины и есть ID скважины
               if (targetBoreholeId && data && Object.keys(data).length > 0) {
-                GeoLogData.update(targetBoreholeId, data);
+                console.log('✅ Вызываем GeoLogData.update для', targetBoreholeId, 'с данными:', data);
+                const result = GeoLogData.update(targetBoreholeId, data);
+                console.log('📊 Результат обновления:', result);
                 markDirty('doc-boreholes');
+              } else {
+                console.log('❌ Условие не выполнено:', { targetBoreholeId, data, keys: data ? Object.keys(data) : null });
               }
               // Всегда увеличиваем dataVersion для перерисовки данных
               setDataVersion(v => v + 1);
               forceUpdate((n) => n + 1);
+              console.log('🔄 dataVersion и forceUpdate обновлены');
             }}
           />
         </div>

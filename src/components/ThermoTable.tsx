@@ -151,33 +151,56 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
     }
   }, [localSelectedBoreholeId, borehole, boreholeId, boreholes, onUpdate]);
 
-  // Удаление сессии (точно как в WaterLayersTable)
+  // Удаление сессии
   const handleDeleteSession = useCallback((sessionId: string) => {
-    if (!confirm('Удалить эту термометрическую сессию?')) return;
+    console.log('🗑️ handleDeleteSession вызвана для sessionId:', sessionId);
+    
+    if (!confirm('Удалить эту термометрическую сессию?')) {
+      console.log('❌ Удаление отменено пользователем');
+      return;
+    }
 
-    // Используем текущую скважину или находим скважину, которой принадлежит сессия
-    const targetBorehole = borehole || boreholes.find(bh => 
-      bh.thermoSessions?.some(s => s.id === sessionId)
-    );
+    // Находим скважину, которой принадлежит сессия
+    let targetBorehole = borehole;
+    let targetBoreholeId = boreholeId;
+    
+    if (!targetBorehole || !targetBoreholeId) {
+      // Если borehole не передан, ищем его по sessionId
+      const foundBorehole = boreholes.find(bh => 
+        bh.thermoSessions?.some(s => s.id === sessionId)
+      );
+      if (foundBorehole) {
+        targetBorehole = foundBorehole;
+        targetBoreholeId = foundBorehole.id;
+      }
+    }
 
-    if (!targetBorehole) {
+    console.log('🔍 targetBorehole:', targetBorehole?.id, 'targetBoreholeId:', targetBoreholeId);
+
+    if (!targetBorehole || !targetBoreholeId) {
+      console.error('❌ Сессия не найдена');
       alert('Сессия не найдена');
       return;
     }
 
     // Создаем новый массив сессий без удаляемой
     const updatedSessions = (targetBorehole.thermoSessions || []).filter(s => s.id !== sessionId);
+    console.log('✅ updatedSessions:', updatedSessions.length, 'сессий');
     
-    // Обновляем данные через onUpdate (как в WaterLayersTable)
+    // Обновляем данные через onUpdate
     if (onUpdate) {
-      onUpdate({ thermoSessions: updatedSessions }, targetBorehole.id);
+      console.log('📤 Вызываем onUpdate с данными:', { thermoSessions: updatedSessions }, 'и boreholeId:', targetBoreholeId);
+      onUpdate({ thermoSessions: updatedSessions }, targetBoreholeId);
+    } else {
+      console.error('❌ onUpdate не определен!');
     }
     
     Journal.logEvent('command', `Удалена термометрическая сессия ${sessionId}`, 'thermo.delete_session');
     
     // Принудительно обновляем данные
     setRefreshKey(prev => prev + 1);
-  }, [borehole, boreholes, onUpdate]);
+    console.log('🔄 refreshKey обновлен');
+  }, [borehole, boreholeId, boreholes, onUpdate]);
 
   // Обработчик начала редактирования ячейки
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
