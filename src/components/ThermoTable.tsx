@@ -4,7 +4,8 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Borehole, ThermoSession, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
-import { exportToDXF, exportToExcel } from '../utils/thermoExport';
+import { exportToExcel } from '../utils/thermoExport';
+import ThermoExportDialog from './ThermoExportDialog';
 
 interface Props {
   borehole?: Borehole | null;
@@ -25,6 +26,7 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
   const [localSelectedBoreholeId, setLocalSelectedBoreholeId] = useState<string>('all');
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Получение всех сессий термометрии
@@ -218,29 +220,6 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
     }
   }, [editingCell]);
 
-  // Экспорт в AutoCAD (DXF)
-  const handleExportDXF = useCallback(() => {
-    const selectedBoreholeIds = localSelectedBoreholeId && localSelectedBoreholeId !== 'all'
-      ? [localSelectedBoreholeId]
-      : undefined;
-    
-    const dxfContent = exportToDXF(boreholes, allSessions, selectedBoreholeIds);
-    
-    // Создаем Blob и скачиваем файл
-    const blob = new Blob([dxfContent], { type: 'application/dxf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const date = new Date().toISOString().split('T')[0];
-    a.download = `Thermometry_${date}.dxf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    Journal.logEvent('command', 'Экспорт термометрии в DXF', 'thermo.export_dxf');
-  }, [boreholes, allSessions, localSelectedBoreholeId]);
-
   // Экспорт в Excel (XLSX)
   const handleExportExcel = useCallback(async () => {
     const selectedBoreholeIds = localSelectedBoreholeId && localSelectedBoreholeId !== 'all'
@@ -317,11 +296,11 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
 
         <div className="ml-auto flex gap-2">
           <button
-            onClick={handleExportDXF}
+            onClick={() => setShowExportDialog(true)}
             className="px-2 py-1 text-xs bg-[#28a745] text-white rounded hover:bg-[#218838]"
             title="Экспорт в AutoCAD (DXF)"
           >
-            📐 Экспорт в Автокад
+            📐 Экспорт в DXF (AutoCAD)
           </button>
           <button
             onClick={handleExportExcel}
@@ -504,6 +483,15 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
           </table>
         )}
       </div>
+
+      {/* Диалог экспорта в DXF */}
+      {showExportDialog && (
+        <ThermoExportDialog
+          boreholes={boreholes}
+          sessions={allSessions}
+          onClose={() => setShowExportDialog(false)}
+        />
+      )}
     </div>
   );
 }
