@@ -4,6 +4,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Borehole, ThermoSession, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
+import { exportToDXF, exportToExcel } from '../utils/thermoExport';
 
 interface Props {
   borehole?: Borehole | null;
@@ -217,6 +218,40 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
     }
   }, [editingCell]);
 
+  // Экспорт в AutoCAD (DXF)
+  const handleExportDXF = useCallback(() => {
+    const selectedBoreholeIds = localSelectedBoreholeId && localSelectedBoreholeId !== 'all'
+      ? [localSelectedBoreholeId]
+      : undefined;
+    
+    const dxfContent = exportToDXF(boreholes, allSessions, selectedBoreholeIds);
+    
+    // Создаем Blob и скачиваем файл
+    const blob = new Blob([dxfContent], { type: 'application/dxf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().split('T')[0];
+    a.download = `Thermometry_${date}.dxf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    Journal.logEvent('command', 'Экспорт термометрии в DXF', 'thermo.export_dxf');
+  }, [boreholes, allSessions, localSelectedBoreholeId]);
+
+  // Экспорт в Excel (XLSX)
+  const handleExportExcel = useCallback(async () => {
+    const selectedBoreholeIds = localSelectedBoreholeId && localSelectedBoreholeId !== 'all'
+      ? [localSelectedBoreholeId]
+      : undefined;
+    
+    await exportToExcel(boreholes, allSessions, selectedBoreholeIds);
+    
+    Journal.logEvent('command', 'Экспорт термометрии в Excel', 'thermo.export_excel');
+  }, [boreholes, allSessions, localSelectedBoreholeId]);
+
   const inputClass = "w-full px-1 py-0.5 text-xs border border-blue-400 bg-white rounded focus:outline-none";
   const cellClass = "px-1 py-0.5 text-xs border-r border-b border-[#e8e8e8] cursor-pointer hover:bg-[#f0f0ff] min-w-[60px] text-center";
   const headerClass = "px-1 py-0.5 text-xs border-r border-b border-[#c0c0c0] bg-[#e8e8e8] font-semibold text-center sticky top-0 z-10";
@@ -281,6 +316,20 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
         </button>
 
         <div className="ml-auto flex gap-2">
+          <button
+            onClick={handleExportDXF}
+            className="px-2 py-1 text-xs bg-[#28a745] text-white rounded hover:bg-[#218838]"
+            title="Экспорт в AutoCAD (DXF)"
+          >
+            📐 Экспорт в Автокад
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="px-2 py-1 text-xs bg-[#17a2b8] text-white rounded hover:bg-[#138496]"
+            title="Экспорт в Excel (XLSX)"
+          >
+            📊 Экспорт в Эксель
+          </button>
           <button
             onClick={handleAddSession}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
