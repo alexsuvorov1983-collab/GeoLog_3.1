@@ -6,6 +6,7 @@ import { Borehole, ThermoSession, GeoLogData } from '../core/dataStore';
 import { Journal } from '../core/journal';
 import { exportToExcel } from '../utils/thermoExport';
 import ThermoExportDialog from './ThermoExportDialog';
+import ThermoImportDialog from './ThermoImportDialog';
 
 interface Props {
   borehole?: Borehole | null;
@@ -27,6 +28,7 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Получение всех сессий термометрии
@@ -310,6 +312,13 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
             📊 Экспорт в Эксель
           </button>
           <button
+            onClick={() => setShowImportDialog(true)}
+            className="px-2 py-1 text-xs bg-[#6f42c1] text-white rounded hover:bg-[#5a32a3]"
+            title="Импорт из Excel (XLSX)"
+          >
+            📥 Импорт из Excel
+          </button>
+          <button
             onClick={handleAddSession}
             className="px-2 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
           >
@@ -490,6 +499,20 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
           boreholes={boreholes}
           sessions={allSessions}
           onClose={() => setShowExportDialog(false)}
+        />
+      )}
+
+      {/* Диалог импорта из Excel */}
+      {showImportDialog && (
+        <ThermoImportDialog
+          boreholes={boreholes}
+          onClose={() => setShowImportDialog(false)}
+          onImportComplete={() => {
+            setRefreshKey(prev => prev + 1);
+            if (onUpdate) {
+              onUpdate({});
+            }
+          }}
         />
       )}
     </div>
