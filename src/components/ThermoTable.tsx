@@ -188,7 +188,7 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
   const handleCellClick = useCallback((sessionId: string, depth: number) => {
     setEditingCell({ sessionId, depth });
     const temp = getTemperature(sessionId, depth);
-    setEditValue(temp !== undefined ? temp.toString() : '');
+    setEditValue(temp !== undefined ? temp.toFixed(2) : '');
   }, [getTemperature]);
 
   // Обработчик завершения редактирования
@@ -381,7 +381,7 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
                             onKeyDown={handleKeyDown}
                           />
                         ) : (
-                          temp !== undefined ? temp.toFixed(1) : ''
+                          temp !== undefined ? temp.toFixed(2) : ''
                         )}
                       </td>
                     );
@@ -481,7 +481,7 @@ export default function ThermoTable({ borehole, boreholes, boreholeId, selectedB
                             onKeyDown={handleKeyDown}
                           />
                         ) : (
-                          temp !== undefined ? temp.toFixed(1) : ''
+                          temp !== undefined ? temp.toFixed(2) : ''
                         )}
                       </td>
                     );
