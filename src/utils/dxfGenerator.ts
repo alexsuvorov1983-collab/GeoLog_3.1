@@ -73,7 +73,7 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     }
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
-      text(x0 + 4, vy, 2.5, fmtVal(p.t), 0, 2, 1);
+      text(x0 + 4, vy, 2.5, fmtVal(p.t), 0, 1, 1);
     }
     text(x0, yTop + 8, 3, row.name, 1, 1, 1);
     text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 1, 1, 1);
