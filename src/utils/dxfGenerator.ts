@@ -65,12 +65,12 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     const pts = row.points.filter(p => Number.isFinite(p.t));
     if (pts.length === 0) { return; }
     const H = Math.max(...pts.map(p => p.depth)) * mmPerM;
-    line(x0, yTop, x0, yTop - H);
+    line(x0, yTop, x0, yTop - H, 1);
     for (const p of pts) {
       const y = yTop - p.depth * mmPerM;
       line(x0 - 2, y, x0, y, 1);
       line(x0, y, x0 + 2, y, 1);
-      text(x0 - 3, y, 2.5, p.depth.toFixed(1), 2, 1);
+      text(x0 - 3, y, 2.5, p.depth.toFixed(1), 2, 1, 1);
     }
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
