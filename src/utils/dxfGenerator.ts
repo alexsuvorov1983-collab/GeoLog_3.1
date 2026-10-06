@@ -197,7 +197,7 @@ function tablesSection(): string {
   return '0\nSECTION\n2\nTABLES\n' +
     '0\nTABLE\n2\nLAYER\n70\n2\n' +
     '0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n' +
-    `0\nLAYER\n2\n${LAYER_NAME}\n70\n0\n62\n1\n6\nCONTINUOUS\n` +
+    `0\nLAYER\n2\n${LAYER_NAME}\n70\n0\n62\n7\n6\nCONTINUOUS\n` +
     '0\nENDTAB\n' +
     '0\nTABLE\n2\nSTYLE\n70\n1\n' +
     `0\nSTYLE\n2\n${STYLE_NAME}\n70\n0\n40\n0\n41\n1\n50\n0\n71\n0\n42\n2.5\n3\narial.ttf\n` +
@@ -295,11 +295,9 @@ export function downloadDXF(dxf: string, fileName: string): void {
     const encoded = toCp1251(dxf);
     console.log('🔤 Кодирование CP1251 завершено, размер:', encoded.length, 'байт');
     
-    // Преобразуем Uint8Array в ArrayBuffer для Blob
-    const arrayBuffer = encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
-    console.log('💾 ArrayBuffer создан, размер:', arrayBuffer.byteLength, 'байт');
-    
-    const blob = new Blob([arrayBuffer as unknown as BlobPart], { type: 'application/dxf' });
+    // Используем slice() для создания копии и получаем её buffer
+    const arrayBuffer = encoded.slice().buffer;
+    const blob = new Blob([arrayBuffer], { type: 'application/dxf' });
     console.log('📦 Blob создан, размер:', blob.size, 'байт');
     
     const url = URL.createObjectURL(blob);
