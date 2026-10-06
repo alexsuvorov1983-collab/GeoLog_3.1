@@ -74,11 +74,11 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     }
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
-      text(x0 + 4, vy, 2.5, fmtVal(p.t), 0, 1, 1);
+      text(x0 + 3, vy, 2.5, fmtVal(p.t), 0, 1, 1);
     }
     text(x0, yTop + 8, 3, row.name, 1, 1, 1);
     text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 1, 1, 1);
-    if (x0 + 4 + 15 > maxX) { maxX = x0 + 4 + 15; }
+    if (x0 + 3 + 15 > maxX) { maxX = x0 + 3 + 15; }
     if (yTop - H - 5 < minY) { minY = yTop - H - 5; }
   };
   const maxDepth = rows.length ? Math.max(0, ...rows.flatMap(r => r.points.map(p => p.depth))) : 0;
