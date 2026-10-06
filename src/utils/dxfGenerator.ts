@@ -70,8 +70,6 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
       line(x0 - 2, y, x0, y);
       text(x0 - 3, y, 2.5, p.depth.toFixed(1), 2, 1);
     }
-    const pl: Array<[number, number]> = pts.map(p => [x0 + p.t * MM_PER_C, yTop - p.depth * mmPerM]);
-    poly(pl);
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
       text(x0 + 2, vy, 2.5, fmtVal(p.t), 0, 2);
