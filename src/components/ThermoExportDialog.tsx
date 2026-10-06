@@ -1,5 +1,5 @@
 // Диалог экспорта термометрии в DXF (AutoCAD)
-// Этап 7: Экспорт в AutoCAD
+// Этап 7: Экспорт в AutoCAD (rev.3)
 
 import { useState, useMemo } from 'react';
 import { Borehole, ThermoSession } from '../core/dataStore';
@@ -7,11 +7,11 @@ import { Journal } from '../core/journal';
 import {
   buildDXF,
   downloadDXF,
-  prepareExportData,
-  formatDate,
-  ThermoExportEntry,
+  downloadDXFDataUrl,
+  fmtDate,
+  DxRow,
   ScaleMode,
-  DateFormat
+  DateMode
 } from '../utils/dxfGenerator';
 
 interface Props {
@@ -22,19 +22,21 @@ interface Props {
 
 export default function ThermoExportDialog({ boreholes, sessions, onClose }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(sessions.map(s => s.id)));
-  const [scaleMode, setScaleMode] = useState<ScaleMode>('100');
-  const [dateFormat, setDateFormat] = useState<DateFormat>('dmy4');
+  const [scaleMode, setScaleMode] = useState<ScaleMode>('1:100');
+  const [dateMode, setDateMode] = useState<DateMode>('dmy4');
+  const [showDxfModal, setShowDxfModal] = useState(false);
+  const [dxfText, setDxfText] = useState('');
 
   // Подготовка данных для отображения
   const exportEntries = useMemo(() => {
     return sessions.map(session => {
       const borehole = boreholes.find(b => b.id === session.boreholeId);
       const name = borehole ? borehole.number : 'Неизвестная';
-      const date = formatDate(session.date, dateFormat);
+      const date = fmtDate(session.date, dateMode);
       const hasData = session.measurements.length > 0;
       return { session, name, date, hasData };
     });
-  }, [boreholes, sessions, dateFormat]);
+  }, [boreholes, sessions, dateMode]);
 
   // Обработка выбора/снятия всех
   const handleSelectAll = () => {
@@ -56,59 +58,52 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
     setSelectedIds(newSet);
   };
 
-  // Генерация DXF
-  const handleGenerate = () => {
-    console.log('🚀 Начало генерации DXF');
+  // Генерация DXF с логами и аварийным выводом
+  const handleExport = () => {
+    console.log('[DXF] 1 клик, масштаб:', scaleMode, 'формат даты:', dateMode);
     
-    // Фильтруем только выбранные сессии с данными
-    const selectedSessions = sessions.filter(s => selectedIds.has(s.id));
-    console.log('📊 Выбрано сессий:', selectedSessions.length);
+    const rows: DxRow[] = sessions
+      .filter(s => selectedIds.has(s.id) && s.measurements.length > 0)
+      .map(s => ({
+        name: String(boreholes.find(b => b.id === s.boreholeId)?.number ?? '-'),
+        date: s.date,
+        points: s.measurements.map(m => ({ depth: m.depth, t: m.temperature })),
+      }));
     
-    if (selectedSessions.length === 0) {
-      alert('Выберите хотя бы одну сессию для экспорта');
+    console.log('[DXF] 2 строк с замерами:', rows.length);
+    
+    if (rows.length === 0) {
+      alert('Не отмечено ни одной сессии с замерами');
       return;
     }
 
-    // Проверяем сессии без данных
-    const emptySessions = selectedSessions.filter(s => s.measurements.length === 0);
-    console.log('⚠️ Сессий без данных:', emptySessions.length);
+    const dxf = buildDXF(rows, scaleMode, dateMode);
+    console.log('[DXF] 3 длина строки:', dxf.length, '| начало:', JSON.stringify(dxf.slice(0, 24)));
     
-    if (emptySessions.length > 0) {
-      Journal.logEvent('warning', 
-        `Пропущено ${emptySessions.length} сессий без данных`, 
-        'thermo.export_dxf'
-      );
+    const fname = 'Thermometry_' + new Date().toISOString().slice(0, 10) + '.dxf';
+    
+    if (!downloadDXF(dxf, fname)) {
+      downloadDXFDataUrl(dxf, fname);
     }
-
-    // Подготавливаем данные только для сессий с замерами
-    const sessionsWithData = selectedSessions.filter(s => s.measurements.length > 0);
-    console.log('✅ Сессий с данными:', sessionsWithData.length);
     
-    const exportData = prepareExportData(boreholes, sessionsWithData, dateFormat);
-    console.log('📋 Данные для экспорта:', exportData);
-
-    // Генерируем DXF
-    const dxfContent = buildDXF(exportData, scaleMode);
-    console.log('📄 DXF контент (первые 500 символов):', dxfContent.substring(0, 500));
-    console.log('📏 Длина DXF:', dxfContent.length);
-
-    // Формируем имя файла
-    const today = new Date().toISOString().split('T')[0];
-    const scaleLabel = scaleMode === 'both' ? '1-100_1-200' : `1-${scaleMode}`;
-    const fileName = `Thermometry_${sessionsWithData.length}скв_${scaleLabel}_${today}.dxf`;
-    console.log('📁 Имя файла:', fileName);
-
-    // Скачиваем файл
-    console.log('💾 Начинаем скачивание...');
-    downloadDXF(dxfContent, fileName);
-    console.log('✅ Скачивание завершено');
+    setDxfText(dxf);
+    setShowDxfModal(true);
 
     Journal.logEvent('command', 
-      `Экспортировано ${sessionsWithData.length} сессий в DXF (масштаб ${scaleMode})`, 
+      `Экспортировано ${rows.length} сессий в DXF (масштаб ${scaleMode})`, 
       'thermo.export_dxf'
     );
+  };
 
-    onClose();
+  // Копирование DXF в буфер обмена
+  const handleCopyDxf = async () => {
+    try {
+      await navigator.clipboard.writeText(dxfText);
+      alert('DXF скопирован в буфер обмена');
+    } catch (err) {
+      console.error('Ошибка копирования:', err);
+      alert('Не удалось скопировать');
+    }
   };
 
   const selectedCount = selectedIds.size;
@@ -155,8 +150,8 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
                 onChange={(e) => setScaleMode(e.target.value as ScaleMode)}
                 className="px-2 py-1 text-xs border border-[#c0c0c0] rounded bg-white"
               >
-                <option value="100">1:100</option>
-                <option value="200">1:200</option>
+                <option value="1:100">1:100</option>
+                <option value="1:200">1:200</option>
                 <option value="both">оба (1:100 слева, 1:200 справа)</option>
               </select>
             </label>
@@ -167,19 +162,19 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
             <label className="text-xs font-semibold flex items-center gap-2">
               Дата в таблице:
               <select
-                value={dateFormat}
-                onChange={(e) => setDateFormat(e.target.value as DateFormat)}
+                value={dateMode}
+                onChange={(e) => setDateMode(e.target.value as DateMode)}
                 className="px-2 py-1 text-xs border border-[#c0c0c0] rounded bg-white"
               >
                 <option value="dmy4">03.07.2026 (как в Excel RU)</option>
                 <option value="dmy2">03.07.26</option>
-                <option value="mdy">7/3/26 (как в файле)</option>
+                <option value="mdy2">7/3/26 (как в файле)</option>
               </select>
             </label>
 
             <div className="ml-auto">
               <button
-                onClick={handleGenerate}
+                onClick={handleExport}
                 disabled={!canGenerate}
                 className={`px-4 py-1.5 text-xs rounded ${
                   canGenerate
@@ -239,11 +234,41 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
 
         {/* Подвал */}
         <div className="px-4 py-2 border-t border-[#c0c0c0] bg-[#f5f5f5] text-xs text-[#808080]">
-          Все объекты будут размещены в слое «{LAYER_NAME}». Откройте DXF в AutoCAD и выполните ZE+Enter.
+          Все объекты будут размещены в слое «ИИ_Термометрия». Откройте DXF в AutoCAD и выполните ZE+Enter.
         </div>
       </div>
+
+      {/* Модалка "Показать DXF" */}
+      {showDxfModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-2xl w-[90%] max-w-4xl h-[80vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-[#c0c0c0] bg-[#e8e8e8] flex items-center justify-between">
+              <h3 className="text-base font-bold">📄 Содержимое DXF файла</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyDxf}
+                  className="px-3 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
+                >
+                  📋 Копировать
+                </button>
+                <button
+                  onClick={() => setShowDxfModal(false)}
+                  className="px-3 py-1 text-xs bg-white border border-[#c0c0c0] rounded hover:bg-[#e8e8ff]"
+                >
+                  ✕ Закрыть
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <textarea
+                readOnly
+                value={dxfText}
+                className="w-full h-full font-mono text-xs border border-[#c0c0c0] rounded p-2 resize-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-const LAYER_NAME = 'ИИ_Термометрия';
