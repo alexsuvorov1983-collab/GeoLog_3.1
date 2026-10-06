@@ -42,13 +42,13 @@ const fmtVal = (t: number): string => (t < 0 ? t.toFixed(2) : ' ' + t.toFixed(2)
 export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): string {
   const ent: string[] = [];
   const push = (c: number, v: string | number) => { ent.push(String(c), String(v)); };
-  const line = (x1: number, y1: number, x2: number, y2: number) => {
-    push(0, 'LINE'); push(8, LAYER); push(62, 7);
+  const line = (x1: number, y1: number, x2: number, y2: number, color: number = 7) => {
+    push(0, 'LINE'); push(8, LAYER); push(62, color);
     push(10, x1.toFixed(2)); push(20, y1.toFixed(2)); push(30, '0.00');
     push(11, x2.toFixed(2)); push(21, y2.toFixed(2)); push(31, '0.00');
   };
-  const text = (x: number, y: number, h: number, s: string, ah: number, av: number) => {
-    push(0, 'TEXT'); push(8, LAYER); push(7, STYLE); push(62, 7);
+  const text = (x: number, y: number, h: number, s: string, ah: number, av: number, color: number = 7) => {
+    push(0, 'TEXT'); push(8, LAYER); push(7, STYLE); push(62, color);
     push(10, x.toFixed(2)); push(20, y.toFixed(2)); push(30, '0.00');
     push(40, h.toFixed(2)); push(1, s); push(72, ah); push(73, av);
     push(11, x.toFixed(2)); push(21, y.toFixed(2)); push(31, '0.00');
@@ -68,16 +68,16 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     line(x0, yTop, x0, yTop - H);
     for (const p of pts) {
       const y = yTop - p.depth * mmPerM;
-      line(x0 - 2, y, x0, y);
+      line(x0, y, x0 + 2, y, 1);
       text(x0 - 3, y, 2.5, p.depth.toFixed(1), 2, 1);
     }
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
-      text(x0 + 3, vy, 2.5, fmtVal(p.t), 0, 2);
+      text(x0 + 4, vy, 2.5, fmtVal(p.t), 0, 2, 1);
     }
-    text(x0, yTop + 8, 3, row.name, 0, 0);
-    text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 0, 0);
-    if (x0 + 3 + 15 > maxX) { maxX = x0 + 3 + 15; }
+    text(x0, yTop + 8, 3, row.name, 0, 0, 1);
+    text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 0, 0, 1);
+    if (x0 + 4 + 15 > maxX) { maxX = x0 + 4 + 15; }
     if (yTop - H - 5 < minY) { minY = yTop - H - 5; }
   };
   const maxDepth = rows.length ? Math.max(0, ...rows.flatMap(r => r.points.map(p => p.depth))) : 0;
