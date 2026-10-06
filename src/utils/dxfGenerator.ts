@@ -73,13 +73,12 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     const pl: Array<[number, number]> = pts.map(p => [x0 + p.t * MM_PER_C, yTop - p.depth * mmPerM]);
     poly(pl);
     for (const p of pts) {
-      const vx = x0 + p.t * MM_PER_C;
       const vy = yTop - p.depth * mmPerM;
-      text(vx + 1.5, vy, 2.5, fmtVal(p.t), 0, 2);
+      text(x0 + 2, vy, 2.5, fmtVal(p.t), 0, 2);
     }
     text(x0, yTop + 8, 3, row.name, 0, 0);
     text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 0, 0);
-    if (x0 + W + 5 > maxX) { maxX = x0 + W + 5; }
+    if (x0 + W > maxX) { maxX = x0 + W; }
     if (yTop - H - 5 < minY) { minY = yTop - H - 5; }
   };
   const maxDepth = rows.length ? Math.max(0, ...rows.flatMap(r => r.points.map(p => p.depth))) : 0;
