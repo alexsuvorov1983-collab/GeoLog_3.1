@@ -68,6 +68,7 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     line(x0, yTop, x0, yTop - H);
     for (const p of pts) {
       const y = yTop - p.depth * mmPerM;
+      line(x0 - 2, y, x0, y, 1);
       line(x0, y, x0 + 2, y, 1);
       text(x0 - 3, y, 2.5, p.depth.toFixed(1), 2, 1);
     }
