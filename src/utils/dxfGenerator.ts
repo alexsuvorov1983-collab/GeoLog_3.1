@@ -85,7 +85,10 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
   }
   const out: string[] = [];
   const h = (c: number, v: string | number) => { out.push(String(c), String(v)); };
+  h(999, 'Откройте в AutoCAD и выполните ZE+Enter');
   h(0, 'SECTION'); h(2, 'HEADER');
+  h(9, '$ACADVER'); h(1, 'AC1009');
+  h(9, '$DWGCODEPAGE'); h(3, 'ANSI_1251');
   h(9, '$EXTMIN'); h(10, '0.00'); h(20, (minY - 10).toFixed(2)); h(30, '0.00');
   h(9, '$EXTMAX'); h(10, (maxX + 10).toFixed(2)); h(20, '10.00'); h(30, '0.00');
   h(9, '$LIMMIN'); h(10, '0.00'); h(20, '0.00');
@@ -109,7 +112,7 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
 export function downloadDXF(content: string, filename: string): boolean {
   try {
     const bytes = toCp1251(content);
-    const blob = new Blob([bytes as unknown as BlobPart], { type: 'application/dxf' });
+    const blob = new Blob([bytes as any], { type: 'application/dxf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

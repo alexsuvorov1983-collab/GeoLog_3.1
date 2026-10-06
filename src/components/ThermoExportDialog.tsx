@@ -1,5 +1,5 @@
 // Диалог экспорта термометрии в DXF (AutoCAD)
-// Этап 7: Экспорт в AutoCAD (rev.3)
+// Этап 7: Экспорт в AutoCAD (rev.3 - end-to-end)
 
 import { useState, useMemo } from 'react';
 import { Borehole, ThermoSession } from '../core/dataStore';
@@ -26,6 +26,7 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
   const [dateMode, setDateMode] = useState<DateMode>('dmy4');
   const [showDxfModal, setShowDxfModal] = useState(false);
   const [dxfText, setDxfText] = useState('');
+  const [generatedFilename, setGeneratedFilename] = useState('');
 
   // Подготовка данных для отображения
   const exportEntries = useMemo(() => {
@@ -58,10 +59,11 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
     setSelectedIds(newSet);
   };
 
-  // Генерация DXF с логами и аварийным выводом
-  const handleExport = () => {
+  // Генерация DXF с логами
+  const handleGenerate = () => {
     console.log('[DXF] 1 клик, масштаб:', scaleMode, 'формат даты:', dateMode);
     
+    // Данные берём ТОЛЬКО из верхней коллекции sessions (state.thermoSessions)
     const rows: DxRow[] = sessions
       .filter(s => selectedIds.has(s.id) && s.measurements.length > 0)
       .map(s => ({
@@ -73,7 +75,7 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
     console.log('[DXF] 2 строк с замерами:', rows.length);
     
     if (rows.length === 0) {
-      alert('Не отмечено ни одной сессии с замерами');
+      console.warn('[DXF] Нет сессий с замерами для экспорта');
       return;
     }
 
@@ -82,32 +84,54 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
     
     const fname = 'Thermometry_' + new Date().toISOString().slice(0, 10) + '.dxf';
     
-    if (!downloadDXF(dxf, fname)) {
-      downloadDXFDataUrl(dxf, fname);
-    }
-    
     setDxfText(dxf);
+    setGeneratedFilename(fname);
     setShowDxfModal(true);
 
     Journal.logEvent('command', 
-      `Экспортировано ${rows.length} сессий в DXF (масштаб ${scaleMode})`, 
+      `Сгенерирован DXF: ${rows.length} сессий, масштаб ${scaleMode}, длина ${dxf.length}`, 
       'thermo.export_dxf'
     );
+  };
+
+  // Скачивание через Blob
+  const handleDownloadBlob = () => {
+    if (!dxfText || !generatedFilename) return;
+    
+    console.log('[DXF] 4 скачивание (blob):', generatedFilename);
+    const success = downloadDXF(dxfText, generatedFilename);
+    
+    if (success) {
+      console.log('[DXF] 4 скачивание (blob): ok');
+    } else {
+      console.error('[DXF] 4 скачивание (blob): fail');
+    }
+  };
+
+  // Скачивание через Data URL
+  const handleDownloadDataUrl = () => {
+    if (!dxfText || !generatedFilename) return;
+    
+    console.log('[DXF] 4 скачивание (data-url):', generatedFilename);
+    downloadDXFDataUrl(dxfText, generatedFilename);
+    console.log('[DXF] 4 скачивание (data-url): ok');
   };
 
   // Копирование DXF в буфер обмена
   const handleCopyDxf = async () => {
     try {
       await navigator.clipboard.writeText(dxfText);
-      alert('DXF скопирован в буфер обмена');
+      console.log('[DXF] Копирование в буфер: ok');
     } catch (err) {
-      console.error('Ошибка копирования:', err);
-      alert('Не удалось скопировать');
+      console.error('[DXF] Ошибка копирования:', err);
     }
   };
 
-  const selectedCount = selectedIds.size;
-  const canGenerate = selectedCount > 0;
+  // Проверка: есть ли выбранные сессии с замерами
+  const selectedSessionsWithMeasurements = sessions.filter(
+    s => selectedIds.has(s.id) && s.measurements.length > 0
+  );
+  const canGenerate = selectedSessionsWithMeasurements.length > 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -174,17 +198,23 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
 
             <div className="ml-auto">
               <button
-                onClick={handleExport}
+                onClick={handleGenerate}
                 disabled={!canGenerate}
                 className={`px-4 py-1.5 text-xs rounded ${
                   canGenerate
                     ? 'bg-[#28a745] text-white hover:bg-[#218838]'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
+                title={!canGenerate ? 'Выберите хотя бы одну сессию с замерами' : ''}
               >
-                📐 Сгенерировать DXF ({selectedCount})
+                📐 Сгенерировать DXF ({selectedSessionsWithMeasurements.length})
               </button>
             </div>
+          </div>
+
+          {/* Подсказки */}
+          <div className="mt-2 text-xs text-[#666]">
+            💡 Если файл не скачивается — откройте приложение в отдельной вкладке браузера и повторите
           </div>
         </div>
 
@@ -243,8 +273,20 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg shadow-2xl w-[90%] max-w-4xl h-[80vh] flex flex-col">
             <div className="px-4 py-3 border-b border-[#c0c0c0] bg-[#e8e8e8] flex items-center justify-between">
-              <h3 className="text-base font-bold">📄 Содержимое DXF файла</h3>
+              <h3 className="text-base font-bold">📄 Содержимое DXF файла: {generatedFilename}</h3>
               <div className="flex gap-2">
+                <button
+                  onClick={handleDownloadBlob}
+                  className="px-3 py-1 text-xs bg-[#28a745] text-white rounded hover:bg-[#218838]"
+                >
+                  💾 Скачать (blob)
+                </button>
+                <button
+                  onClick={handleDownloadDataUrl}
+                  className="px-3 py-1 text-xs bg-[#17a2b8] text-white rounded hover:bg-[#138496]"
+                >
+                  💾 Скачать (data-URL)
+                </button>
                 <button
                   onClick={handleCopyDxf}
                   className="px-3 py-1 text-xs bg-[#4472c4] text-white rounded hover:bg-[#3060b0]"
@@ -266,9 +308,13 @@ export default function ThermoExportDialog({ boreholes, sessions, onClose }: Pro
                 className="w-full h-full font-mono text-xs border border-[#c0c0c0] rounded p-2 resize-none"
               />
             </div>
+            <div className="px-4 py-2 border-t border-[#c0c0c0] bg-[#fff3cd] text-xs text-[#856404]">
+              ⚠️ При ручном сохранении — кодировка ANSI/CP1251, не UTF-8
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
+// Конец файла
