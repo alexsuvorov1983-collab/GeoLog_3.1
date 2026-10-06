@@ -12,6 +12,7 @@ const STEP = 80;
 const GAP = 165;
 const VGAP = 25;
 const X0 = 10;
+const DRAW_CURVE = false;
 
 export function toCp1251(s: string): Uint8Array {
   const out = new Uint8Array(s.length);
@@ -72,11 +73,11 @@ export function buildDXF(rows: DxRow[], scale: ScaleMode, dateMode: DateMode): s
     }
     for (const p of pts) {
       const vy = yTop - p.depth * mmPerM;
-      text(x0 + 2, vy, 2.5, fmtVal(p.t), 0, 2);
+      text(x0 + 10, vy, 2.5, fmtVal(p.t), 0, 2);
     }
     text(x0, yTop + 8, 3, row.name, 0, 0);
     text(x0, yTop + 4, 3, fmtDate(row.date, dateMode), 0, 0);
-    if (x0 + W > maxX) { maxX = x0 + W; }
+    if (x0 + 10 + 15 > maxX) { maxX = x0 + 10 + 15; }
     if (yTop - H - 5 < minY) { minY = yTop - H - 5; }
   };
   const maxDepth = rows.length ? Math.max(0, ...rows.flatMap(r => r.points.map(p => p.depth))) : 0;
