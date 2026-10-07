@@ -131,10 +131,9 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       isResizing.current = false;
     };
 
-    if (isDragging.current || isResizing.current) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
+    // Всегда добавляем обработчики, проверка флагов внутри них
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
