@@ -441,12 +441,12 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                             onClick={() => toggleSectionReady(section.id)}
                             className={`px-3 py-1 text-white rounded text-sm font-semibold ${
                               isReady 
-                                ? 'bg-red-500 hover:bg-red-600' 
-                                : 'bg-green-500 hover:bg-green-600'
+                                ? 'bg-green-500 hover:bg-green-600' 
+                                : 'bg-red-500 hover:bg-red-600'
                             }`}
-                            title={isReady ? 'Отметить раздел как не готовый' : 'Отметить раздел как готовый'}
+                            title={isReady ? 'Раздел готов' : 'Раздел не готов'}
                           >
-                            {isReady ? '✗ Не готово' : '✓ Готово'}
+                            {isReady ? '✓ Готово' : '✗ Не готово'}
                           </button>
                         </>
                       )}
