@@ -410,7 +410,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
           )}
 
           {/* Правая панель - содержимое */}
-          <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
+          <div ref={contentRef} className="flex-1 overflow-y-auto p-6 bg-gray-100">
             {REPORT_SECTIONS.map(section => {
               const sectionState = sections.find(s => s.id === section.id);
               const isEditing = editingSection === section.id;
@@ -418,15 +418,28 @@ export default function ReportWindow({ projectName, onClose }: Props) {
               
               return (
                 <div key={section.id} id={section.id} className="mb-8">
+                  {/* Лист A4 */}
+                  <div 
+                    className="bg-white shadow-lg mx-auto"
+                    style={{
+                      width: '210mm',
+                      minHeight: '297mm',
+                      padding: '20mm 15mm 20mm 30mm',
+                      fontFamily: '"Times New Roman", Times, serif',
+                      fontSize: '12pt',
+                      lineHeight: '1.5',
+                      pageBreakBefore: 'always'
+                    }}
+                  >
                   {/* Заголовок раздела */}
                   <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
                     <div className="flex items-center gap-3">
                       <span className={`text-2xl ${isReady ? 'text-green-600' : 'text-red-500'}`} title={isReady ? 'Раздел готов' : 'Раздел не готов'}>
                         {isReady ? '✓' : '✗'}
                       </span>
-                      <h2 className={`font-bold text-gray-800 ${section.level === 1 ? 'text-2xl' : 'text-xl pl-4'}`}>
+                      <h2 className={`font-bold text-gray-800 uppercase ${section.level === 1 ? 'text-2xl' : 'text-xl pl-4'}`}>
                         {section.number && <span>{section.number} </span>}
-                        {section.title}
+                        {section.title.toUpperCase()}
                       </h2>
                     </div>
                     <div className="flex gap-2">
@@ -557,6 +570,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                       )}
                     </div>
                   )}
+                  </div> {/* Конец листа A4 */}
                 </div>
               );
             })}
