@@ -594,26 +594,43 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                       
                       {/* Загруженные изображения */}
                       {uploadedImages[section.id] && uploadedImages[section.id].length > 0 && (
-                        <div className="space-y-4">
+                        <div className="space-y-8 mt-6">
                           <h3 className="text-sm font-semibold text-gray-700">Загруженные изображения:</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            {uploadedImages[section.id].map((image, idx) => (
-                              <div key={idx} className="relative group">
+                          {uploadedImages[section.id].map((image, idx) => (
+                            <div key={idx} className="relative group">
+                              {/* Лист A4 для изображения */}
+                              <div 
+                                className="bg-white shadow-lg mx-auto"
+                                style={{
+                                  width: '210mm',
+                                  minHeight: '297mm',
+                                  padding: '20mm',
+                                  pageBreakBefore: 'always',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
                                 <img 
                                   src={image} 
                                   alt={`Изображение ${idx + 1}`}
-                                  className="w-full h-auto border border-gray-300 rounded"
+                                  className="max-w-full max-h-full object-contain"
                                 />
-                                <button
-                                  onClick={() => handleImageDelete(section.id, idx)}
-                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Удалить изображение"
-                                >
-                                  ×
-                                </button>
                               </div>
-                            ))}
-                          </div>
+                              {/* Кнопка удаления */}
+                              <button
+                                onClick={() => handleImageDelete(section.id, idx)}
+                                className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                title="Удалить изображение"
+                              >
+                                ×
+                              </button>
+                              {/* Номер изображения */}
+                              <div className="text-center text-sm text-gray-500 mt-2">
+                                Рисунок {idx + 1}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -653,26 +670,43 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                       
                       {/* Загруженные изображения */}
                       {uploadedImages[section.id] && uploadedImages[section.id].length > 0 && (
-                        <div className="space-y-4 mt-6">
+                        <div className="space-y-8 mt-6">
                           <h3 className="text-sm font-semibold text-gray-700">Загруженные изображения:</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            {uploadedImages[section.id].map((image, idx) => (
-                              <div key={idx} className="relative group">
+                          {uploadedImages[section.id].map((image, idx) => (
+                            <div key={idx} className="relative group">
+                              {/* Лист A4 для изображения */}
+                              <div 
+                                className="bg-white shadow-lg mx-auto"
+                                style={{
+                                  width: '210mm',
+                                  minHeight: '297mm',
+                                  padding: '20mm',
+                                  pageBreakBefore: 'always',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
                                 <img 
                                   src={image} 
                                   alt={`Изображение ${idx + 1}`}
-                                  className="w-full h-auto border border-gray-300 rounded"
+                                  className="max-w-full max-h-full object-contain"
                                 />
-                                <button
-                                  onClick={() => handleImageDelete(section.id, idx)}
-                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Удалить изображение"
-                                >
-                                  ×
-                                </button>
                               </div>
-                            ))}
-                          </div>
+                              {/* Кнопка удаления */}
+                              <button
+                                onClick={() => handleImageDelete(section.id, idx)}
+                                className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                title="Удалить изображение"
+                              >
+                                ×
+                              </button>
+                              {/* Номер изображения */}
+                              <div className="text-center text-sm text-gray-500 mt-2">
+                                Рисунок {idx + 1}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
