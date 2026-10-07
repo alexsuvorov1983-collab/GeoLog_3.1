@@ -153,14 +153,16 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     return sectionState.isReady;
   };
 
-  // Функция отметки раздела как готового
-  const markSectionAsReady = (sectionId: string) => {
+  // Функция переключения готовности раздела
+  const toggleSectionReady = (sectionId: string) => {
     setSections(prev => prev.map(s => 
       s.id === sectionId 
-        ? { ...s, isReady: true }
+        ? { ...s, isReady: !s.isReady }
         : s
     ));
-    Journal.logEvent('info', `Раздел ${sectionId} отмечен как готовый`, 'report.section_ready');
+    const section = sections.find(s => s.id === sectionId);
+    const newStatus = section?.isReady ? 'не готов' : 'готов';
+    Journal.logEvent('info', `Раздел ${sectionId} отмечен как ${newStatus}`, 'report.section_toggle');
   };
 
   // Scrollspy
@@ -435,15 +437,17 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                           >
                             ↺ Автогенерация
                           </button>
-                          {!isReady && (
-                            <button
-                              onClick={() => markSectionAsReady(section.id)}
-                              className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-semibold"
-                              title="Отметить раздел как готовый"
-                            >
-                              ✓ Готово
-                            </button>
-                          )}
+                          <button
+                            onClick={() => toggleSectionReady(section.id)}
+                            className={`px-3 py-1 text-white rounded text-sm font-semibold ${
+                              isReady 
+                                ? 'bg-red-500 hover:bg-red-600' 
+                                : 'bg-green-500 hover:bg-green-600'
+                            }`}
+                            title={isReady ? 'Отметить раздел как не готовый' : 'Отметить раздел как готовый'}
+                          >
+                            {isReady ? '✗ Не готово' : '✓ Готово'}
+                          </button>
                         </>
                       )}
                     </div>
