@@ -67,7 +67,11 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
       ]
     },
     {
-      id: 'geophysics', label: 'ГЕОФИЗИКА', icon: '📡', children: []
+      id: 'geophysics', label: 'ГЕОФИЗИКА', icon: '📡', children: [
+        { id: 'vez', label: 'ВЭЗ', icon: '📊' },
+        { id: 'bt', label: 'БТ', icon: '📊' },
+        { id: 'microseismic', label: 'Микросейсморайонирование', icon: '📊' },
+      ]
     },
     {
       id: 'report', label: 'ПОЯСНИТЕЛЬНАЯ ЗАПИСКА', icon: '📝', children: []
