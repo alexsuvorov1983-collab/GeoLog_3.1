@@ -12,6 +12,12 @@ export interface ReportSection {
 }
 
 export const REPORT_SECTIONS: ReportSection[] = [
+  { id: 'report-cover', number: '', title: 'Обложка', level: 1 },
+  { id: 'report-title', number: '', title: 'Титул', level: 1 },
+  { id: 'report-executors', number: '', title: 'Список исполнителей', level: 1 },
+  { id: 'report-volume-contents', number: '', title: 'Содержание тома', level: 1 },
+  { id: 'report-documentation', number: '', title: 'Состав отчётной документации', level: 1 },
+  { id: 'report-contents', number: '', title: 'Содержание', level: 1 },
   { id: 'report-1', number: '1', title: 'Введение', level: 1 },
   { id: 'report-2', number: '2', title: 'Изученность инженерно-геологических условий', level: 1 },
   { id: 'report-3', number: '3', title: 'Физико-географические и техногенные условия', level: 1 },
