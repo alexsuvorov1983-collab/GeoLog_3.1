@@ -141,6 +141,17 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     };
   }, []);
 
+  // Функция проверки готовности раздела
+  const isSectionReady = (sectionState: SectionState | undefined): boolean => {
+    if (!sectionState) return false;
+    
+    // Раздел готов, если есть непустой текст ИЛИ есть таблица с данными
+    const hasText = Boolean(sectionState.text && sectionState.text.trim().length > 0);
+    const hasTable = Boolean(sectionState.tableRows && sectionState.tableRows.length > 0);
+    
+    return hasText || hasTable;
+  };
+
   // Scrollspy
   useEffect(() => {
     const handleScroll = () => {
@@ -337,6 +348,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                   const sectionState = sections.find(s => s.id === section.id);
                   const isActive = activeSection === section.id;
                   const hasUnsavedChanges = sectionState?.isEdited && !sectionState?.isSaved;
+                  const isReady = isSectionReady(sectionState);
                   
                   return (
                     <div
@@ -348,6 +360,9 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                       style={{ paddingLeft: `${section.level === 2 ? 24 : 12}px` }}
                     >
                       {hasUnsavedChanges && <span className="text-red-500 text-xs">●</span>}
+                      <span className={`text-lg ${isReady ? 'text-green-600' : 'text-red-500'}`}>
+                        {isReady ? '✓' : '✗'}
+                      </span>
                       <span className="text-sm flex-1">
                         {section.number && <span className="font-semibold">{section.number} </span>}
                         {section.title}
@@ -364,15 +379,21 @@ export default function ReportWindow({ projectName, onClose }: Props) {
             {REPORT_SECTIONS.map(section => {
               const sectionState = sections.find(s => s.id === section.id);
               const isEditing = editingSection === section.id;
+              const isReady = isSectionReady(sectionState);
               
               return (
                 <div key={section.id} id={section.id} className="mb-8">
                   {/* Заголовок раздела */}
                   <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
-                    <h2 className={`font-bold text-gray-800 ${section.level === 1 ? 'text-2xl' : 'text-xl pl-4'}`}>
-                      {section.number && <span>{section.number} </span>}
-                      {section.title}
-                    </h2>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-2xl ${isReady ? 'text-green-600' : 'text-red-500'}`} title={isReady ? 'Раздел готов' : 'Раздел не готов'}>
+                        {isReady ? '✓' : '✗'}
+                      </span>
+                      <h2 className={`font-bold text-gray-800 ${section.level === 1 ? 'text-2xl' : 'text-xl pl-4'}`}>
+                        {section.number && <span>{section.number} </span>}
+                        {section.title}
+                      </h2>
+                    </div>
                     <div className="flex gap-2">
                       {isEditing ? (
                         <>
