@@ -12,6 +12,7 @@ import StatusBar from './components/StatusBar';
 import ContextMenu from './components/ContextMenu';
 import JournalPanel from './components/JournalPanel';
 import Splitter from './components/Splitter';
+import ReportWindow from './components/ReportWindow';
 
 export default function App() {
   const [selectedBoreholeId, setSelectedBoreholeId] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export default function App() {
   const [navWidth, setNavWidth] = useState(280);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(260);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: { label: string; commandId: string }[] } | null>(null);
+  const [showReportWindow, setShowReportWindow] = useState(false);
   const [, forceUpdate] = useState(0);
 
   // Open document function
@@ -101,17 +103,30 @@ export default function App() {
     CommandRegistry.register({ id: 'doc.open.subsidence', label: 'Тип просадки', handler: () => openDoc('doc-subsidence', 'Тип просадки') });
     CommandRegistry.register({ id: 'doc.open.pile', label: 'Несущая способность свай', handler: () => openDoc('doc-pile', 'Несущая способность свай') });
 
+    // Report commands
+    CommandRegistry.register({ id: 'report.open.docx', label: 'Пояснительная записка', handler: () => {
+      setShowReportWindow(true);
+      Journal.logEvent('command', 'Открыта пояснительная записка', 'report.open');
+    }});
+
     Journal.logEvent('info', 'GeoLog 3.0 запущен');
   }, [selectedBoreholeId, openDoc]);
 
   // Listen for bus events
   useEffect(() => {
-    const unsub = bus.on('ui:node-selected', (payload) => {
+    const unsub1 = bus.on('ui:node-selected', (payload) => {
       if (payload?.collection === 'boreholes' && payload?.id) {
         setSelectedBoreholeId(payload.id);
       }
     });
-    return unsub;
+    const unsub2 = bus.on('ui:report-open', () => {
+      setShowReportWindow(true);
+      Journal.logEvent('command', 'Открыта пояснительная записка из навигатора', 'report.open');
+    });
+    return () => {
+      unsub1();
+      unsub2();
+    };
   }, []);
 
   // Listen for data changes
@@ -364,6 +379,14 @@ export default function App() {
         modifiedAt={selectedBorehole?.modified_at}
         totalObjects={GeoLogData.totalObjects()}
       />
+
+      {/* Report Window */}
+      {showReportWindow && (
+        <ReportWindow
+          projectName="GeoLog"
+          onClose={() => setShowReportWindow(false)}
+        />
+      )}
 
       {/* Context Menu */}
       {contextMenu && (

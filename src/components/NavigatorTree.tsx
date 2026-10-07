@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GeoLogData } from '../core/dataStore';
 import { CommandRegistry } from '../core/commandRegistry';
+import { bus } from '../core/eventBus';
 
 interface Props {
   selectedBoreholeId: string | null;
@@ -74,7 +75,7 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
       ]
     },
     {
-      id: 'report', label: 'ПОЯСНИТЕЛЬНАЯ ЗАПИСКА', icon: '📝', children: [
+      id: 'report', label: 'ПОЯСНИТЕЛЬНАЯ ЗАПИСКА', icon: '📝', commandId: 'report.open.docx', children: [
         { id: 'report-1', label: '1. Введение', icon: '📄' },
         { id: 'report-2', label: '2. Изученность инженерно-геологических условий', icon: '📄' },
         { id: 'report-3', label: '3. Физико-географические и техногенные условия', icon: '📄' },
@@ -156,6 +157,10 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
               // Also execute command if exists (for boreholes node)
               if (node.commandId && node.id === 'boreholes') {
                 handleNodeClick(node);
+              }
+              // Open report window when clicking on report section
+              if (node.id === 'report') {
+                bus.emit('ui:report-open');
               }
             } else {
               handleNodeClick(node);

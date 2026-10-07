@@ -59,6 +59,8 @@ const menuStructure: { label: string; items: MenuItem[] }[] = [
   {
     label: 'ОТЧЁТЫ DOCX',
     items: [
+      { label: 'Пояснительная записка', commandId: 'report.open.docx' },
+      { separator: true, label: '' },
       { label: 'Сформировать отчёт...', commandId: 'reports.docx' },
     ],
   },
