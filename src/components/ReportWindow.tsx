@@ -417,12 +417,64 @@ export default function ReportWindow({ projectName, onClose }: Props) {
               const isReady = isSectionReady(sectionState);
               
               return (
-                <div key={section.id} id={section.id} className="mb-8">
+                <div key={section.id} id={section.id} className="mb-8 flex gap-4">
+                  {/* Левая панель с кнопками управления */}
+                  <div className="flex-shrink-0 w-48 flex flex-col gap-2 pt-4">
+                    {/* Индикатор готовности */}
+                    <div className={`text-4xl text-center ${isReady ? 'text-green-600' : 'text-red-500'}`} title={isReady ? 'Раздел готов' : 'Раздел не готов'}>
+                      {isReady ? '✓' : '✗'}
+                    </div>
+                    
+                    {/* Кнопки управления */}
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={saveSection}
+                          className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-semibold"
+                        >
+                          ✓ Сохранить
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm font-semibold"
+                        >
+                          ✗ Отменить
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(section.id)}
+                          className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-semibold"
+                        >
+                          ✎ Редактировать
+                        </button>
+                        <button
+                          onClick={() => resetToAutoGeneration(section.id)}
+                          className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-semibold"
+                        >
+                          ↺ Автогенерация
+                        </button>
+                        <button
+                          onClick={() => toggleSectionReady(section.id)}
+                          className={`px-3 py-2 text-white rounded text-sm font-semibold ${
+                            isReady 
+                              ? 'bg-green-500 hover:bg-green-600' 
+                              : 'bg-red-500 hover:bg-red-600'
+                          }`}
+                          title={isReady ? 'Раздел готов' : 'Раздел не готов'}
+                        >
+                          {isReady ? '✓ Готово' : '✗ Не готово'}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
                   {/* Лист A4 */}
                   <div 
-                    className="bg-white shadow-lg mx-auto"
+                    className="bg-white shadow-lg flex-1"
                     style={{
-                      width: '210mm',
+                      maxWidth: '210mm',
                       minHeight: '297mm',
                       padding: '20mm 15mm 20mm 30mm',
                       fontFamily: '"Times New Roman", Times, serif',
@@ -432,60 +484,11 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                     }}
                   >
                   {/* Заголовок раздела */}
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-2xl ${isReady ? 'text-green-600' : 'text-red-500'}`} title={isReady ? 'Раздел готов' : 'Раздел не готов'}>
-                        {isReady ? '✓' : '✗'}
-                      </span>
-                      <h2 className={`font-bold text-gray-800 uppercase ${section.level === 1 ? 'text-2xl' : 'text-xl pl-4'}`}>
-                        {section.number && <span>{section.number} </span>}
-                        {section.title.toUpperCase()}
-                      </h2>
-                    </div>
-                    <div className="flex gap-2">
-                      {isEditing ? (
-                        <>
-                          <button
-                            onClick={saveSection}
-                            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm"
-                          >
-                            ✓ Сохранить
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm"
-                          >
-                            ✗ Отменить
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => startEditing(section.id)}
-                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
-                          >
-                            ✎ Редактировать
-                          </button>
-                          <button
-                            onClick={() => resetToAutoGeneration(section.id)}
-                            className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm"
-                          >
-                            ↺ Автогенерация
-                          </button>
-                          <button
-                            onClick={() => toggleSectionReady(section.id)}
-                            className={`px-3 py-1 text-white rounded text-sm font-semibold ${
-                              isReady 
-                                ? 'bg-green-500 hover:bg-green-600' 
-                                : 'bg-red-500 hover:bg-red-600'
-                            }`}
-                            title={isReady ? 'Раздел готов' : 'Раздел не готов'}
-                          >
-                            {isReady ? '✓ Готово' : '✗ Не готово'}
-                          </button>
-                        </>
-                      )}
-                    </div>
+                  <div className="mb-4">
+                    <h2 className={`font-bold text-gray-800 uppercase ${section.level === 1 ? 'text-2xl' : 'text-xl'}`}>
+                      {section.number && <span>{section.number} </span>}
+                      {section.title.toUpperCase()}
+                    </h2>
                   </div>
 
                   {/* Содержимое раздела */}
