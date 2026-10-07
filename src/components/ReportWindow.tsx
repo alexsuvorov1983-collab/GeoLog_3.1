@@ -153,16 +153,14 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     return sectionState.isReady;
   };
 
-  // Функция переключения готовности раздела
-  const toggleSectionReady = (sectionId: string) => {
+  // Функция отметки раздела как готового
+  const markSectionAsReady = (sectionId: string) => {
     setSections(prev => prev.map(s => 
       s.id === sectionId 
-        ? { ...s, isReady: !s.isReady }
+        ? { ...s, isReady: true }
         : s
     ));
-    const section = sections.find(s => s.id === sectionId);
-    const newStatus = section?.isReady ? 'не готов' : 'готов';
-    Journal.logEvent('info', `Раздел ${sectionId} отмечен как ${newStatus}`, 'report.section_toggle');
+    Journal.logEvent('info', `Раздел ${sectionId} отмечен как готовый`, 'report.section_ready');
   };
 
   // Scrollspy
@@ -437,17 +435,19 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                           >
                             ↺ Автогенерация
                           </button>
-                          <button
-                            onClick={() => toggleSectionReady(section.id)}
-                            className={`px-3 py-1 text-white rounded text-sm font-semibold ${
-                              isReady 
-                                ? 'bg-green-500 hover:bg-green-600' 
-                                : 'bg-red-500 hover:bg-red-600'
-                            }`}
-                            title={isReady ? 'Раздел готов' : 'Раздел не готов'}
-                          >
-                            {isReady ? '✓ Готово' : '✗ Не готово'}
-                          </button>
+                          {!isReady ? (
+                            <button
+                              onClick={() => markSectionAsReady(section.id)}
+                              className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-semibold"
+                              title="Отметить раздел как готовый"
+                            >
+                              ✓ Готово
+                            </button>
+                          ) : (
+                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm font-semibold">
+                              ✓ Готово
+                            </span>
+                          )}
                         </>
                       )}
                     </div>
