@@ -62,13 +62,12 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       
       if (needsMigration) {
         console.log('[ReportWindow] Обнаружены старые данные, выполняю миграцию');
-        // Миграция: если поле isReady отсутствует, установить по умолчанию
+        // Миграция: если поле isReady отсутствует, установить все как неготовые
         const migrated = parsed.map((section: any) => {
-          const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
-          console.log(`[ReportWindow] Миграция раздела ${section.id}: isReady = ${isReadyByDefault}`);
-          return { ...section, isReady: isReadyByDefault };
+          console.log(`[ReportWindow] Миграция раздела ${section.id}: isReady = false`);
+          return { ...section, isReady: false };
         });
-        console.log('[ReportWindow] Готовые разделы после миграции:', migrated.filter((s: any) => s.isReady).map((s: any) => s.id));
+        console.log('[ReportWindow] Все разделы после миграции не готовы');
         return migrated;
       } else {
         console.log('[ReportWindow] Данные актуальны, миграция не требуется');
@@ -79,20 +78,19 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     
     console.log('[ReportWindow] Инициализация новых разделов');
     // Инициализация разделов автогенерацией
-    // По умолчанию готовы только разделы 14 и 16
+    // По умолчанию все разделы не готовы
     const initialized = REPORT_SECTIONS.map(section => {
       const content = generateSectionContent(section.id);
-      const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
       return {
         id: section.id,
         text: content.text,
         tableRows: content.tableRows,
         isEdited: false,
         isSaved: true,
-        isReady: isReadyByDefault
+        isReady: false
       };
     });
-    console.log('[ReportWindow] Готовые разделы по умолчанию:', initialized.filter(s => s.isReady).map(s => s.id));
+    console.log('[ReportWindow] Все разделы по умолчанию не готовы');
     return initialized;
   });
 
