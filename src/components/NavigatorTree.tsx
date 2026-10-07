@@ -19,7 +19,7 @@ interface TreeNode {
 }
 
 export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextMenu, width = 280 }: Props) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['geology', 'project', 'field', 'lab', 'processing']));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['geology', 'project', 'field', 'lab', 'processing', 'geophysics', 'report']));
 
   const boreholes = GeoLogData.getAll();
   const dicts = GeoLogData.getDicts();
@@ -65,6 +65,12 @@ export default function NavigatorTree({ selectedBoreholeId, onSelect, onContextM
         { id: 'subsidence', label: 'Тип просадки', commandId: 'doc.open.subsidence', icon: '⚠️' },
         { id: 'pile-bearing', label: 'Несущая способность свай', commandId: 'doc.open.pile', icon: '🏗️' },
       ]
+    },
+    {
+      id: 'geophysics', label: 'ГЕОФИЗИКА', icon: '📡', children: []
+    },
+    {
+      id: 'report', label: 'ПОЯСНИТЕЛЬНАЯ ЗАПИСКА', icon: '📝', children: []
     },
   ];
 
