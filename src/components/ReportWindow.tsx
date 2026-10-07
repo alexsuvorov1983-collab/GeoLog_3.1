@@ -99,6 +99,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
   const [editTableRows, setEditTableRows] = useState<string[][]>([]);
   const [activeSection, setActiveSection] = useState<string>('report-1');
   const [showNavigation, setShowNavigation] = useState(true);
+  const [uploadedImages, setUploadedImages] = useState<Record<string, string[]>>({});
 
   const contentRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
@@ -186,6 +187,45 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     const newStatus = section?.isReady ? 'не готов' : 'готов';
     Journal.logEvent('info', `Раздел ${sectionId} отмечен как ${newStatus}`, 'report.section_toggle');
   };
+
+  // Функция загрузки изображений
+  const handleImageUpload = (sectionId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setUploadedImages(prev => ({
+            ...prev,
+            [sectionId]: [...(prev[sectionId] || []), result]
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Сброс input для возможности повторной загрузки того же файла
+    event.target.value = '';
+  };
+
+  // Функция удаления изображения
+  const handleImageDelete = (sectionId: string, imageIndex: number) => {
+    setUploadedImages(prev => ({
+      ...prev,
+      [sectionId]: prev[sectionId]?.filter((_, idx) => idx !== imageIndex) || []
+    }));
+  };
+
+  // Список приложений, для которых доступна загрузка изображений
+  const imageUploadSections = [
+    'report-app-a', 'report-app-b', 'report-app-v', 'report-app-e', 'report-app-zh',
+    'report-app-i', 'report-app-k', 'report-app-l', 'report-app-m', 'report-app-n',
+    'report-app-p', 'report-app-r', 'report-app-s', 'report-app-t', 'report-app-u',
+    'report-app-h', 'report-app-ts', 'report-app-sh', 'report-app-sch', 'report-app-ya'
+  ];
 
   // Scrollspy
   useEffect(() => {
@@ -466,6 +506,20 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                         >
                           {isReady ? '✓ Готово' : '✗ Не готово'}
                         </button>
+                        
+                        {/* Кнопка загрузки изображений для приложений */}
+                        {imageUploadSections.includes(section.id) && (
+                          <label className="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm font-semibold cursor-pointer text-center">
+                            📷 Загрузить
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg"
+                              multiple
+                              onChange={(e) => handleImageUpload(section.id, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
                       </>
                     )}
                   </div>
@@ -537,6 +591,31 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                           </table>
                         </div>
                       )}
+                      
+                      {/* Загруженные изображения */}
+                      {uploadedImages[section.id] && uploadedImages[section.id].length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-semibold text-gray-700">Загруженные изображения:</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            {uploadedImages[section.id].map((image, idx) => (
+                              <div key={idx} className="relative group">
+                                <img 
+                                  src={image} 
+                                  alt={`Изображение ${idx + 1}`}
+                                  className="w-full h-auto border border-gray-300 rounded"
+                                />
+                                <button
+                                  onClick={() => handleImageDelete(section.id, idx)}
+                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Удалить изображение"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="prose max-w-none">
@@ -569,6 +648,31 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                               ))}
                             </tbody>
                           </table>
+                        </div>
+                      )}
+                      
+                      {/* Загруженные изображения */}
+                      {uploadedImages[section.id] && uploadedImages[section.id].length > 0 && (
+                        <div className="space-y-4 mt-6">
+                          <h3 className="text-sm font-semibold text-gray-700">Загруженные изображения:</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            {uploadedImages[section.id].map((image, idx) => (
+                              <div key={idx} className="relative group">
+                                <img 
+                                  src={image} 
+                                  alt={`Изображение ${idx + 1}`}
+                                  className="w-full h-auto border border-gray-300 rounded"
+                                />
+                                <button
+                                  onClick={() => handleImageDelete(section.id, idx)}
+                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Удалить изображение"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
