@@ -54,7 +54,15 @@ export default function ReportWindow({ projectName, onClose }: Props) {
   const [sections, setSections] = useState<SectionState[]>(() => {
     const saved = localStorage.getItem(SECTIONS_STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Миграция: если поле isReady отсутствует, установить по умолчанию
+      return parsed.map((section: any) => {
+        if (section.isReady === undefined) {
+          const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
+          return { ...section, isReady: isReadyByDefault };
+        }
+        return section;
+      });
     }
     // Инициализация разделов автогенерацией
     // По умолчанию готовы только разделы 14 и 16
