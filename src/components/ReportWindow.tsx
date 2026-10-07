@@ -55,18 +55,32 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     const saved = localStorage.getItem(SECTIONS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Миграция: если поле isReady отсутствует, установить по умолчанию
-      return parsed.map((section: any) => {
-        if (section.isReady === undefined) {
+      console.log('[ReportWindow] Загружено из localStorage:', parsed.length, 'разделов');
+      
+      // Проверяем, нужна ли миграция (если у первого раздела нет поля isReady)
+      const needsMigration = parsed.length > 0 && parsed[0].isReady === undefined;
+      
+      if (needsMigration) {
+        console.log('[ReportWindow] Обнаружены старые данные, выполняю миграцию');
+        // Миграция: если поле isReady отсутствует, установить по умолчанию
+        const migrated = parsed.map((section: any) => {
           const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
+          console.log(`[ReportWindow] Миграция раздела ${section.id}: isReady = ${isReadyByDefault}`);
           return { ...section, isReady: isReadyByDefault };
-        }
-        return section;
-      });
+        });
+        console.log('[ReportWindow] Готовые разделы после миграции:', migrated.filter((s: any) => s.isReady).map((s: any) => s.id));
+        return migrated;
+      } else {
+        console.log('[ReportWindow] Данные актуальны, миграция не требуется');
+        console.log('[ReportWindow] Готовые разделы:', parsed.filter((s: any) => s.isReady).map((s: any) => s.id));
+        return parsed;
+      }
     }
+    
+    console.log('[ReportWindow] Инициализация новых разделов');
     // Инициализация разделов автогенерацией
     // По умолчанию готовы только разделы 14 и 16
-    return REPORT_SECTIONS.map(section => {
+    const initialized = REPORT_SECTIONS.map(section => {
       const content = generateSectionContent(section.id);
       const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
       return {
@@ -78,6 +92,8 @@ export default function ReportWindow({ projectName, onClose }: Props) {
         isReady: isReadyByDefault
       };
     });
+    console.log('[ReportWindow] Готовые разделы по умолчанию:', initialized.filter(s => s.isReady).map(s => s.id));
+    return initialized;
   });
 
   const [editingSection, setEditingSection] = useState<string | null>(null);
