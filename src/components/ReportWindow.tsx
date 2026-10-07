@@ -600,21 +600,22 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                             <div key={idx} className="relative group">
                               {/* Лист A4 для изображения */}
                               <div 
-                                className="bg-white shadow-lg mx-auto"
+                                className="bg-white shadow-lg mx-auto relative"
                                 style={{
                                   width: '210mm',
-                                  minHeight: '297mm',
+                                  height: '297mm',
                                   padding: '20mm',
                                   pageBreakBefore: 'always',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
+                                  boxSizing: 'border-box'
                                 }}
                               >
                                 <img 
                                   src={image} 
                                   alt={`Изображение ${idx + 1}`}
-                                  className="max-w-full max-h-full object-contain"
+                                  className="w-full h-full object-contain"
+                                  style={{
+                                    display: 'block'
+                                  }}
                                 />
                               </div>
                               {/* Кнопка удаления */}
