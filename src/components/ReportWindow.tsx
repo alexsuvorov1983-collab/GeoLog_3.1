@@ -23,6 +23,7 @@ interface SectionState {
   tableRows?: string[][];
   isEdited: boolean;
   isSaved: boolean;
+  isReady: boolean;
 }
 
 interface Props {
@@ -56,14 +57,17 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       return JSON.parse(saved);
     }
     // Инициализация разделов автогенерацией
+    // По умолчанию готовы только разделы 14 и 16
     return REPORT_SECTIONS.map(section => {
       const content = generateSectionContent(section.id);
+      const isReadyByDefault = section.id === 'report-14' || section.id === 'report-16';
       return {
         id: section.id,
         text: content.text,
         tableRows: content.tableRows,
         isEdited: false,
-        isSaved: true
+        isSaved: true,
+        isReady: isReadyByDefault
       };
     });
   });
@@ -145,11 +149,18 @@ export default function ReportWindow({ projectName, onClose }: Props) {
   const isSectionReady = (sectionState: SectionState | undefined): boolean => {
     if (!sectionState) return false;
     
-    // Раздел готов, если есть непустой текст ИЛИ есть таблица с данными
-    const hasText = Boolean(sectionState.text && sectionState.text.trim().length > 0);
-    const hasTable = Boolean(sectionState.tableRows && sectionState.tableRows.length > 0);
-    
-    return hasText || hasTable;
+    // Раздел готов, если явно отмечен как готовый
+    return sectionState.isReady;
+  };
+
+  // Функция отметки раздела как готового
+  const markSectionAsReady = (sectionId: string) => {
+    setSections(prev => prev.map(s => 
+      s.id === sectionId 
+        ? { ...s, isReady: true }
+        : s
+    ));
+    Journal.logEvent('info', `Раздел ${sectionId} отмечен как готовый`, 'report.section_ready');
   };
 
   // Scrollspy
@@ -424,6 +435,15 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                           >
                             ↺ Автогенерация
                           </button>
+                          {!isReady && (
+                            <button
+                              onClick={() => markSectionAsReady(section.id)}
+                              className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-semibold"
+                              title="Отметить раздел как готовый"
+                            >
+                              ✓ Готово
+                            </button>
+                          )}
                         </>
                       )}
                     </div>
