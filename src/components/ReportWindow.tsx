@@ -59,28 +59,21 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     const saved = localStorage.getItem(SECTIONS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      console.log('[ReportWindow] Загружено из localStorage:', parsed.length, 'разделов');
       
       // Проверяем, нужна ли миграция (если у первого раздела нет поля isReady)
       const needsMigration = parsed.length > 0 && parsed[0].isReady === undefined;
       
       if (needsMigration) {
-        console.log('[ReportWindow] Обнаружены старые данные, выполняю миграцию');
         // Миграция: если поле isReady отсутствует, установить все как неготовые
         const migrated = parsed.map((section: any) => {
-          console.log(`[ReportWindow] Миграция раздела ${section.id}: isReady = false`);
           return { ...section, isReady: false };
         });
-        console.log('[ReportWindow] Все разделы после миграции не готовы');
         return migrated;
       } else {
-        console.log('[ReportWindow] Данные актуальны, миграция не требуется');
-        console.log('[ReportWindow] Готовые разделы:', parsed.filter((s: any) => s.isReady).map((s: any) => s.id));
         return parsed;
       }
     }
     
-    console.log('[ReportWindow] Инициализация новых разделов');
     // Инициализация разделов автогенерацией
     // По умолчанию все разделы не готовы
     const initialized = REPORT_SECTIONS.map(section => {
@@ -94,7 +87,6 @@ export default function ReportWindow({ projectName, onClose }: Props) {
         isReady: false
       };
     });
-    console.log('[ReportWindow] Все разделы по умолчанию не готовы');
     return initialized;
   });
 
@@ -372,7 +364,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       Journal.logEvent('info', `ПЗ экспортирована в DOCX: ${projectName}_ПЗ.docx`, 'report.export');
       alert('Файл успешно экспортирован!\n\nОткройте файл в Word и обновите поле оглавления (Ctrl+A, F9).');
     } catch (error) {
-      console.error('Ошибка экспорта:', error);
+      Journal.logEvent('error', `Ошибка экспорта ПЗ в DOCX: ${error instanceof Error ? error.message : String(error)}`, 'report.export_error');
       alert('Ошибка при экспорте файла');
     }
   };
