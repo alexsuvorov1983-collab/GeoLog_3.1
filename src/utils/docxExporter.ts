@@ -21,9 +21,8 @@ import {
   PageOrientation,
   convertMillimetersToTwip,
   VerticalAlign,
-  Tab,
-  TabStopPosition,
-  TabStopType
+  HeightRule,
+  TableLayoutType
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { REPORT_SECTIONS, PageSettings, StampSettings } from './reportStructure';
@@ -40,12 +39,21 @@ const PAGE_SIZES = {
   A3: { width: 297, height: 420 }
 };
 
-// Поля рамки по ГОСТ Р 21.1101 (в мм)
-const FRAME_MARGINS = {
+// Поля страницы (в мм)
+const PAGE_MARGINS = {
+  top: 10,
+  bottom: 20,
   left: 20,
-  right: 5,
-  top: 5,
-  bottom: 5
+  right: 10
+};
+
+// Расстояния колонтитулов (в мм)
+const HEADER_FOOTER_DISTANCE = 5;
+
+// Размеры рамки (в мм) - для A4 вертикальная
+const FRAME_SIZE = {
+  width: 185,  // 210 - 20 (left) - 5 (right)
+  height: 287  // 297 - 5 (top) - 5 (bottom)
 };
 
 // Размеры штампов (в мм)
@@ -53,6 +61,9 @@ const STAMP_SIZES = {
   big: { width: 185, height: 55 },
   small: { width: 185, height: 15 }
 };
+
+// Коэффициент конвертации мм в твипы
+const MM_TO_TWIP = 56.6929;
 
 // Создание большого штампа (форма 1) - таблица с реквизитами
 function createBigStamp(stampSettings: StampSettings): Table {
@@ -92,37 +103,87 @@ function createBigStamp(stampSettings: StampSettings): Table {
   });
 }
 
-// Создание малого штампа (форма 2) - таблица с шифром и номерами страниц
+// Создание малого штампа (форма 2) - таблица с двумя колонками
 function createSmallStamp(stampSettings: StampSettings): Table {
+  const stampWidth = STAMP_SIZES.small.width;
+  const stampHeight = STAMP_SIZES.small.height;
+  
+  // Левая колонка: пустые графы (Изм, Лист, №док, Подп, Дата)
+  const leftColumnWidth = Math.round((stampWidth * 0.4) * MM_TO_TWIP);
+  // Правая колонка: шифр и номера страниц
+  const rightColumnWidth = Math.round((stampWidth * 0.6) * MM_TO_TWIP);
+
   return new Table({
+    width: { size: Math.round(stampWidth * MM_TO_TWIP), type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
     rows: [
       new TableRow({
+        height: { value: Math.round(stampHeight * MM_TO_TWIP), rule: HeightRule.EXACT },
         children: [
+          // Левая колонка - пустые графы
           new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: stampSettings.code, size: 18, font: 'Times New Roman' }),
-                  new TextRun({ text: '  ' }),
-                  new TextRun({ children: ['Лист ', PageNumber.CURRENT], size: 18, font: 'Times New Roman' }),
-                  new TextRun({ text: '  ' }),
-                  new TextRun({ children: ['Листов ', PageNumber.TOTAL_PAGES], size: 18, font: 'Times New Roman' })
-                ],
-                alignment: AlignmentType.CENTER
-              })
-            ],
+            width: { size: leftColumnWidth, type: WidthType.DXA },
             borders: {
               top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               right: { style: BorderStyle.SINGLE, size: 4, color: '000000' }
             },
-            width: { size: convertMillimetersToTwip(STAMP_SIZES.small.width), type: WidthType.DXA }
+            margins: {
+              top: 0,
+              bottom: 0,
+              left: 20,
+              right: 20
+            },
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'Изм.', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: 'Лист', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: '№докум.', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: 'Подп.', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: 'Дата', size: 20, font: 'Times New Roman' })
+                ]
+              })
+            ]
+          }),
+          // Правая колонка - шифр и номера страниц
+          new TableCell({
+            width: { size: rightColumnWidth, type: WidthType.DXA },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+              bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+              left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+              right: { style: BorderStyle.SINGLE, size: 4, color: '000000' }
+            },
+            margins: {
+              top: 0,
+              bottom: 0,
+              left: 20,
+              right: 20
+            },
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: stampSettings.code, size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: 'Лист ', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ children: [PageNumber.CURRENT], size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ text: 'Листов ', size: 20, font: 'Times New Roman' }),
+                  new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 20, font: 'Times New Roman' })
+                ],
+                alignment: AlignmentType.RIGHT
+              })
+            ]
           })
         ]
       })
-    ],
-    width: { size: 100, type: WidthType.PERCENTAGE }
+    ]
   });
 }
 
@@ -178,34 +239,46 @@ function createTable(headers: string[], rows: string[][]): Table {
 
 // Создание рамки через таблицу в header
 function createFrameInHeader(pageSettings: PageSettings): Table {
-  const pageSize = PAGE_SIZES[pageSettings.format];
-  const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
-  const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
-  
-  // Вычисляем размеры содержимого (страница минус поля)
-  const contentWidth = pageWidth - FRAME_MARGINS.left - FRAME_MARGINS.right;
-  const contentHeight = pageHeight - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
+  // Рамка всегда 185×287 мм для A4 вертикальная
+  const frameWidth = FRAME_SIZE.width;
+  const frameHeight = FRAME_SIZE.height;
 
   // Создаем таблицу 1x1 с границами
   return new Table({
+    width: { size: Math.round(frameWidth * MM_TO_TWIP), type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+      bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+      left: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+      right: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+      insideVertical: { style: BorderStyle.SINGLE, size: 8, color: '000000' }
+    },
     rows: [
       new TableRow({
-        height: { value: convertMillimetersToTwip(contentHeight), rule: 'exact' },
+        cantSplit: true,
+        height: { value: Math.round(frameHeight * MM_TO_TWIP), rule: HeightRule.EXACT },
         children: [
           new TableCell({
-            width: { size: convertMillimetersToTwip(contentWidth), type: WidthType.DXA },
+            width: { size: Math.round(frameWidth * MM_TO_TWIP), type: WidthType.DXA },
             borders: {
-              top: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
-              bottom: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
-              left: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
-              right: { style: BorderStyle.SINGLE, size: 12, color: '000000' }
+              top: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              left: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              right: { style: BorderStyle.SINGLE, size: 8, color: '000000' }
+            },
+            margins: {
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0
             },
             children: [new Paragraph({ text: '' })]
           })
         ]
       })
-    ],
-    width: { size: 100, type: WidthType.PERCENTAGE }
+    ]
   });
 }
 
@@ -266,11 +339,13 @@ function createSection(
           orientation: pageSettings.orientation === 'landscape' ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT
         },
         margin: {
-          top: convertMillimetersToTwip(FRAME_MARGINS.top),
-          right: convertMillimetersToTwip(FRAME_MARGINS.right),
-          bottom: convertMillimetersToTwip(FRAME_MARGINS.bottom),
-          left: convertMillimetersToTwip(FRAME_MARGINS.left)
-        }
+          top: convertMillimetersToTwip(PAGE_MARGINS.top),
+          right: convertMillimetersToTwip(PAGE_MARGINS.right),
+          bottom: convertMillimetersToTwip(PAGE_MARGINS.bottom),
+          left: convertMillimetersToTwip(PAGE_MARGINS.left)
+        },
+        headerDistance: convertMillimetersToTwip(HEADER_FOOTER_DISTANCE),
+        footerDistance: convertMillimetersToTwip(HEADER_FOOTER_DISTANCE)
       },
       type: isFirstSection ? SectionType.CONTINUOUS : SectionType.NEXT_PAGE
     },
@@ -278,7 +353,8 @@ function createSection(
       default: new Header({
         children: [frameTable]
       })
-    },    footers: {
+    },
+    footers: {
       default: new Footer({
         children: pageSettings.stamp === 'big' 
           ? [createBigStamp(stampSettings)]
