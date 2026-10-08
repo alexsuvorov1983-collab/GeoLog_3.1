@@ -8,6 +8,7 @@ import { generateDocx } from '../utils/docxExporter';
 import { Journal } from '../core/journal';
 import PageSettingsDialog from './PageSettingsDialog';
 import StampSettingsDialog from './StampSettingsDialog';
+import PageSheet from './PageSheet';
 
 interface ReportWindowState {
   isOpen: boolean;
@@ -615,18 +616,12 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                     )}
                   </div>
                   
-                  {/* Лист A4 */}
-                  <div 
-                    className="bg-white shadow-lg flex-1"
-                    style={{
-                      maxWidth: '210mm',
-                      minHeight: '297mm',
-                      padding: '20mm 15mm 20mm 30mm',
-                      fontFamily: '"Times New Roman", Times, serif',
-                      fontSize: '12pt',
-                      lineHeight: '1.5',
-                      pageBreakBefore: 'always'
-                    }}
+                  {/* Лист A4 с ГОСТ-рамкой и штампом */}
+                  <PageSheet
+                    pageSettings={pageSettings[section.id] || getDefaultPageSettings(section.id)}
+                    stampSettings={stampSettings}
+                    pageNumber={REPORT_SECTIONS.findIndex(s => s.id === section.id) + 1}
+                    totalPages={REPORT_SECTIONS.length}
                   >
                   {/* Заголовок раздела */}
                   <div className="mb-4">
@@ -803,7 +798,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                       )}
                     </div>
                   )}
-                  </div> {/* Конец листа A4 */}
+                  </PageSheet> {/* Конец листа с ГОСТ-рамкой */}
                 </div>
               );
             })}
