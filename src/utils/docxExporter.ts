@@ -176,21 +176,36 @@ function createTable(headers: string[], rows: string[][]): Table {
   });
 }
 
-// Создание рамки через параграф с границами в header
-function createFrameInHeader(pageSettings: PageSettings): Paragraph {
-  return new Paragraph({
-    text: '',
-    border: {
-      top: { style: BorderStyle.SINGLE, size: 12, color: '000000', space: 1 },
-      bottom: { style: BorderStyle.SINGLE, size: 12, color: '000000', space: 1 },
-      left: { style: BorderStyle.SINGLE, size: 12, color: '000000', space: 1 },
-      right: { style: BorderStyle.SINGLE, size: 12, color: '000000', space: 1 }
-    },
-    spacing: {
-      before: 0,
-      after: 0,
-      line: 240 * 40 // Высота строки для заполнения страницы
-    }
+// Создание рамки через таблицу в header
+function createFrameInHeader(pageSettings: PageSettings): Table {
+  const pageSize = PAGE_SIZES[pageSettings.format];
+  const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
+  const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
+  
+  // Вычисляем размеры содержимого (страница минус поля)
+  const contentWidth = pageWidth - FRAME_MARGINS.left - FRAME_MARGINS.right;
+  const contentHeight = pageHeight - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
+
+  // Создаем таблицу 1x1 с границами
+  return new Table({
+    rows: [
+      new TableRow({
+        height: { value: convertMillimetersToTwip(contentHeight), rule: 'exact' },
+        children: [
+          new TableCell({
+            width: { size: convertMillimetersToTwip(contentWidth), type: WidthType.DXA },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
+              bottom: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
+              left: { style: BorderStyle.SINGLE, size: 12, color: '000000' },
+              right: { style: BorderStyle.SINGLE, size: 12, color: '000000' }
+            },
+            children: [new Paragraph({ text: '' })]
+          })
+        ]
+      })
+    ],
+    width: { size: 100, type: WidthType.PERCENTAGE }
   });
 }
 
@@ -239,9 +254,9 @@ function createSection(
   const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
   const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
 
-  // Создание рамки через параграф с границами в header
-  const frameParagraph = createFrameInHeader(pageSettings);
-
+  // Создание рамки через таблицу в header
+  const frameTable = createFrameInHeader(pageSettings);
+  
   return {
     properties: {
       page: {
@@ -261,10 +276,9 @@ function createSection(
     },
     headers: {
       default: new Header({
-        children: [frameParagraph]
+        children: [frameTable]
       })
-    },
-    footers: {
+    },    footers: {
       default: new Footer({
         children: pageSettings.stamp === 'big' 
           ? [createBigStamp(stampSettings)]
