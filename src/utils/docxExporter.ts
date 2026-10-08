@@ -176,6 +176,37 @@ function createTable(headers: string[], rows: string[][]): Table {
   });
 }
 
+// Создание рамки через таблицу в header
+function createFrameInHeader(pageSettings: PageSettings): Table {
+  const pageSize = PAGE_SIZES[pageSettings.format];
+  const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
+  const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
+  
+  const contentWidth = pageWidth - FRAME_MARGINS.left - FRAME_MARGINS.right;
+  const contentHeight = pageHeight - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
+
+  return new Table({
+    rows: [
+      new TableRow({
+        height: { value: convertMillimetersToTwip(contentHeight), rule: 'exact' },
+        children: [
+          new TableCell({
+            width: { size: convertMillimetersToTwip(contentWidth), type: WidthType.DXA },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              left: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
+              right: { style: BorderStyle.SINGLE, size: 8, color: '000000' }
+            },
+            children: [new Paragraph({ text: '' })]
+          })
+        ]
+      })
+    ],
+    width: { size: 100, type: WidthType.PERCENTAGE }
+  });
+}
+
 // Создание секции документа с рамкой и штампом
 function createSection(
   sectionData: SectionData,
@@ -221,29 +252,8 @@ function createSection(
   const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
   const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
 
-  // Header с рамкой (таблица 1×1 на всю страницу)
-  const headerContent: Paragraph[] = [];
-  
-  // Footer со штампом
-  let footerContent: any[] = [];
-  
-  if (pageSettings.stamp === 'big') {
-    footerContent = [
-      new Paragraph({ spacing: { before: 200 } }),
-      new Paragraph({
-        children: [new TextRun({ text: '' })],
-        alignment: AlignmentType.RIGHT
-      })
-    ];
-  } else if (pageSettings.stamp === 'small') {
-    footerContent = [
-      new Paragraph({ spacing: { before: 200 } }),
-      new Paragraph({
-        children: [new TextRun({ text: '' })],
-        alignment: AlignmentType.RIGHT
-      })
-    ];
-  }
+  // Создание рамки через таблицу в header
+  const frameTable = createFrameInHeader(pageSettings);
 
   return {
     properties: {
@@ -258,20 +268,13 @@ function createSection(
           right: convertMillimetersToTwip(FRAME_MARGINS.right),
           bottom: convertMillimetersToTwip(FRAME_MARGINS.bottom),
           left: convertMillimetersToTwip(FRAME_MARGINS.left)
-        },
-        // Рамка страницы
-        border: {
-          top: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
-          bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
-          left: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
-          right: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 }
         }
       },
       type: isFirstSection ? SectionType.CONTINUOUS : SectionType.NEXT_PAGE
     },
     headers: {
       default: new Header({
-        children: headerContent
+        children: [frameTable]
       })
     },
     footers: {
