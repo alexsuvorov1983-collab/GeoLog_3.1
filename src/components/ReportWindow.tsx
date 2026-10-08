@@ -77,15 +77,27 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     // Инициализация разделов автогенерацией
     // По умолчанию все разделы не готовы
     const initialized = REPORT_SECTIONS.map(section => {
-      const content = generateSectionContent(section.id);
-      return {
-        id: section.id,
-        text: content.text,
-        tableRows: content.tableRows,
-        isEdited: false,
-        isSaved: true,
-        isReady: false
-      };
+      try {
+        const content = generateSectionContent(section.id);
+        return {
+          id: section.id,
+          text: content.text,
+          tableRows: content.tableRows,
+          isEdited: false,
+          isSaved: true,
+          isReady: false
+        };
+      } catch (error) {
+        Journal.logEvent('error', `Ошибка генерации раздела ${section.id}: ${error instanceof Error ? error.message : String(error)}`, 'report.generation_error');
+        return {
+          id: section.id,
+          text: 'Ошибка генерации содержимого раздела',
+          tableRows: [],
+          isEdited: false,
+          isSaved: true,
+          isReady: false
+        };
+      }
     });
     return initialized;
   });
@@ -129,6 +141,8 @@ export default function ReportWindow({ projectName, onClose }: Props) {
   const isDragging = useRef(false);
   const isResizing = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const resizeOffset = useRef({ x: 0, y: 0 });
+  const resizeStartSize = useRef({ width: 0, height: 0 });
 
   // Сохранение состояния окна
   useEffect(() => {
@@ -160,9 +174,13 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       };
     } else {
       isResizing.current = true;
-      dragOffset.current = {
+      resizeOffset.current = {
         x: e.clientX,
         y: e.clientY
+      };
+      resizeStartSize.current = {
+        width: windowState.width,
+        height: windowState.height
       };
     }
     e.preventDefault();
@@ -179,10 +197,9 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       } else if (isResizing.current) {
         setWindowState(prev => ({
           ...prev,
-          width: Math.max(480, prev.width + (e.clientX - dragOffset.current.x)),
-          height: Math.max(320, prev.height + (e.clientY - dragOffset.current.y))
+          width: Math.max(480, resizeStartSize.current.width + (e.clientX - resizeOffset.current.x)),
+          height: Math.max(320, resizeStartSize.current.height + (e.clientY - resizeOffset.current.y))
         }));
-        dragOffset.current = { x: e.clientX, y: e.clientY };
       }
     };
 
@@ -281,23 +298,27 @@ export default function ReportWindow({ projectName, onClose }: Props) {
       if (!contentRef.current) return;
       const scrollTop = contentRef.current.scrollTop;
       
+      let lastActiveSection = activeSection;
       for (const section of REPORT_SECTIONS) {
         const element = document.getElementById(section.id);
-        if (element) {
+        if (element && element.offsetTop !== undefined) {
           const offsetTop = element.offsetTop;
           if (scrollTop >= offsetTop - 100) {
-            setActiveSection(section.id);
+            lastActiveSection = section.id;
           }
         }
       }
+      setActiveSection(lastActiveSection);
     };
 
     const content = contentRef.current;
     if (content) {
       content.addEventListener('scroll', handleScroll);
-      return () => content.removeEventListener('scroll', handleScroll);
+      return () => {
+        content.removeEventListener('scroll', handleScroll);
+      };
     }
-  }, []);
+  }, [activeSection]);
 
   // Навигация к разделу
   const scrollToSection = (sectionId: string) => {
@@ -342,13 +363,18 @@ export default function ReportWindow({ projectName, onClose }: Props) {
 
   // Сброс к автогенерации
   const resetToAutoGeneration = (sectionId: string) => {
-    const content = generateSectionContent(sectionId);
-    setSections(prev => prev.map(s => 
-      s.id === sectionId 
-        ? { ...s, text: content.text, tableRows: content.tableRows, isEdited: false, isSaved: true }
-        : s
-    ));
-    Journal.logEvent('info', `Раздел ${sectionId} сброшен к автогенерации`, 'report.reset');
+    try {
+      const content = generateSectionContent(sectionId);
+      setSections(prev => prev.map(s => 
+        s.id === sectionId 
+          ? { ...s, text: content.text, tableRows: content.tableRows, isEdited: false, isSaved: true }
+          : s
+      ));
+      Journal.logEvent('info', `Раздел ${sectionId} сброшен к автогенерации`, 'report.reset');
+    } catch (error) {
+      Journal.logEvent('error', `Ошибка автогенерации раздела ${sectionId}: ${error instanceof Error ? error.message : String(error)}`, 'report.reset_error');
+      alert(`Ошибка при сбросе раздела к автогенерации: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   // Экспорт в DOCX
