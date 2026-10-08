@@ -17,12 +17,13 @@ import {
   PageNumber,
   Footer,
   Header,
-  TableOfContents,
   SectionType,
   PageOrientation,
   convertMillimetersToTwip,
   VerticalAlign,
-  TableLayoutType
+  Tab,
+  TabStopPosition,
+  TabStopType
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { REPORT_SECTIONS, PageSettings, StampSettings } from './reportStructure';
@@ -53,78 +54,36 @@ const STAMP_SIZES = {
   small: { width: 185, height: 15 }
 };
 
-// Создание рамки (таблица 1×1 с чёрными границами)
-function createFrame(pageSettings: PageSettings): Table {
-  const pageSize = PAGE_SIZES[pageSettings.format];
-  const width = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
-  const height = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
-  
-  const contentWidth = width - FRAME_MARGINS.left - FRAME_MARGINS.right;
-  const contentHeight = height - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
-
-  return new Table({
-    rows: [
-      new TableRow({
-        height: { value: convertMillimetersToTwip(contentHeight), rule: 'exact' },
-        children: [
-          new TableCell({
-            width: { size: convertMillimetersToTwip(contentWidth), type: WidthType.DXA },
-            borders: {
-              top: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
-              bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
-              left: { style: BorderStyle.SINGLE, size: 8, color: '000000' },
-              right: { style: BorderStyle.SINGLE, size: 8, color: '000000' }
-            },
-            children: [new Paragraph({ text: '' })]
-          })
-        ]
-      })
-    ],
-    width: { size: 100, type: WidthType.PERCENTAGE }
-  });
-}
-
-// Создание большого штампа (форма 1)
+// Создание большого штампа (форма 1) - таблица с реквизитами
 function createBigStamp(stampSettings: StampSettings): Table {
-  const stampWidth = STAMP_SIZES.big.width;
-  const stampHeight = STAMP_SIZES.big.height;
-
   return new Table({
     rows: [
       new TableRow({
-        height: { value: convertMillimetersToTwip(stampHeight), rule: 'exact' },
         children: [
           new TableCell({
-            width: { size: convertMillimetersToTwip(stampWidth), type: WidthType.DXA },
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: stampSettings.organization, size: 20, font: 'Times New Roman' })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 20 }
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: stampSettings.documentName, size: 20, font: 'Times New Roman' })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 20 }
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: stampSettings.code, size: 18, font: 'Times New Roman' })],
+                alignment: AlignmentType.CENTER
+              })
+            ],
             borders: {
               top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               right: { style: BorderStyle.SINGLE, size: 4, color: '000000' }
             },
-            verticalAlign: VerticalAlign.CENTER,
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: stampSettings.organization, size: 20, font: 'Times New Roman' })
-                ],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 40 }
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: stampSettings.documentName, size: 20, font: 'Times New Roman' })
-                ],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 40 }
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: stampSettings.code, size: 18, font: 'Times New Roman' })
-                ],
-                alignment: AlignmentType.CENTER
-              })
-            ]
+            width: { size: convertMillimetersToTwip(STAMP_SIZES.big.width), type: WidthType.DXA }
           })
         ]
       })
@@ -133,33 +92,32 @@ function createBigStamp(stampSettings: StampSettings): Table {
   });
 }
 
-// Создание малого штампа (форма 2)
-function createSmallStamp(stampSettings: StampSettings, pageNumber: number, totalPages: number): Table {
-  const stampWidth = STAMP_SIZES.small.width;
-  const stampHeight = STAMP_SIZES.small.height;
-
+// Создание малого штампа (форма 2) - таблица с шифром и номерами страниц
+function createSmallStamp(stampSettings: StampSettings): Table {
   return new Table({
     rows: [
       new TableRow({
-        height: { value: convertMillimetersToTwip(stampHeight), rule: 'exact' },
         children: [
           new TableCell({
-            width: { size: convertMillimetersToTwip(stampWidth), type: WidthType.DXA },
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: stampSettings.code, size: 18, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ children: ['Лист ', PageNumber.CURRENT], size: 18, font: 'Times New Roman' }),
+                  new TextRun({ text: '  ' }),
+                  new TextRun({ children: ['Листов ', PageNumber.TOTAL_PAGES], size: 18, font: 'Times New Roman' })
+                ],
+                alignment: AlignmentType.CENTER
+              })
+            ],
             borders: {
               top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
               right: { style: BorderStyle.SINGLE, size: 4, color: '000000' }
             },
-            verticalAlign: VerticalAlign.CENTER,
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: `${stampSettings.code}  Лист ${pageNumber}  Листов ${totalPages}`, size: 18, font: 'Times New Roman' })
-                ],
-                alignment: AlignmentType.CENTER
-              })
-            ]
+            width: { size: convertMillimetersToTwip(STAMP_SIZES.small.width), type: WidthType.DXA }
           })
         ]
       })
@@ -168,98 +126,7 @@ function createSmallStamp(stampSettings: StampSettings, pageNumber: number, tota
   });
 }
 
-// Создание секции документа
-function createSection(
-  sectionData: SectionData,
-  section: typeof REPORT_SECTIONS[0],
-  pageSettings: PageSettings,
-  stampSettings: StampSettings,
-  isFirstSection: boolean,
-  pageNumber: number,
-  totalPages: number
-): any {
-  const children: any[] = [];
-
-  // Заголовок раздела
-  const headingText = section.number ? `${section.number} ${section.title}` : section.title;
-  children.push(
-    new Paragraph({
-      text: headingText,
-      heading: section.level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 },
-      alignment: AlignmentType.CENTER
-    })
-  );
-
-  // Текст раздела
-  if (sectionData?.text) {
-    const paragraphs = sectionData.text.split('\n\n');
-    paragraphs.forEach(para => {
-      children.push(
-        new Paragraph({
-          text: para,
-          spacing: { after: 200, line: 360 },
-          indent: { firstLine: convertMillimetersToTwip(12.5) }
-        })
-      );
-    });
-  }
-
-  // Таблица раздела
-  if (sectionData?.tableRows && section.tableHeaders) {
-    children.push(createTable(section.tableHeaders, sectionData.tableRows));
-  }
-
-  // Настройки страницы
-  const pageSize = PAGE_SIZES[pageSettings.format];
-  const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
-  const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
-
-  // Header с рамкой
-  const header = new Header({
-    children: [createFrame(pageSettings)]
-  });
-
-  // Footer со штампом
-  let footer;
-  if (pageSettings.stamp === 'big') {
-    footer = new Footer({
-      children: [createBigStamp(stampSettings)]
-    });
-  } else if (pageSettings.stamp === 'small') {
-    footer = new Footer({
-      children: [createSmallStamp(stampSettings, pageNumber, totalPages)]
-    });
-  } else {
-    footer = new Footer({
-      children: [new Paragraph({ text: '' })]
-    });
-  }
-
-  return {
-    properties: {
-      page: {
-        size: {
-          width: convertMillimetersToTwip(pageWidth),
-          height: convertMillimetersToTwip(pageHeight),
-          orientation: pageSettings.orientation === 'landscape' ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT
-        },
-        margin: {
-          top: convertMillimetersToTwip(FRAME_MARGINS.top),
-          right: convertMillimetersToTwip(FRAME_MARGINS.right),
-          bottom: convertMillimetersToTwip(FRAME_MARGINS.bottom),
-          left: convertMillimetersToTwip(FRAME_MARGINS.left)
-        }
-      },
-      type: isFirstSection ? SectionType.CONTINUOUS : SectionType.NEXT_PAGE
-    },
-    headers: { default: header },
-    footers: { default: footer },
-    children
-  };
-}
-
-// Создание таблицы
+// Создание таблицы с данными
 function createTable(headers: string[], rows: string[][]): Table {
   const headerRow = new TableRow({
     children: headers.map(header => 
@@ -309,6 +176,117 @@ function createTable(headers: string[], rows: string[][]): Table {
   });
 }
 
+// Создание секции документа с рамкой и штампом
+function createSection(
+  sectionData: SectionData,
+  section: typeof REPORT_SECTIONS[0],
+  pageSettings: PageSettings,
+  stampSettings: StampSettings,
+  isFirstSection: boolean
+): any {
+  const children: any[] = [];
+
+  // Заголовок раздела
+  const headingText = section.number ? `${section.number} ${section.title}` : section.title;
+  children.push(
+    new Paragraph({
+      text: headingText,
+      heading: section.level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
+      spacing: { before: 400, after: 200 },
+      alignment: AlignmentType.CENTER
+    })
+  );
+
+  // Текст раздела
+  if (sectionData?.text) {
+    const paragraphs = sectionData.text.split('\n\n');
+    paragraphs.forEach(para => {
+      children.push(
+        new Paragraph({
+          text: para,
+          spacing: { after: 200, line: 360 },
+          indent: { firstLine: convertMillimetersToTwip(12.5) }
+        })
+      );
+    });
+  }
+
+  // Таблица раздела
+  if (sectionData?.tableRows && section.tableHeaders) {
+    children.push(createTable(section.tableHeaders, sectionData.tableRows));
+  }
+
+  // Настройки страницы
+  const pageSize = PAGE_SIZES[pageSettings.format];
+  const pageWidth = pageSettings.orientation === 'portrait' ? pageSize.width : pageSize.height;
+  const pageHeight = pageSettings.orientation === 'portrait' ? pageSize.height : pageSize.width;
+
+  // Header с рамкой (таблица 1×1 на всю страницу)
+  const headerContent: Paragraph[] = [];
+  
+  // Footer со штампом
+  let footerContent: any[] = [];
+  
+  if (pageSettings.stamp === 'big') {
+    footerContent = [
+      new Paragraph({ spacing: { before: 200 } }),
+      new Paragraph({
+        children: [new TextRun({ text: '' })],
+        alignment: AlignmentType.RIGHT
+      })
+    ];
+  } else if (pageSettings.stamp === 'small') {
+    footerContent = [
+      new Paragraph({ spacing: { before: 200 } }),
+      new Paragraph({
+        children: [new TextRun({ text: '' })],
+        alignment: AlignmentType.RIGHT
+      })
+    ];
+  }
+
+  return {
+    properties: {
+      page: {
+        size: {
+          width: convertMillimetersToTwip(pageWidth),
+          height: convertMillimetersToTwip(pageHeight),
+          orientation: pageSettings.orientation === 'landscape' ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT
+        },
+        margin: {
+          top: convertMillimetersToTwip(FRAME_MARGINS.top),
+          right: convertMillimetersToTwip(FRAME_MARGINS.right),
+          bottom: convertMillimetersToTwip(FRAME_MARGINS.bottom),
+          left: convertMillimetersToTwip(FRAME_MARGINS.left)
+        },
+        // Рамка страницы
+        border: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
+          bottom: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
+          left: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 },
+          right: { style: BorderStyle.SINGLE, size: 8, color: '000000', space: 1 }
+        }
+      },
+      type: isFirstSection ? SectionType.CONTINUOUS : SectionType.NEXT_PAGE
+    },
+    headers: {
+      default: new Header({
+        children: headerContent
+      })
+    },
+    footers: {
+      default: new Footer({
+        children: pageSettings.stamp === 'big' 
+          ? [createBigStamp(stampSettings)]
+          : pageSettings.stamp === 'small'
+          ? [createSmallStamp(stampSettings)]
+          : [new Paragraph({ text: '' })]
+      })
+    },
+    children
+  };
+}
+
 // Главная функция генерации DOCX
 export async function generateDocx(
   projectName: string,
@@ -317,8 +295,6 @@ export async function generateDocx(
   stampSettings: StampSettings
 ): Promise<void> {
   const docSections: any[] = [];
-  let pageNumber = 1;
-  const totalPages = sections.length;
 
   // Создаём секции для каждого раздела
   for (let i = 0; i < REPORT_SECTIONS.length; i++) {
@@ -331,13 +307,10 @@ export async function generateDocx(
       section,
       settings,
       stampSettings,
-      i === 0,
-      pageNumber,
-      totalPages
+      i === 0
     );
 
     docSections.push(docSection);
-    pageNumber++;
   }
 
   // Создание документа
