@@ -2,10 +2,12 @@
 // Этап 7: Пояснительная записка
 
 import { useState, useEffect, useRef } from 'react';
-import { REPORT_SECTIONS } from '../utils/reportStructure';
+import { REPORT_SECTIONS, PageSettings, StampSettings, DEFAULT_STAMP_SETTINGS, getDefaultPageSettings } from '../utils/reportStructure';
 import { generateSectionContent } from '../utils/reportGenerator';
 import { generateDocx } from '../utils/docxExporter';
 import { Journal } from '../core/journal';
+import PageSettingsDialog from './PageSettingsDialog';
+import StampSettingsDialog from './StampSettingsDialog';
 
 interface ReportWindowState {
   isOpen: boolean;
@@ -33,6 +35,8 @@ interface Props {
 
 const STORAGE_KEY = 'geolog_report_window_state';
 const SECTIONS_STORAGE_KEY = 'geolog_report_sections';
+const PAGE_SETTINGS_KEY = 'geolog_report_page_settings';
+const STAMP_SETTINGS_KEY = 'geolog_report_stamp_settings';
 
 export default function ReportWindow({ projectName, onClose }: Props) {
   const [windowState, setWindowState] = useState<ReportWindowState>(() => {
@@ -94,6 +98,33 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     return initialized;
   });
 
+  // Настройки листов для каждого раздела
+  const [pageSettings, setPageSettings] = useState<Record<string, PageSettings>>(() => {
+    const saved = localStorage.getItem(PAGE_SETTINGS_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Инициализация настройками по умолчанию
+    const initial: Record<string, PageSettings> = {};
+    REPORT_SECTIONS.forEach(section => {
+      initial[section.id] = getDefaultPageSettings(section.id);
+    });
+    return initial;
+  });
+
+  // Реквизиты штампа
+  const [stampSettings, setStampSettings] = useState<StampSettings>(() => {
+    const saved = localStorage.getItem(STAMP_SETTINGS_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return DEFAULT_STAMP_SETTINGS;
+  });
+
+  // Диалоги настроек
+  const [showPageSettingsDialog, setShowPageSettingsDialog] = useState<string | null>(null);
+  const [showStampSettingsDialog, setShowStampSettingsDialog] = useState(false);
+
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>('');
   const [editTableRows, setEditTableRows] = useState<string[][]>([]);
@@ -116,6 +147,16 @@ export default function ReportWindow({ projectName, onClose }: Props) {
   useEffect(() => {
     localStorage.setItem(SECTIONS_STORAGE_KEY, JSON.stringify(sections));
   }, [sections]);
+
+  // Сохранение настроек листов
+  useEffect(() => {
+    localStorage.setItem(PAGE_SETTINGS_KEY, JSON.stringify(pageSettings));
+  }, [pageSettings]);
+
+  // Сохранение реквизитов штампа
+  useEffect(() => {
+    localStorage.setItem(STAMP_SETTINGS_KEY, JSON.stringify(stampSettings));
+  }, [stampSettings]);
 
   // Обработка drag
   const handleMouseDown = (e: React.MouseEvent, type: 'drag' | 'resize') => {
@@ -186,6 +227,21 @@ export default function ReportWindow({ projectName, onClose }: Props) {
     const section = sections.find(s => s.id === sectionId);
     const newStatus = section?.isReady ? 'не готов' : 'готов';
     Journal.logEvent('info', `Раздел ${sectionId} отмечен как ${newStatus}`, 'report.section_toggle');
+  };
+
+  // Функция сохранения настроек листа
+  const handleSavePageSettings = (sectionId: string, settings: PageSettings) => {
+    setPageSettings(prev => ({
+      ...prev,
+      [sectionId]: settings
+    }));
+    Journal.logEvent('info', `Настройки листа для ${sectionId} обновлены: ${settings.format} ${settings.orientation} ${settings.stamp}`, 'report.page_settings');
+  };
+
+  // Функция сохранения реквизитов штампа
+  const handleSaveStampSettings = (settings: StampSettings) => {
+    setStampSettings(settings);
+    Journal.logEvent('info', 'Реквизиты штампа обновлены', 'report.stamp_settings');
   };
 
   // Функция загрузки изображений
@@ -312,7 +368,7 @@ export default function ReportWindow({ projectName, onClose }: Props) {
         tableRows: s.tableRows
       }));
       
-      await generateDocx(projectName, sectionsData);
+      await generateDocx(projectName, sectionsData, pageSettings, stampSettings);
       Journal.logEvent('info', `ПЗ экспортирована в DOCX: ${projectName}_ПЗ.docx`, 'report.export');
       alert('Файл успешно экспортирован!\n\nОткройте файл в Word и обновите поле оглавления (Ctrl+A, F9).');
     } catch (error) {
@@ -381,6 +437,13 @@ export default function ReportWindow({ projectName, onClose }: Props) {
             💾 DOCX
           </button>
           <button
+            onClick={() => setShowStampSettingsDialog(true)}
+            className="px-3 py-1 bg-purple-500 hover:bg-purple-600 rounded text-sm font-semibold"
+            title="Реквизиты штампа"
+          >
+            📋 Штамп
+          </button>
+          <button
             onClick={() => setShowNavigation(!showNavigation)}
             className="px-2 py-1 bg-blue-500 hover:bg-blue-600 rounded text-sm"
             title="Показать/скрыть навигацию"
@@ -442,6 +505,16 @@ export default function ReportWindow({ projectName, onClose }: Props) {
                         {section.number && <span className="font-semibold">{section.number} </span>}
                         {section.title}
                       </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPageSettingsDialog(section.id);
+                        }}
+                        className="px-1.5 py-0.5 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                        title={`Настройки листа: ${pageSettings[section.id]?.format || 'A4'} ${pageSettings[section.id]?.orientation || 'portrait'}`}
+                      >
+                        📄
+                      </button>
                     </div>
                   );
                 })}
@@ -725,6 +798,26 @@ export default function ReportWindow({ projectName, onClose }: Props) {
         <div
           className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-gradient-to-tl from-gray-400 to-transparent"
           onMouseDown={(e) => handleMouseDown(e, 'resize')}
+        />
+      )}
+
+      {/* Диалог настроек листа */}
+      {showPageSettingsDialog && (
+        <PageSettingsDialog
+          sectionId={showPageSettingsDialog}
+          sectionTitle={REPORT_SECTIONS.find(s => s.id === showPageSettingsDialog)?.title || ''}
+          currentSettings={pageSettings[showPageSettingsDialog] || getDefaultPageSettings(showPageSettingsDialog)}
+          onSave={handleSavePageSettings}
+          onClose={() => setShowPageSettingsDialog(null)}
+        />
+      )}
+
+      {/* Диалог реквизитов штампа */}
+      {showStampSettingsDialog && (
+        <StampSettingsDialog
+          currentSettings={stampSettings}
+          onSave={handleSaveStampSettings}
+          onClose={() => setShowStampSettingsDialog(false)}
         />
       )}
     </div>

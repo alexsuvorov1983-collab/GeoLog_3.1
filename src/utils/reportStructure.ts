@@ -11,6 +11,63 @@ export interface ReportSection {
   tableHeaders?: string[];
 }
 
+// Настройки листа для каждого раздела
+export interface PageSettings {
+  format: 'A4' | 'A3';
+  orientation: 'portrait' | 'landscape';
+  stamp: 'big' | 'small' | 'none';
+}
+
+// Реквизиты штампа (общие для всего документа)
+export interface StampSettings {
+  organization: string;
+  documentName: string;
+  code: string;
+  stage: string;
+  developer: string;
+  developerDate: string;
+  checker: string;
+  checkerDate: string;
+  normControl: string;
+  normControlDate: string;
+  approver: string;
+  approverDate: string;
+  totalSheets: number;
+}
+
+// Значения по умолчанию для реквизитов штампа
+export const DEFAULT_STAMP_SETTINGS: StampSettings = {
+  organization: 'ООО "ГеоСтройСистема"',
+  documentName: 'Пояснительная записка',
+  code: 'ЕС/4194/95-05/23/94-ГСС-УПН-ЯНГКМ-ИГИ',
+  stage: 'Рабочая документация',
+  developer: '',
+  developerDate: '',
+  checker: '',
+  checkerDate: '',
+  normControl: '',
+  normControlDate: '',
+  approver: '',
+  approverDate: '',
+  totalSheets: 0
+};
+
+// Значения по умолчанию для настроек листов
+export function getDefaultPageSettings(sectionId: string): PageSettings {
+  // Титул - A4 вертикальный с большим штампом
+  if (sectionId === 'report-title') {
+    return { format: 'A4', orientation: 'portrait', stamp: 'big' };
+  }
+  
+  // Приложения Д, Г, Х, Ц - A3 горизонтальный с малым штампом (широкие таблицы)
+  if (['report-app-d', 'report-app-g', 'report-app-h', 'report-app-ts'].includes(sectionId)) {
+    return { format: 'A3', orientation: 'landscape', stamp: 'small' };
+  }
+  
+  // Все остальные разделы и приложения - A4 вертикальный с малым штампом
+  return { format: 'A4', orientation: 'portrait', stamp: 'small' };
+}
+
 export const REPORT_SECTIONS: ReportSection[] = [
   { id: 'report-cover', number: '', title: 'Обложка', level: 1 },
   { id: 'report-title', number: '', title: 'Титул', level: 1 },

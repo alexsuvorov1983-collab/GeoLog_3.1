@@ -22,7 +22,7 @@ import {
   convertInchesToTwip
 } from 'docx';
 import { saveAs } from 'file-saver';
-import { REPORT_SECTIONS, ReportSection } from './reportStructure';
+import { REPORT_SECTIONS, ReportSection, PageSettings, StampSettings } from './reportStructure';
 
 interface SectionData {
   id: string;
@@ -30,10 +30,35 @@ interface SectionData {
   tableRows?: string[][];
 }
 
+// Размеры страниц в мм
+const PAGE_SIZES = {
+  A4: { width: 210, height: 297 },
+  A3: { width: 297, height: 420 }
+};
+
+// Поля рамки по ГОСТ Р 21.1101 (в мм)
+const FRAME_MARGINS = {
+  left: 20,
+  right: 5,
+  top: 5,
+  bottom: 5
+};
+
+// Размеры штампов (в мм)
+const STAMP_SIZES = {
+  big: { width: 185, height: 55 },
+  small: { width: 185, height: 15 }
+};
+
 export async function generateDocx(
   projectName: string,
-  sections: SectionData[]
+  sections: SectionData[],
+  pageSettings: Record<string, PageSettings>,
+  stampSettings: StampSettings
 ): Promise<void> {
+  // Временная упрощённая реализация
+  // TODO: Полная реализация с рамками и штампами будет добавлена позже
+  
   const children: any[] = [];
 
   // Секция 1: Титульный лист
