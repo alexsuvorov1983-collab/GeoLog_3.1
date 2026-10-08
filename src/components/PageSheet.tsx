@@ -27,6 +27,9 @@ const FRAME_MARGINS = {
   bottom: 5
 };
 
+// Конвертация мм в пиксели (96 DPI)
+const PX_PER_MM = 96 / 25.4; // ≈3.7795275591
+
 export default function PageSheet({ 
   pageSettings, 
   stampSettings, 
@@ -35,25 +38,48 @@ export default function PageSheet({
   children 
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.5); // Начальное значение 0.5
+  const [isReady, setIsReady] = useState(false); // Флаг готовности
 
-  // Вычисляем размеры листа
+  // Вычисляем размеры листа в мм
   const pageSize = PAGE_SIZES[pageSettings.format];
-  const sheetWidth = pageSettings.orientation === 'portrait' 
+  const sheetWidthMm = pageSettings.orientation === 'portrait' 
     ? pageSize.width 
     : pageSize.height;
-  const sheetHeight = pageSettings.orientation === 'portrait' 
+  const sheetHeightMm = pageSettings.orientation === 'portrait' 
     ? pageSize.height 
     : pageSize.width;
+
+  // Переводим размеры в пиксели
+  const sheetWpx = sheetWidthMm * PX_PER_MM;
+  const sheetHpx = sheetHeightMm * PX_PER_MM;
+
+  // Размеры рамки в мм
+  const frameWidthMm = sheetWidthMm - FRAME_MARGINS.left - FRAME_MARGINS.right;
+  const frameHeightMm = sheetHeightMm - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
 
   // Масштабирование при изменении размера контейнера
   useEffect(() => {
     const updateScale = () => {
       if (!containerRef.current) return;
       
-      const containerWidth = containerRef.current.offsetWidth;
-      const newScale = containerWidth / sheetWidth;
-      setScale(newScale);
+      const containerWidthPx = containerRef.current.offsetWidth;
+      
+      // Если контейнер ещё не имеет ширины, используем начальное значение
+      if (containerWidthPx === 0) {
+        setScale(0.5);
+        setIsReady(false);
+        return;
+      }
+      
+      // Вычисляем масштаб
+      let k = containerWidthPx / sheetWpx;
+      
+      // Ограничиваем масштаб максимум 1 (100%)
+      k = Math.min(k, 1);
+      
+      setScale(k);
+      setIsReady(true);
     };
 
     updateScale();
@@ -71,11 +97,7 @@ export default function PageSheet({
       window.removeEventListener('resize', updateScale);
       resizeObserver.disconnect();
     };
-  }, [sheetWidth, pageSettings.format, pageSettings.orientation]);
-
-  // Размеры рамки
-  const frameWidth = sheetWidth - FRAME_MARGINS.left - FRAME_MARGINS.right;
-  const frameHeight = sheetHeight - FRAME_MARGINS.top - FRAME_MARGINS.bottom;
+  }, [sheetWpx, pageSettings.format, pageSettings.orientation]);
 
   return (
     <div 
@@ -83,19 +105,20 @@ export default function PageSheet({
       style={{
         width: '100%',
         marginBottom: '20px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        height: isReady ? `${sheetHpx * scale}px` : '0px', // Высота обёртки
+        visibility: isReady ? 'visible' : 'hidden' // Скрываем до первого замера
       }}
     >
       <div
         style={{
-          width: `${sheetWidth}mm`,
-          height: `${sheetHeight}mm`,
+          width: `${sheetWpx}px`,
+          height: `${sheetHpx}px`,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
           position: 'relative',
           backgroundColor: 'white',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          marginBottom: `${(sheetHeight * scale) - sheetHeight}mm`
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
         }}
       >
         {/* Рамка */}
@@ -104,9 +127,9 @@ export default function PageSheet({
             position: 'absolute',
             left: `${FRAME_MARGINS.left}mm`,
             top: `${FRAME_MARGINS.top}mm`,
-            width: `${frameWidth}mm`,
-            height: `${frameHeight}mm`,
-            border: '0.5mm solid #000',
+            width: `${frameWidthMm}mm`,
+            height: `${frameHeightMm}mm`,
+            border: '0.4mm solid #000', // Толщина 0.4 мм
             pointerEvents: 'none'
           }}
         />
@@ -117,8 +140,8 @@ export default function PageSheet({
             position: 'absolute',
             left: `${FRAME_MARGINS.left + 5}mm`,
             top: `${FRAME_MARGINS.top + 5}mm`,
-            width: `${frameWidth - 10}mm`,
-            height: `${frameHeight - 10}mm`,
+            width: `${frameWidthMm - 10}mm`,
+            height: `${frameHeightMm - 10}mm`,
             padding: '5mm 5mm 5mm 5mm',
             overflow: 'hidden',
             fontFamily: 'Times New Roman, serif',
